@@ -1,0 +1,86 @@
+Pitch,Piccolo,Flute,Alto Flute,Bass Flute,Oboe,English Horn,Clarinet,Bass Clarinet,Alto Saxophone,Tenor Saxophone,Baritone Saxophone,Bassoon,French Horn,Trumpet,Trombone,Bass Trombone,Euphonium,Tuba
+C1,,,,,,,,,,,,,,,,,,
+C#1,,,,,,,,,,,,,,,,,,
+D1,,,,,,,,,,,,,,,,,,"Deep, Heavy"
+D#1,,,,,,,,,,,,,,,,,,"Deep, Heavy"
+E1,,,,,,,,,,,,,,,,,,"Deep, Heavy"
+F1,,,,,,,,,,,,,,,,,,"Deep, Heavy"
+F#1,,,,,,,,,,,,,,,,,,"Deep, Heavy"
+G1,,,,,,,,,,,,,,,,,,"Deep, Heavy"
+G#1,,,,,,,,,,,,,,,,,,"Deep, Heavy"
+A1,,,,,,,,,,,,,,,,,,"Deep, Heavy"
+A#1,,,,,,,,,,,,"Sonorous, Dark, Vibrant",,,,"Heavy, strong","Dark, round, full","Deep, Heavy"
+B1,,,,,,,,,,,,"Sonorous, Dark, Vibrant",,,,"Heavy, strong","Dark, round, full","Deep, Heavy"
+C2,,,,,,,,,,,rumbling,"Sonorous, Dark, Vibrant",,,,"Heavy, strong","Dark, round, full",Strong
+C#2,,,,,,,,,,,rumbling,"Sonorous, Dark, Vibrant",,,,"Heavy, strong","Dark, round, full",Strong
+D2,,,,,,,,"Chalumeau, deep, rich",,,rumbling,"Sonorous, Dark, Vibrant",,,,"Heavy, strong","Dark, round, full",Strong
+D#2,,,,,,,,"Chalumeau, deep, rich",,,rumbling,"Sonorous, Dark, Vibrant",,,,"Heavy, strong","Dark, round, full",Strong
+E2,,,,,,,,"Chalumeau, deep, rich",,,dark,"Sonorous, Dark, Vibrant",,,Dark,"Heavy, strong","Dark, round, full",Strong
+F2,,,,,,,,"Chalumeau, deep, rich",,,dark,"Sonorous, Dark, Vibrant","Dark, unfocused",,Dark,"Heavy, strong","Dark, round, full",Strong
+F#2,,,,,,,,"Chalumeau, deep, rich",,,dark,"Sonorous, Dark, Vibrant","Dark, unfocused",,Dark,"Heavy, strong","mellow, smooth, sweet",Strong
+G2,,,,,,,,"Chalumeau, deep, rich",,,dark,"Sonorous, Dark, Vibrant","Dark, unfocused",,Dark,"Deep, solid","mellow, smooth, sweet",Strong
+G#2,,,,,,,,"Chalumeau, deep, rich",,,dark,"Sonorous, Dark, Vibrant","Dark, unfocused",,"Firm, powerful","Deep, solid","mellow, smooth, sweet",Strong
+A2,,,,,,,,"Chalumeau, deep, rich",,,dark,"Sweet, Subdued, Expressive","Dark, unfocused",,"Firm, powerful","Deep, solid","mellow, smooth, sweet",Strong
+A#2,,,,,,,,"Chalumeau, deep, rich",,"heavy, grainy",Full,"Sweet, Subdued, Expressive","Dark, unfocused",,"Firm, powerful","Deep, solid","mellow, smooth, sweet",Strong
+B2,,,,,,,,"Chalumeau, deep, rich",,"heavy, grainy",Full,"Sweet, Subdued, Expressive","Dark, unfocused",,"Firm, powerful","Deep, solid","mellow, smooth, sweet",Strong
+C3,,,,"Deep, rich, sonorous",,,,"Chalumeau, deep, rich",,"heavy, grainy",Full,"Sweet, Subdued, Expressive","Dark, unfocused",,"Firm, powerful","Deep, solid","mellow, smooth, sweet",Strong
+C#3,,,,"Deep, rich, sonorous",,,,"Chalumeau, deep, rich",,"heavy, grainy",Full,"Sweet, Subdued, Expressive","Dark, unfocused",,"Firm, powerful","Deep, solid","mellow, smooth, sweet",Strong
+D3,,,,"Deep, rich, sonorous",,,"Chalumeau, deep, rich","Chalumeau, deep, rich","Dark, covered","heavy, grainy",Full,"Sweet, Subdued, Expressive","Dark, unfocused",,"Firm, powerful","Deep, solid","mellow, smooth, sweet",Strong
+D#3,,,,"Deep, rich, sonorous",,,"Chalumeau, deep, rich","Chalumeau, deep, rich","Dark, covered","warm, rich",Full,"Sweet, Subdued, Expressive","Deep, bold",,"Firm, powerful","Deep, solid","mellow, smooth, sweet",Strong
+E3,,,,"Deep, rich, sonorous",,"Deep, rich, intense","Chalumeau, deep, rich","Chalumeau, deep, rich","Dark, covered","warm, rich",Bright,"Sweet, Subdued, Expressive","Deep, bold",dull,"Firm, powerful","Deep, solid","mellow, smooth, sweet",Strong
+F3,,,,"Deep, rich, sonorous",,"Deep, rich, intense","Chalumeau, deep, rich","Chalumeau, deep, rich","Dark, covered","warm, rich",Bright,"Sweet, Subdued, Expressive","Deep, bold",dull,"Firm, powerful","Deep, solid","mellow, smooth, sweet",Intense
+F#3,,,,"Deep, rich, sonorous",,"Deep, rich, intense","Chalumeau, deep, rich","clarino, bright, incisive, expressive",warm,"warm, rich",Bright,"Sweet, Subdued, Expressive","Deep, bold",dull,"Firm, powerful","Deep, solid","mellow, smooth, sweet",Intense
+G3,,,"Deep, rich, sonorous","Deep, rich, sonorous",,"Deep, rich, intense","Chalumeau, deep, rich","clarino, bright, incisive, expressive",warm,"warm, rich",Bright,"Sweet, Subdued, Expressive","Deep, bold",dull,"Firm, powerful","Deep, solid","mellow, smooth, sweet",Intense
+G#3,,,"Deep, rich, sonorous","Deep, rich, sonorous",,"Deep, rich, intense","Chalumeau, deep, rich","clarino, bright, incisive, expressive",warm,"warm, rich",Bright,"Sweet, Subdued, Expressive","bold, bright, heroic",dull,"Firm, powerful","Deep, solid","mellow, smooth, sweet",Intense
+A3,,,"Deep, rich, sonorous","Deep, rich, sonorous",,"Deep, rich, intense","Chalumeau, deep, rich","clarino, bright, incisive, expressive",warm,"full, bright",Bright,"Sweet, Subdued, Expressive","bright, heroic",dull,"Firm, powerful",powerful,"mellow, smooth, sweet",Intense
+A#3,,,"Deep, rich, sonorous","Deep, rich, sonorous","thick, heavy","Deep, rich, intense","Chalumeau, deep, rich","clarino, bright, incisive, expressive",warm,"full, bright",Bright,"Sweet, Subdued, Expressive","bright, heroic","clear, bright, articulate","Firm, powerful",powerful,"mellow, smooth, sweet",Intense
+B3,,"Weak, Luscious","Deep, rich, sonorous","Deep, rich, sonorous","thick, heavy","Deep, rich, intense","Chalumeau, deep, rich","clarino, bright, incisive, expressive",warm,"full, bright",Bright,"Sweet, Subdued, Expressive","bright, heroic","clear, bright, articulate","Firm, powerful",powerful,"mellow, smooth, sweet",Intense
+C4,,"Weak, Luscious","Deep, rich, sonorous","Deep, rich, sonorous","thick, heavy","Deep, rich, intense","Chalumeau, deep, rich","clarino, bright, incisive, expressive","Bright, expressive","full, bright",Bright,"Sweet, Subdued, Expressive","bright, heroic","clear, bright, articulate","Firm, powerful",powerful,"mellow, smooth, sweet",Intense
+C#4,,"Weak, Luscious","Deep, rich, sonorous",resonant,"thick, heavy","Deep, rich, intense","Chalumeau, deep, rich","clarino, bright, incisive, expressive","Bright, expressive","full, bright",Bright,"Sweet, Subdued, Expressive","bright, heroic","clear, bright, articulate","Firm, powerful",powerful,"mellow, smooth, sweet",Intense
+D4,,"Weak, Luscious","Deep, rich, sonorous",resonant,"thick, heavy","Mellow, reedy, sonorous","Chalumeau, deep, rich","clarino, bright, incisive, expressive","Bright, expressive","full, bright",Thin,"Sweet, Subdued, Expressive","bright, heroic","clear, bright, articulate","Firm, powerful",powerful,"mellow, smooth, sweet",Intense
+D#4,,"Weak, Luscious","Deep, rich, sonorous",resonant,"thick, heavy","Mellow, reedy, sonorous","Chalumeau, deep, rich","clarino, bright, incisive, expressive","Bright, expressive","full, bright",Thin,"Sweet, Subdued, Expressive","bright, heroic","clear, bright, articulate","Firm, powerful",powerful,"mellow, smooth, sweet",Intense
+E4,,"Weak, Luscious","Deep, rich, sonorous",resonant,"thick, heavy","Mellow, reedy, sonorous","Chalumeau, deep, rich","clarino, bright, incisive, expressive","Bright, expressive","full, bright",Thin,"Thin, Intense","bright, heroic","clear, bright, articulate","Firm, powerful",powerful,"mellow, smooth, sweet",Intense
+F4,,"Weak, Luscious","Deep, rich, sonorous",resonant,"thick, heavy","Mellow, reedy, sonorous","pale, throat-tone","clarino, bright, incisive, expressive","Edgy, piercing","full, bright",Thin,"Thin, Intense","bright, heroic","clear, bright, articulate","Firm, powerful",powerful,"mellow, smooth, sweet",Intense
+F#4,,"Weak, Luscious","Deep, rich, sonorous",resonant,"thick, heavy, warm, prominent","Mellow, reedy, sonorous","pale, throat-tone","clarino, bright, incisive, expressive","Edgy, piercing","full, bright",Thin,"Thin, Intense","bright, heroic","clear, bright, articulate","Firm, powerful",powerful,bright,Intense
+G4,,"Weak, Luscious","Deep, rich, sonorous, full, effective",resonant,"warm, prominent, reedy, poignant","Mellow, reedy, sonorous","pale, throat-tone",thin,"Edgy, piercing",thin,Thin,"Thin, Intense","bright, heroic","clear, bright, articulate",intense,powerful,bright,Intense
+G#4,,"Weak, Luscious, Sweet","full, effective",resonant,"warm, prominent, reedy, poignant","Mellow, reedy, sonorous","pale, throat-tone",thin,"Edgy, piercing",thin,Thin,"Thin, Intense","bright, heroic","clear, bright, articulate",intense,powerful,bright,
+A4,,Sweet,"full, effective",resonant,"warm, prominent, reedy, poignant","Mellow, reedy, sonorous","clarino, bright, incisive, expressive",thin,"Edgy, piercing",thin,Thin,"Thin, Intense","bright, heroic","clear, bright, articulate",intense,powerful,bright,
+A#4,,Sweet,"full, effective",resonant,"warm, prominent, reedy, poignant","Mellow, reedy, sonorous","clarino, bright, incisive, expressive",thin,thin,thin,Thin,"Thin, Intense","bright, heroic","clear, bright, articulate",intense,powerful,bright,
+B4,,Sweet,"full, effective",resonant,"warm, prominent, reedy, poignant","Mellow, reedy, sonorous","clarino, bright, incisive, expressive",thin,thin,thin,,pinched,"bright, heroic","clear, bright, articulate",,,,
+C5,,Sweet,"full, effective","airy, hollow","warm, prominent, reedy, poignant","Mellow, reedy, sonorous","clarino, bright, incisive, expressive",thin,thin,thin,,pinched,"bright, heroic","clear, bright, articulate",,,,
+C#5,,Sweet,"full, effective","airy, hollow","warm, prominent, reedy, poignant","Mellow, reedy, sonorous","clarino, bright, incisive, expressive",thin,thin,thin,,pinched,"heroic, brilliant, loud","clear, bright, articulate",,,,
+D5,"Quiet, Hollow",Sweet,"full, effective","airy, hollow","warm, prominent, reedy, poignant","Mellow, reedy, sonorous","clarino, bright, incisive, expressive",thin,thin,thin,,pinched,"brilliant, loud","clear, bright, articulate",,,,
+D#5,"Quiet, Hollow",Sweet,"full, effective","airy, hollow","warm, prominent, reedy, poignant","Mellow, reedy, sonorous","clarino, bright, incisive, expressive",,thin,thin,,pinched,"brilliant, loud","clear, bright, articulate",,,,
+E5,"Quiet, Hollow",Sweet,"full, effective","airy, hollow","warm, prominent, reedy, poignant","Thin, pinched","clarino, bright, incisive, expressive",,thin,thin,,,"brilliant, loud","clear, bright, articulate",,,,
+F5,"Quiet, Hollow",Sweet,"full, effective","airy, hollow","warm, prominent, reedy, poignant","Thin, pinched","clarino, bright, incisive, expressive",,thin,thin,,,"brilliant, loud","clear, bright, articulate",,,,
+F#5,"Quiet, Hollow",Sweet,"full, effective","airy, hollow","warm, prominent, reedy, poignant","Thin, pinched","clarino, bright, incisive, expressive",,thin,,,,,"clear, bright, articulate",,,,
+G5,"Quiet, Hollow",Sweet,"full, effective","airy, hollow","warm, prominent, reedy, poignant","Thin, pinched","clarino, bright, incisive, expressive",,thin,,,,,"clear, bright, articulate",,,,
+G#5,"Quiet, Hollow, Soft, Mellow",Sweet,"full, effective","airy, hollow","warm, prominent, reedy, poignant","Thin, pinched","clarino, bright, incisive, expressive",,thin,,,,,"brilliant, strident",,,,
+A5,"Soft, Mellow","Sweet, Clear, Brilliant",ordinary,"airy, hollow","warm, prominent, reedy, poignant","Thin, pinched","clarino, bright, incisive, expressive",,thin,,,,,"brilliant, strident",,,,
+A#5,"Soft, Mellow","Clear, Brilliant",ordinary,"airy, hollow","prominent, reedy, thin, clear","Thin, pinched","clarino, bright, incisive, expressive",,thin,,,,,"brilliant, strident",,,,
+B5,"Soft, Mellow","Clear, Brilliant",ordinary,"airy, hollow","thin, clear","Thin, pinched","clarino, bright, incisive, expressive",,,,,,,"brilliant, strident",,,,
+C6,"Soft, Mellow","Clear, Brilliant",ordinary,"airy, hollow","thin, clear","Thin, pinched","piercing, shrill",,,,,,,"brilliant, strident",,,,
+C#6,"Soft, Mellow","Clear, Brilliant",ordinary,,"thin, clear",,"piercing, shrill",,,,,,,,,,,
+D6,"Soft, Mellow","Clear, Brilliant",ordinary,,"thin, clear",,"piercing, shrill",,,,,,,,,,,
+D#6,"Soft, Mellow","Clear, Brilliant",ordinary,,"thin, clear",,"piercing, shrill",,,,,,,,,,,
+E6,"Soft, Mellow","Clear, Brilliant",ordinary,,"thin, clear",,"piercing, shrill",,,,,,,,,,,
+F6,"Soft, Mellow","Clear, Brilliant",ordinary,,"pinched, ineffective",,"piercing, shrill",,,,,,,,,,,
+F#6,"Soft, Mellow","Clear, Brilliant",ordinary,,"pinched, ineffective",,"piercing, shrill",,,,,,,,,,,
+G6,"Soft, Mellow","Clear, Brilliant",ordinary,,"pinched, ineffective",,"piercing, shrill",,,,,,,,,,,
+G#6,"Soft, Mellow, Bright, Clear","Clear, Brilliant, Shrill",,,"pinched, ineffective",,,,,,,,,,,,,
+A6,"Bright, Clear",Shrill,,,"pinched, ineffective",,,,,,,,,,,,,
+A#6,"Bright, Clear",Shrill,,,,,,,,,,,,,,,,
+B6,"Bright, Clear",Shrill,,,,,,,,,,,,,,,,
+C7,"Bright, Clear",Shrill,,,,,,,,,,,,,,,,
+C#7,"Bright, Clear",Shrill,,,,,,,,,,,,,,,,
+D7,"Bright, Clear",Shrill,,,,,,,,,,,,,,,,
+D#7,"Bright, Clear",,,,,,,,,,,,,,,,,
+E7,"Bright, Clear",,,,,,,,,,,,,,,,,
+F7,"Bright, Clear",,,,,,,,,,,,,,,,,
+F#7,"Bright, Clear, Shrill",,,,,,,,,,,,,,,,,
+G7,Shrill,,,,,,,,,,,,,,,,,
+G#7,Shrill,,,,,,,,,,,,,,,,,
+A7,Shrill,,,,,,,,,,,,,,,,,
+A#7,Shrill,,,,,,,,,,,,,,,,,
+B7,Shrill,,,,,,,,,,,,,,,,,
+C8,Shrill,,,,,,,,,,,,,,,,,

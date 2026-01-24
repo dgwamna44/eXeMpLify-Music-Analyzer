@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>MusicXML Analyzer (Verovio)</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, sans-serif;
+      background: #f4f4f5;
+    }
+
+    header {
+      padding: 12px 16px;
+      background: #0f172a;
+      color: white;
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: 3fr 1fr;
+      height: calc(100vh - 56px);
+    }
+
+    #viewer {
+      background: white;
+      padding: 12px;
+      overflow: hidden; /* important: Verovio handles paging */
+    }
+
+    #analysis {
+      border-left: 1px solid #ddd;
+      background: #fafafa;
+      padding: 16px;
+      font-size: 14px;
+      overflow: auto;
+    }
+
+    button {
+      padding: 4px 8px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      background: #1e40af;
+      color: white;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+
+<body>
+<header>
+  <strong>MusicXML Analyzer</strong>
+
+  <input type="file" id="fileInput" accept=".musicxml,.xml,.mei" />
+
+  <button id="prevPage">Prev</button>
+  <span id="pageInfo">Page 1</span>
+  <button id="nextPage">Next</button>
+</header>
+
+<main>
+  <div id="viewer"></div>
+
+  <div id="analysis">
+    <h3>Analysis</h3>
+    <p>Move the cursor to inspect notes or measures.</p>
+  </div>
+</main>
+
+<script type="module">
+  import 'https://editor.verovio.org/javascript/app/verovio-app.js';
+
+  const viewer = document.getElementById("viewer");
+  const fileInput = document.getElementById("fileInput");
+  const pageInfo = document.getElementById("pageInfo");
+  const analysisPanel = document.getElementById("analysis");
+
+  const app = new Verovio.App(viewer, {
+    layout: "page",
+    defaultView: "page"
+  });
+
+  // --- File loading ---
+  fileInput.addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const data = await file.text();
+    app.loadData(data);
+
+    app.enableCursor(true);
+    updatePageInfo();
+    attachCursorHooks();
+  });
+
+  // --- Paging ---
+  document.getElementById("prevPage").onclick = () => {
+    app.prevPage();
+    updatePageInfo();
+  };
+
+  document.getElementById("nextPage").onclick = () => {
+    app.nextPage();
+    updatePageInfo();
+  };
+
+  function updatePageInfo() {
+    const page = app.getCurrentPage();
+    const total = app.getPageCount();
+    pageInfo.textContent = `Page ${page + 1} / ${total}`;
+  }
+
+  // --- Cursor → Analysis hook ---
+  function attachCursorHooks() {
+    const cursor = app.getCursor();
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowRight") cursor.next();
+      if (e.key === "ArrowLeft") cursor.prev();
+      updateAnalysis(cursor);
+    });
+
+    updateAnalysis(cursor);
+  }
+
+  function updateAnalysis(cursor) {
+    const elementId = cursor.getCurrentId();
+
+    analysisPanel.innerHTML = `
+      <h3>Analysis</h3>
+      <p><strong>Element ID:</strong> ${elementId || "None"}</p>
+      <p>(Hook this into your tessitura / difficulty analyzer)</p>
+    `;
+  }
+</script>
+</body>
+</html>

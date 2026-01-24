@@ -1,0 +1,11 @@
+Grade,FJH,ABC,Marlatt,Fischer,Mesa-string,Kjos,Core,Extended
+0.5,1.5,3,3,None,1.5,1.5,1.5,3
+1,1.5,3,3,3,2,2,2,3
+1.5,2.5,3,3,3,2,3,2.5,3
+2,5,5,5,5,4,3,4.5,5
+2.5,5,5,5,5,4,4,5,None
+3,6,7,10,7,7,4.5,6,10
+3.5,6,7,10,7,7,None,6,10
+4,Any,Any,Any,Any,Any,None,Any,None
+4.5,Any,Any,Any,Any,Any,None,Any,None
+5,Any,Any,Any,Any,Any,None,Any,None

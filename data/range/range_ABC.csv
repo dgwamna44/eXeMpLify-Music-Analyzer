@@ -1,0 +1,16 @@
+Instrument,1,2,3,4,5
+flute,F4-C6,D4-F6,C4-G6,C4-Bb6,C4-C7
+oboe,F4-Bb5,Bb3-C5,Bb3-C5,Bb3-D5,Bb3-D5
+clarinet_bb,Eb3-Ab4,C3-Bb5,C3-Eb6,Db3-F6,Db3-F6
+alto_clarinet,Bb2-Db4,G2-Bb4,G2-E5,G2-A5,G2-A5
+bass_clarinet,F2-Ab3,D2-F4,D2-B4,D2-E5,D2-E5
+bassoon,E2-F3,D2-F4,Bb1-G4,Bb1-Bb4,Bb1-Bb4
+alto_sax,G3-Bb4,E3-F5,D3-G5,Db3-A5,Db3-A5
+tenor_sax,D3-F4,B2-C5,A2-D5,Ab2-E5,Ab2-E5
+bari_sax,G2-Bb3,E2-F4,D2-G4,Db2-A4,Db2-A4
+horn_f,F3-F4,Bb2-Bb4,A2-C5,F2-D5,Bb1-F5
+trumpet,Ab3-Bb4,F3-Eb5,E3-F5,E3-A5,E3-Bb5
+trombone,Ab2-D4,F2-Eb4,F2-F4,E2-A4,E2-Bb5
+euphonium,Ab2-D4,F2-Eb4,F2-F4,E2-A4,E2-Bb5
+baritone,Ab2-D4,F2-Eb4,F2-F4,E2-A4,E2-Bb5
+tuba,Bb1-D3,E1-D3,E1-F3,E1-G3,E1-Bb3

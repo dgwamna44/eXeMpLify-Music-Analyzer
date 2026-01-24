@@ -1,0 +1,28 @@
+Instrument,Availability,FJH,Belwin,Marlatt
+Piccolo,3,3,4,4
+Flute,0.5,0.5,0.5,1
+Alto Flute,4,4,4,5
+Bass Flute,4,4,4,5
+Oboe,2,1.5,0.5,1
+English Horn,4,4,4,5
+Clarinet,0.5,0.5,0.5,1
+Bass Clarinet,2,0.5,0.5,1
+Alto Saxophone,0.5,0.5,0.5,1
+Tenor Saxophone,2,0.5,0.5,1
+Baritone Saxophone,2,0.5,0.5,1
+Bassoon,2,1,1.5,1
+French Horn,2,1,0.5,1
+Trumpet,0.5,0.5,0.5,1
+Trombone,0.5,0.5,0.5,1
+Bass Trombone,2,4,4,5
+Euphonium,2,1,0.5,1
+Baritone ,2,1,0.5,1
+Snare Drum,1,1,0.5,1
+Tuba,1,1,0.5,1
+Timpani,3,1.5,0.5,1
+Bass Drum,1,0.5,0.5,1
+Bells,1,0.5,0.5,1
+Drum Set,None,None,2.5,None
+Piano,None,None,2.5,4
+Synthesizer,None,None,3,None
+Electric Bass,None,None,3,None

@@ -1,0 +1,11 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run All Analyzers",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/run_analysis.py"
+    }
+  ]
+}

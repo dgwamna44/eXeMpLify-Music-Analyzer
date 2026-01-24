@@ -1,0 +1,8 @@
+grade,allowed_rhythms,allow_dotted,allow_tuplet,allow_syncopation,allow_easy_compound,allow_mixed_compund,allow_compound
+0.5,"w, wr, h, hr, q, qr",FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+1,"w, wr, hd, hdr, h, hr, q, qr, e, er, (qd e),  ex2, ex4",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE
+1.5,"w, wr, hd, hdr, h, hr, q, qr,e, er,  (qd e), (e e), ex4, (e q e)",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE
+2,"w, wr, hd, hdr, h, hr, q, qr,e, er, ed, edr, (qd e), (e e), ex4, (e q e), sx4, (ed s), t3:e",TRUE,TRUE,FALSE,FALSE,FALSE,FALSE
+2.5,"w, wr, hd, hdr, h, hr, q, qr,e, er, ed, edr, (qd e), (e e), ex4, (e q e), sx4, (ed s), t3:e",TRUE,TRUE,FALSE,TRUE,FALSE,FALSE
+3,"w, wr, hd, hdr, h, hr, q, qr,e, er, ed, edr, (qd e), (e e), ex4, (e q e), sx4, (ed s), t3:e",TRUE,TRUE,TRUE,TRUE,FALSE,TRUE
+3.5,Any,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE
