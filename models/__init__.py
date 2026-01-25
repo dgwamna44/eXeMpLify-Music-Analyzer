@@ -3,6 +3,7 @@ from .key_data import KeyData
 from .meter_data import MeterData
 from .tempo_data import TempoData
 from .partial_note_data import PartialNoteData
+from .rhythm_grade_rules import RhythmGradeRules
 
 __all__ = [
     "PartialNoteData",
@@ -10,5 +11,6 @@ __all__ = [
     "TempoData",
     "MeterData",
     "DurationGradeBucket",
-    "DurationData"
+    "DurationData",
+    "RhythmGradeRules"
 ]

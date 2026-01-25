@@ -1,4 +1,4 @@
-grade,max_subdivision,allow_dotted,allow_tuplet,allowed_tuplet_classes,allow_mixed_tuplet,allow_syncopation,allow_easy_compound,allow_mixed_compund,allow_compound
+grade,max_subdivision,allow_dotted,allow_tuplet,allowed_tuplet_classes,allow_mixed_tuplet,allow_syncopation,allow_easy_compound,allow_mixed_compound,allow_compound
 0.5,q,FALSE,FALSE,None,FALSE,FALSE,FALSE,FALSE,FALSE
 1,e,TRUE,FALSE,simple,FALSE,FALSE,FALSE,FALSE,FALSE
 1.5,e,TRUE,FALSE,simple,FALSE,FALSE,FALSE,FALSE,FALSE

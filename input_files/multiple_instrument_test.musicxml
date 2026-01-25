@@ -190,6 +190,11 @@ Arranged by [Arranger]</credit-words>
    <group-symbol>bracket</group-symbol>
   </part-group>
   <score-part id="P1">
+   <identification>
+    <miscellaneous>
+     <miscellaneous-field name="show-rhythms">false</miscellaneous-field>
+    </miscellaneous>
+   </identification>
    <part-name>Flute</part-name>
    <part-name-display>
     <display-text>Flute</display-text>
@@ -259,6 +264,11 @@ Arranged by [Arranger]</credit-words>
    </score-instrument>
   </score-part>
   <score-part id="P4">
+   <identification>
+    <miscellaneous>
+     <miscellaneous-field name="show-rhythms">false</miscellaneous-field>
+    </miscellaneous>
+   </identification>
    <part-name>Clarinet 2in Bb</part-name>
    <part-name-display>
     <display-text>Clarinet 2in B</display-text>
@@ -305,6 +315,11 @@ Arranged by [Arranger]</credit-words>
    </score-instrument>
   </score-part>
   <score-part id="P6">
+   <identification>
+    <miscellaneous>
+     <miscellaneous-field name="show-rhythms">false</miscellaneous-field>
+    </miscellaneous>
+   </identification>
    <part-name>Alto Saxophonein Eb</part-name>
    <part-name-display>
     <display-text>Alto Saxophonein E</display-text>
@@ -405,6 +420,11 @@ Arranged by [Arranger]</credit-words>
    </score-instrument>
   </score-part>
   <score-part id="P10">
+   <identification>
+    <miscellaneous>
+     <miscellaneous-field name="show-rhythms">false</miscellaneous-field>
+    </miscellaneous>
+   </identification>
    <part-name>Trumpet 2in Bb</part-name>
    <part-name-display>
     <display-text>Trumpet 2in B</display-text>
@@ -450,6 +470,11 @@ Arranged by [Arranger]</credit-words>
    </score-instrument>
   </score-part>
   <score-part id="P12">
+   <identification>
+    <miscellaneous>
+     <miscellaneous-field name="show-rhythms">false</miscellaneous-field>
+    </miscellaneous>
+   </identification>
    <part-name>Trombone</part-name>
    <part-name-display>
     <display-text>Trombone</display-text>
@@ -1713,7 +1738,7 @@ Arranged by [Arranger]</credit-words>
    </note>
   </measure>
   <!--============== Part: P1, Measure: 17 ==============-->
-  <measure number="17" width="253">
+  <measure number="17" width="252">
    <print new-page="yes">
     <system-layout>
      <system-margins>
@@ -1783,7 +1808,7 @@ Arranged by [Arranger]</credit-words>
     <staff>1</staff>
     <beam number="1">begin</beam>
    </note>
-   <note color="#000000" default-x="227" default-y="-34">
+   <note color="#000000" default-x="226" default-y="-34">
     <pitch>
      <step>F</step>
      <octave>5</octave>
@@ -1798,7 +1823,7 @@ Arranged by [Arranger]</credit-words>
    </note>
   </measure>
   <!--============== Part: P1, Measure: 18 ==============-->
-  <measure number="18" width="247">
+  <measure number="18" width="246">
    <note color="#000000" default-x="15" default-y="-24">
     <pitch>
      <step>G</step>
@@ -1975,7 +2000,7 @@ Arranged by [Arranger]</credit-words>
    </note>
   </measure>
   <!--============== Part: P1, Measure: 20 ==============-->
-  <measure number="20" width="221">
+  <measure number="20" width="220">
    <note color="#000000" default-x="15" default-y="-55">
     <pitch>
      <step>B</step>
@@ -2006,7 +2031,7 @@ Arranged by [Arranger]</credit-words>
    </barline>
   </measure>
   <!--============== Part: P1, Measure: 21 ==============-->
-  <measure number="21" width="155">
+  <measure number="21" width="158">
    <attributes>
     <key color="#000000">
      <fifths>0</fifths>
@@ -2025,7 +2050,7 @@ Arranged by [Arranger]</credit-words>
     <stem>down</stem>
     <staff>1</staff>
    </note>
-   <note color="#000000" default-x="51" default-y="-42">
+   <note color="#000000" default-x="50" default-y="-45">
     <pitch>
      <step>D</step>
      <octave>5</octave>
@@ -2036,35 +2061,20 @@ Arranged by [Arranger]</credit-words>
     <type>eighth</type>
     <stem>down</stem>
     <staff>1</staff>
-    <beam number="1">begin</beam>
    </note>
-   <note color="#000000" default-x="77" default-y="-42">
+   <note color="#000000" default-x="80" default-y="-40">
     <pitch>
      <step>E</step>
      <octave>5</octave>
     </pitch>
-    <duration>128</duration>
+    <duration>256</duration>
     <instrument id="P1-I1" />
     <voice>1</voice>
-    <type>eighth</type>
+    <type>quarter</type>
     <stem>down</stem>
     <staff>1</staff>
-    <beam number="1">end</beam>
    </note>
-   <note color="#000000" default-x="103" default-y="-32">
-    <pitch>
-     <step>F</step>
-     <octave>5</octave>
-    </pitch>
-    <duration>128</duration>
-    <instrument id="P1-I1" />
-    <voice>1</voice>
-    <type>eighth</type>
-    <stem>down</stem>
-    <staff>1</staff>
-    <beam number="1">begin</beam>
-   </note>
-   <note color="#000000" default-x="129" default-y="-32">
+   <note color="#000000" default-x="132" default-y="-30">
     <pitch>
      <step>G</step>
      <octave>5</octave>
@@ -2075,7 +2085,6 @@ Arranged by [Arranger]</credit-words>
     <type>eighth</type>
     <stem>down</stem>
     <staff>1</staff>
-    <beam number="1">end</beam>
    </note>
   </measure>
   <!--============== Part: P1, Measure: 22 ==============-->
@@ -2106,7 +2115,7 @@ Arranged by [Arranger]</credit-words>
     <staff>1</staff>
     <beam number="1">end</beam>
    </note>
-   <note color="#000000" default-x="67" default-y="-20">
+   <note color="#000000" default-x="66" default-y="-20">
     <pitch>
      <step>C</step>
      <octave>6</octave>
@@ -2139,7 +2148,7 @@ Arranged by [Arranger]</credit-words>
      <tuplet type="start" bracket="no" number="1" default-y="-20" placement="below" />
     </notations>
    </note>
-   <note color="#000000" default-x="176" default-y="-19">
+   <note color="#000000" default-x="175" default-y="-19">
     <pitch>
      <step>C</step>
      <octave>6</octave>
@@ -2157,7 +2166,7 @@ Arranged by [Arranger]</credit-words>
     <staff>1</staff>
     <beam number="1">continue</beam>
    </note>
-   <note color="#000000" default-x="205" default-y="-19">
+   <note color="#000000" default-x="204" default-y="-19">
     <pitch>
      <step>B</step>
      <octave>5</octave>
@@ -4264,7 +4273,7 @@ Arranged by [Arranger]</credit-words>
    </note>
   </measure>
   <!--============== Part: P2, Measure: 17 ==============-->
-  <measure number="17" width="253">
+  <measure number="17" width="252">
    <print new-page="yes">
     <system-layout>
      <system-margins>
@@ -4336,7 +4345,7 @@ Arranged by [Arranger]</credit-words>
     <staff>1</staff>
     <beam number="1">begin</beam>
    </note>
-   <note color="#000000" default-x="227" default-y="-34">
+   <note color="#000000" default-x="226" default-y="-34">
     <pitch>
      <step>F</step>
      <octave>5</octave>
@@ -4351,7 +4360,7 @@ Arranged by [Arranger]</credit-words>
    </note>
   </measure>
   <!--============== Part: P2, Measure: 18 ==============-->
-  <measure number="18" width="247">
+  <measure number="18" width="246">
    <note color="#000000" default-x="15" default-y="-24">
     <pitch>
      <step>G</step>
@@ -4528,7 +4537,7 @@ Arranged by [Arranger]</credit-words>
    </note>
   </measure>
   <!--============== Part: P2, Measure: 20 ==============-->
-  <measure number="20" width="221">
+  <measure number="20" width="220">
    <note color="#000000" default-x="15" default-y="-55">
     <pitch>
      <step>B</step>
@@ -4559,7 +4568,7 @@ Arranged by [Arranger]</credit-words>
    </barline>
   </measure>
   <!--============== Part: P2, Measure: 21 ==============-->
-  <measure number="21" width="155">
+  <measure number="21" width="158">
    <attributes>
     <key color="#000000">
      <fifths>0</fifths>
@@ -4578,7 +4587,7 @@ Arranged by [Arranger]</credit-words>
     <stem>down</stem>
     <staff>1</staff>
    </note>
-   <note color="#000000" default-x="51" default-y="-42">
+   <note color="#000000" default-x="50" default-y="-45">
     <pitch>
      <step>D</step>
      <octave>5</octave>
@@ -4589,35 +4598,20 @@ Arranged by [Arranger]</credit-words>
     <type>eighth</type>
     <stem>down</stem>
     <staff>1</staff>
-    <beam number="1">begin</beam>
    </note>
-   <note color="#000000" default-x="77" default-y="-42">
+   <note color="#000000" default-x="80" default-y="-40">
     <pitch>
      <step>E</step>
      <octave>5</octave>
     </pitch>
-    <duration>128</duration>
+    <duration>256</duration>
     <instrument id="P2-I1" />
     <voice>1</voice>
-    <type>eighth</type>
+    <type>quarter</type>
     <stem>down</stem>
     <staff>1</staff>
-    <beam number="1">end</beam>
    </note>
-   <note color="#000000" default-x="103" default-y="-32">
-    <pitch>
-     <step>F</step>
-     <octave>5</octave>
-    </pitch>
-    <duration>128</duration>
-    <instrument id="P2-I1" />
-    <voice>1</voice>
-    <type>eighth</type>
-    <stem>down</stem>
-    <staff>1</staff>
-    <beam number="1">begin</beam>
-   </note>
-   <note color="#000000" default-x="129" default-y="-32">
+   <note color="#000000" default-x="132" default-y="-30">
     <pitch>
      <step>G</step>
      <octave>5</octave>
@@ -4628,7 +4622,6 @@ Arranged by [Arranger]</credit-words>
     <type>eighth</type>
     <stem>down</stem>
     <staff>1</staff>
-    <beam number="1">end</beam>
    </note>
   </measure>
   <!--============== Part: P2, Measure: 22 ==============-->
@@ -4659,7 +4652,7 @@ Arranged by [Arranger]</credit-words>
     <staff>1</staff>
     <beam number="1">end</beam>
    </note>
-   <note color="#000000" default-x="67" default-y="-20">
+   <note color="#000000" default-x="66" default-y="-20">
     <pitch>
      <step>C</step>
      <octave>6</octave>
@@ -4692,7 +4685,7 @@ Arranged by [Arranger]</credit-words>
      <tuplet type="start" bracket="no" number="1" default-y="-20" placement="below" />
     </notations>
    </note>
-   <note color="#000000" default-x="176" default-y="-19">
+   <note color="#000000" default-x="175" default-y="-19">
     <pitch>
      <step>C</step>
      <octave>6</octave>
@@ -4710,7 +4703,7 @@ Arranged by [Arranger]</credit-words>
     <staff>1</staff>
     <beam number="1">continue</beam>
    </note>
-   <note color="#000000" default-x="205" default-y="-19">
+   <note color="#000000" default-x="204" default-y="-19">
     <pitch>
      <step>B</step>
      <octave>5</octave>
@@ -6811,7 +6804,7 @@ Arranged by [Arranger]</credit-words>
    </note>
   </measure>
   <!--============== Part: P3, Measure: 17 ==============-->
-  <measure number="17" width="253">
+  <measure number="17" width="252">
    <print new-page="yes">
     <system-layout>
      <system-margins>
@@ -6881,7 +6874,7 @@ Arranged by [Arranger]</credit-words>
     <staff>1</staff>
     <beam number="1">begin</beam>
    </note>
-   <note color="#000000" default-x="227" default-y="-32">
+   <note color="#000000" default-x="226" default-y="-32">
     <pitch>
      <step>G</step>
      <octave>5</octave>
@@ -6896,7 +6889,7 @@ Arranged by [Arranger]</credit-words>
    </note>
   </measure>
   <!--============== Part: P3, Measure: 18 ==============-->
-  <measure number="18" width="247">
+  <measure number="18" width="246">
    <note color="#000000" default-x="15" default-y="-22">
     <pitch>
      <step>A</step>
@@ -7069,7 +7062,7 @@ Arranged by [Arranger]</credit-words>
    </note>
   </measure>
   <!--============== Part: P3, Measure: 20 ==============-->
-  <measure number="20" width="221">
+  <measure number="20" width="220">
    <note color="#000000" default-x="15" default-y="-50">
     <pitch>
      <step>C</step>
@@ -7099,7 +7092,7 @@ Arranged by [Arranger]</credit-words>
    </barline>
   </measure>
   <!--============== Part: P3, Measure: 21 ==============-->
-  <measure number="21" width="155">
+  <measure number="21" width="158">
    <attributes>
     <key color="#000000">
      <fifths>2</fifths>
@@ -7118,7 +7111,7 @@ Arranged by [Arranger]</credit-words>
     <stem>down</stem>
     <staff>1</staff>
    </note>
-   <note color="#000000" default-x="51" default-y="-34">
+   <note color="#000000" default-x="50" default-y="-40">
     <pitch>
      <step>E</step>
      <octave>5</octave>
@@ -7129,36 +7122,21 @@ Arranged by [Arranger]</credit-words>
     <type>eighth</type>
     <stem>down</stem>
     <staff>1</staff>
-    <beam number="1">begin</beam>
    </note>
-   <note color="#000000" default-x="77" default-y="-34">
+   <note color="#000000" default-x="80" default-y="-35">
     <pitch>
      <step>F</step>
      <alter>1</alter>
      <octave>5</octave>
     </pitch>
-    <duration>128</duration>
+    <duration>256</duration>
     <instrument id="P3-I1" />
     <voice>1</voice>
-    <type>eighth</type>
+    <type>quarter</type>
     <stem>down</stem>
     <staff>1</staff>
-    <beam number="1">end</beam>
    </note>
-   <note color="#000000" default-x="103" default-y="-24">
-    <pitch>
-     <step>G</step>
-     <octave>5</octave>
-    </pitch>
-    <duration>128</duration>
-    <instrument id="P3-I1" />
-    <voice>1</voice>
-    <type>eighth</type>
-    <stem>down</stem>
-    <staff>1</staff>
-    <beam number="1">begin</beam>
-   </note>
-   <note color="#000000" default-x="129" default-y="-24">
+   <note color="#000000" default-x="132" default-y="-25">
     <pitch>
      <step>A</step>
      <octave>5</octave>
@@ -7169,7 +7147,6 @@ Arranged by [Arranger]</credit-words>
     <type>eighth</type>
     <stem>down</stem>
     <staff>1</staff>
-    <beam number="1">end</beam>
    </note>
   </measure>
   <!--============== Part: P3, Measure: 22 ==============-->
@@ -7201,7 +7178,7 @@ Arranged by [Arranger]</credit-words>
     <staff>1</staff>
     <beam number="1">end</beam>
    </note>
-   <note color="#000000" default-x="67" default-y="-20">
+   <note color="#000000" default-x="66" default-y="-20">
     <pitch>
      <step>D</step>
      <octave>6</octave>
@@ -7235,7 +7212,7 @@ Arranged by [Arranger]</credit-words>
      <tuplet type="start" bracket="no" number="1" default-y="-20" placement="below" />
     </notations>
    </note>
-   <note color="#000000" default-x="176" default-y="-19">
+   <note color="#000000" default-x="175" default-y="-19">
     <pitch>
      <step>D</step>
      <octave>6</octave>
@@ -7253,7 +7230,7 @@ Arranged by [Arranger]</credit-words>
     <staff>1</staff>
     <beam number="1">continue</beam>
    </note>
-   <note color="#000000" default-x="205" default-y="-19">
+   <note color="#000000" default-x="204" default-y="-19">
     <pitch>
      <step>C</step>
      <alter>1</alter>
@@ -9342,7 +9319,7 @@ Arranged by [Arranger]</credit-words>
    </note>
   </measure>
   <!--============== Part: P4, Measure: 17 ==============-->
-  <measure number="17" width="253">
+  <measure number="17" width="252">
    <print new-page="yes">
     <system-layout>
      <system-margins>
@@ -9412,7 +9389,7 @@ Arranged by [Arranger]</credit-words>
     <staff>1</staff>
     <beam number="1">begin</beam>
    </note>
-   <note color="#000000" default-x="227">
+   <note color="#000000" default-x="226">
     <pitch>
      <step>G</step>
      <octave>4</octave>
@@ -9427,7 +9404,7 @@ Arranged by [Arranger]</credit-words>
    </note>
   </measure>
   <!--============== Part: P4, Measure: 18 ==============-->
-  <measure number="18" width="247">
+  <measure number="18" width="246">
    <note color="#000000" default-x="15" default-y="9">
     <pitch>
      <step>A</step>
@@ -9600,7 +9577,7 @@ Arranged by [Arranger]</credit-words>
    </note>
   </measure>
   <!--============== Part: P4, Measure: 20 ==============-->
-  <measure number="20" width="221">
+  <measure number="20" width="220">
    <note color="#000000" default-x="15" default-y="-15">
     <pitch>
      <step>C</step>
@@ -9630,7 +9607,7 @@ Arranged by [Arranger]</credit-words>
    </barline>
   </measure>
   <!--============== Part: P4, Measure: 21 ==============-->
-  <measure number="21" width="155">
+  <measure number="21" width="158">
    <attributes>
     <key color="#000000">
      <fifths>2</fifths>
@@ -9649,7 +9626,7 @@ Arranged by [Arranger]</credit-words>
     <stem>up</stem>
     <staff>1</staff>
    </note>
-   <note color="#000000" default-x="51">
+   <note color="#000000" default-x="50" default-y="-5">
     <pitch>
      <step>E</step>
      <octave>4</octave>
@@ -9660,36 +9637,21 @@ Arranged by [Arranger]</credit-words>
     <type>eighth</type>
     <stem>up</stem>
     <staff>1</staff>
-    <beam number="1">begin</beam>
    </note>
-   <note color="#000000" default-x="77">
+   <note color="#000000" default-x="80">
     <pitch>
      <step>F</step>
      <alter>1</alter>
      <octave>4</octave>
     </pitch>
-    <duration>128</duration>
+    <duration>256</duration>
     <instrument id="P4-I1" />
     <voice>1</voice>
-    <type>eighth</type>
+    <type>quarter</type>
     <stem>up</stem>
     <staff>1</staff>
-    <beam number="1">end</beam>
    </note>
-   <note color="#000000" default-x="103" default-y="9">
-    <pitch>
-     <step>G</step>
-     <octave>4</octave>
-    </pitch>
-    <duration>128</duration>
-    <instrument id="P4-I1" />
-    <voice>1</voice>
-    <type>eighth</type>
-    <stem>up</stem>
-    <staff>1</staff>
-    <beam number="1">begin</beam>
-   </note>
-   <note color="#000000" default-x="129" default-y="9">
+   <note color="#000000" default-x="132" default-y="10">
     <pitch>
      <step>A</step>
      <octave>4</octave>
@@ -9700,7 +9662,6 @@ Arranged by [Arranger]</credit-words>
     <type>eighth</type>
     <stem>up</stem>
     <staff>1</staff>
-    <beam number="1">end</beam>
    </note>
   </measure>
   <!--============== Part: P4, Measure: 22 ==============-->
@@ -9732,7 +9693,7 @@ Arranged by [Arranger]</credit-words>
     <staff>1</staff>
     <beam number="1">end</beam>
    </note>
-   <note color="#000000" default-x="67" default-y="-45">
+   <note color="#000000" default-x="66" default-y="-45">
     <pitch>
      <step>D</step>
      <octave>5</octave>
@@ -9766,7 +9727,7 @@ Arranged by [Arranger]</credit-words>
      <tuplet type="start" bracket="no" number="1" default-y="-20" placement="below" />
     </notations>
    </note>
-   <note color="#000000" default-x="176" default-y="-49">
+   <note color="#000000" default-x="175" default-y="-49">
     <pitch>
      <step>D</step>
      <octave>5</octave>
@@ -9784,7 +9745,7 @@ Arranged by [Arranger]</credit-words>
     <staff>1</staff>
     <beam number="1">continue</beam>
    </note>
-   <note color="#000000" default-x="205" default-y="-49">
+   <note color="#000000" default-x="204" default-y="-49">
     <pitch>
      <step>C</step>
      <alter>1</alter>
@@ -11874,7 +11835,7 @@ Arranged by [Arranger]</credit-words>
    </note>
   </measure>
   <!--============== Part: P5, Measure: 17 ==============-->
-  <measure number="17" width="253">
+  <measure number="17" width="252">
    <print new-page="yes">
     <system-layout>
      <system-margins>
@@ -11944,7 +11905,7 @@ Arranged by [Arranger]</credit-words>
     <staff>1</staff>
     <beam number="1">begin</beam>
    </note>
-   <note color="#000000" default-x="227" default-y="-32">
+   <note color="#000000" default-x="226" default-y="-32">
     <pitch>
      <step>G</step>
      <octave>5</octave>
@@ -11959,7 +11920,7 @@ Arranged by [Arranger]</credit-words>
    </note>
   </measure>
   <!--============== Part: P5, Measure: 18 ==============-->
-  <measure number="18" width="247">
+  <measure number="18" width="246">
    <note color="#000000" default-x="15" default-y="-22">
     <pitch>
      <step>A</step>
@@ -12132,7 +12093,7 @@ Arranged by [Arranger]</credit-words>
    </note>
   </measure>
   <!--============== Part: P5, Measure: 20 ==============-->
-  <measure number="20" width="221">
+  <measure number="20" width="220">
    <note color="#000000" default-x="15" default-y="-50">
     <pitch>
      <step>C</step>
@@ -12162,7 +12123,7 @@ Arranged by [Arranger]</credit-words>
    </barline>
   </measure>
   <!--============== Part: P5, Measure: 21 ==============-->
-  <measure number="21" width="155">
+  <measure number="21" width="158">
    <attributes>
     <key color="#000000">
      <fifths>2</fifths>
@@ -12181,7 +12142,7 @@ Arranged by [Arranger]</credit-words>
     <stem>down</stem>
     <staff>1</staff>
    </note>
-   <note color="#000000" default-x="51" default-y="-34">
+   <note color="#000000" default-x="50" default-y="-40">
     <pitch>
      <step>E</step>
      <octave>5</octave>
@@ -12192,36 +12153,21 @@ Arranged by [Arranger]</credit-words>
     <type>eighth</type>
     <stem>down</stem>
     <staff>1</staff>
-    <beam number="1">begin</beam>
    </note>
-   <note color="#000000" default-x="77" default-y="-34">
+   <note color="#000000" default-x="80" default-y="-35">
     <pitch>
      <step>F</step>
      <alter>1</alter>
      <octave>5</octave>
     </pitch>
-    <duration>128</duration>
+    <duration>256</duration>
     <instrument id="P5-I1" />
     <voice>1</voice>
-    <type>eighth</type>
+    <type>quarter</type>
     <stem>down</stem>
     <staff>1</staff>
-    <beam number="1">end</beam>
    </note>
-   <note color="#000000" default-x="103" default-y="-24">
-    <pitch>
-     <step>G</step>
-     <octave>5</octave>
-    </pitch>
-    <duration>128</duration>
-    <instrument id="P5-I1" />
-    <voice>1</voice>
-    <type>eighth</type>
-    <stem>down</stem>
-    <staff>1</staff>
-    <beam number="1">begin</beam>
-   </note>
-   <note color="#000000" default-x="129" default-y="-24">
+   <note color="#000000" default-x="132" default-y="-25">
     <pitch>
      <step>A</step>
      <octave>5</octave>
@@ -12232,7 +12178,6 @@ Arranged by [Arranger]</credit-words>
     <type>eighth</type>
     <stem>down</stem>
     <staff>1</staff>
-    <beam number="1">end</beam>
    </note>
   </measure>
   <!--============== Part: P5, Measure: 22 ==============-->
@@ -12264,7 +12209,7 @@ Arranged by [Arranger]</credit-words>
     <staff>1</staff>
     <beam number="1">end</beam>
    </note>
-   <note color="#000000" default-x="67" default-y="-20">
+   <note color="#000000" default-x="66" default-y="-20">
     <pitch>
      <step>D</step>
      <octave>6</octave>
@@ -12298,7 +12243,7 @@ Arranged by [Arranger]</credit-words>
      <tuplet type="start" bracket="no" number="1" default-y="-20" placement="above" />
     </notations>
    </note>
-   <note color="#000000" default-x="176" default-y="-19">
+   <note color="#000000" default-x="175" default-y="-19">
     <pitch>
      <step>D</step>
      <octave>6</octave>
@@ -12316,7 +12261,7 @@ Arranged by [Arranger]</credit-words>
     <staff>1</staff>
     <beam number="1">continue</beam>
    </note>
-   <note color="#000000" default-x="205" default-y="-19">
+   <note color="#000000" default-x="204" default-y="-19">
     <pitch>
      <step>C</step>
      <alter>1</alter>
@@ -14415,7 +14360,7 @@ Arranged by [Arranger]</credit-words>
    </note>
   </measure>
   <!--============== Part: P6, Measure: 17 ==============-->
-  <measure number="17" width="253">
+  <measure number="17" width="252">
    <print new-page="yes">
     <system-layout>
      <system-margins>
@@ -14485,7 +14430,7 @@ Arranged by [Arranger]</credit-words>
     <staff>1</staff>
     <beam number="1">begin</beam>
    </note>
-   <note color="#000000" default-x="227" default-y="-44">
+   <note color="#000000" default-x="226" default-y="-44">
     <pitch>
      <step>D</step>
      <octave>5</octave>
@@ -14500,7 +14445,7 @@ Arranged by [Arranger]</credit-words>
    </note>
   </measure>
   <!--============== Part: P6, Measure: 18 ==============-->
-  <measure number="18" width="247">
+  <measure number="18" width="246">
    <note color="#000000" default-x="15" default-y="-34">
     <pitch>
      <step>E</step>
@@ -14676,7 +14621,7 @@ Arranged by [Arranger]</credit-words>
    </note>
   </measure>
   <!--============== Part: P6, Measure: 20 ==============-->
-  <measure number="20" width="221">
+  <measure number="20" width="220">
    <note color="#000000" default-x="15" default-y="5">
     <pitch>
      <step>G</step>
@@ -14706,7 +14651,7 @@ Arranged by [Arranger]</credit-words>
    </barline>
   </measure>
   <!--============== Part: P6, Measure: 21 ==============-->
-  <measure number="21" width="155">
+  <measure number="21" width="158">
    <attributes>
     <key color="#000000">
      <fifths>3</fifths>
@@ -14725,7 +14670,7 @@ Arranged by [Arranger]</credit-words>
     <stem>up</stem>
     <staff>1</staff>
    </note>
-   <note color="#000000" default-x="51" default-y="-52">
+   <note color="#000000" default-x="50" default-y="-55">
     <pitch>
      <step>B</step>
      <octave>4</octave>
@@ -14736,36 +14681,21 @@ Arranged by [Arranger]</credit-words>
     <type>eighth</type>
     <stem>down</stem>
     <staff>1</staff>
-    <beam number="1">begin</beam>
    </note>
-   <note color="#000000" default-x="77" default-y="-52">
+   <note color="#000000" default-x="80" default-y="-50">
     <pitch>
      <step>C</step>
      <alter>1</alter>
      <octave>5</octave>
     </pitch>
-    <duration>128</duration>
+    <duration>256</duration>
     <instrument id="P6-I1" />
     <voice>1</voice>
-    <type>eighth</type>
+    <type>quarter</type>
     <stem>down</stem>
     <staff>1</staff>
-    <beam number="1">end</beam>
    </note>
-   <note color="#000000" default-x="103" default-y="-42">
-    <pitch>
-     <step>D</step>
-     <octave>5</octave>
-    </pitch>
-    <duration>128</duration>
-    <instrument id="P6-I1" />
-    <voice>1</voice>
-    <type>eighth</type>
-    <stem>down</stem>
-    <staff>1</staff>
-    <beam number="1">begin</beam>
-   </note>
-   <note color="#000000" default-x="129" default-y="-42">
+   <note color="#000000" default-x="132" default-y="-40">
     <pitch>
      <step>E</step>
      <octave>5</octave>
@@ -14776,7 +14706,6 @@ Arranged by [Arranger]</credit-words>
     <type>eighth</type>
     <stem>down</stem>
     <staff>1</staff>
-    <beam number="1">end</beam>
    </note>
   </measure>
   <!--============== Part: P6, Measure: 22 ==============-->
@@ -14809,7 +14738,7 @@ Arranged by [Arranger]</credit-words>
     <staff>1</staff>
     <beam number="1">end</beam>
    </note>
-   <note color="#000000" default-x="67" default-y="-25">
+   <note color="#000000" default-x="66" default-y="-25">
     <pitch>
      <step>A</step>
      <octave>5</octave>
@@ -14843,7 +14772,7 @@ Arranged by [Arranger]</credit-words>
      <tuplet type="start" bracket="no" number="1" default-y="-20" placement="below" />
     </notations>
    </note>
-   <note color="#000000" default-x="176" default-y="-29">
+   <note color="#000000" default-x="175" default-y="-29">
     <pitch>
      <step>A</step>
      <octave>5</octave>
@@ -14861,7 +14790,7 @@ Arranged by [Arranger]</credit-words>
     <staff>1</staff>
     <beam number="1">continue</beam>
    </note>
-   <note color="#000000" default-x="205" default-y="-29">
+   <note color="#000000" default-x="204" default-y="-29">
     <pitch>
      <step>G</step>
      <alter>1</alter>
@@ -16957,7 +16886,7 @@ Arranged by [Arranger]</credit-words>
    </note>
   </measure>
   <!--============== Part: P7, Measure: 17 ==============-->
-  <measure number="17" width="253">
+  <measure number="17" width="252">
    <print new-page="yes">
     <system-layout>
      <system-margins>
@@ -17027,7 +16956,7 @@ Arranged by [Arranger]</credit-words>
     <staff>1</staff>
     <beam number="1">begin</beam>
    </note>
-   <note color="#000000" default-x="227" default-y="-32">
+   <note color="#000000" default-x="226" default-y="-32">
     <pitch>
      <step>G</step>
      <octave>5</octave>
@@ -17042,7 +16971,7 @@ Arranged by [Arranger]</credit-words>
    </note>
   </measure>
   <!--============== Part: P7, Measure: 18 ==============-->
-  <measure number="18" width="247">
+  <measure number="18" width="246">
    <note color="#000000" default-x="15" default-y="-22">
     <pitch>
      <step>A</step>
@@ -17215,7 +17144,7 @@ Arranged by [Arranger]</credit-words>
    </note>
   </measure>
   <!--============== Part: P7, Measure: 20 ==============-->
-  <measure number="20" width="221">
+  <measure number="20" width="220">
    <note color="#000000" default-x="15" default-y="-50">
     <pitch>
      <step>C</step>
@@ -17245,7 +17174,7 @@ Arranged by [Arranger]</credit-words>
    </barline>
   </measure>
   <!--============== Part: P7, Measure: 21 ==============-->
-  <measure number="21" width="155">
+  <measure number="21" width="158">
    <attributes>
     <key color="#000000">
      <fifths>2</fifths>
@@ -17264,7 +17193,7 @@ Arranged by [Arranger]</credit-words>
     <stem>down</stem>
     <staff>1</staff>
    </note>
-   <note color="#000000" default-x="51" default-y="-34">
+   <note color="#000000" default-x="50" default-y="-40">
     <pitch>
      <step>E</step>
      <octave>5</octave>
@@ -17275,36 +17204,21 @@ Arranged by [Arranger]</credit-words>
     <type>eighth</type>
     <stem>down</stem>
     <staff>1</staff>
-    <beam number="1">begin</beam>
    </note>
-   <note color="#000000" default-x="77" default-y="-34">
+   <note color="#000000" default-x="80" default-y="-35">
     <pitch>
      <step>F</step>
      <alter>1</alter>
      <octave>5</octave>
     </pitch>
-    <duration>128</duration>
+    <duration>256</duration>
     <instrument id="P7-I1" />
     <voice>1</voice>
-    <type>eighth</type>
+    <type>quarter</type>
     <stem>down</stem>
     <staff>1</staff>
-    <beam number="1">end</beam>
    </note>
-   <note color="#000000" default-x="103" default-y="-24">
-    <pitch>
-     <step>G</step>
-     <octave>5</octave>
-    </pitch>
-    <duration>128</duration>
-    <instrument id="P7-I1" />
-    <voice>1</voice>
-    <type>eighth</type>
-    <stem>down</stem>
-    <staff>1</staff>
-    <beam number="1">begin</beam>
-   </note>
-   <note color="#000000" default-x="129" default-y="-24">
+   <note color="#000000" default-x="132" default-y="-25">
     <pitch>
      <step>A</step>
      <octave>5</octave>
@@ -17315,7 +17229,6 @@ Arranged by [Arranger]</credit-words>
     <type>eighth</type>
     <stem>down</stem>
     <staff>1</staff>
-    <beam number="1">end</beam>
    </note>
   </measure>
   <!--============== Part: P7, Measure: 22 ==============-->
@@ -17347,7 +17260,7 @@ Arranged by [Arranger]</credit-words>
     <staff>1</staff>
     <beam number="1">end</beam>
    </note>
-   <note color="#000000" default-x="67" default-y="-20">
+   <note color="#000000" default-x="66" default-y="-20">
     <pitch>
      <step>D</step>
      <octave>6</octave>
@@ -17381,7 +17294,7 @@ Arranged by [Arranger]</credit-words>
      <tuplet type="start" bracket="no" number="1" default-y="-20" placement="above" />
     </notations>
    </note>
-   <note color="#000000" default-x="176" default-y="-19">
+   <note color="#000000" default-x="175" default-y="-19">
     <pitch>
      <step>D</step>
      <octave>6</octave>
@@ -17399,7 +17312,7 @@ Arranged by [Arranger]</credit-words>
     <staff>1</staff>
     <beam number="1">continue</beam>
    </note>
-   <note color="#000000" default-x="205" default-y="-19">
+   <note color="#000000" default-x="204" default-y="-19">
     <pitch>
      <step>C</step>
      <alter>1</alter>
@@ -19499,7 +19412,7 @@ Arranged by [Arranger]</credit-words>
    </note>
   </measure>
   <!--============== Part: P8, Measure: 17 ==============-->
-  <measure number="17" width="253">
+  <measure number="17" width="252">
    <print new-page="yes">
     <system-layout>
      <system-margins>
@@ -19569,7 +19482,7 @@ Arranged by [Arranger]</credit-words>
     <staff>1</staff>
     <beam number="1">begin</beam>
    </note>
-   <note color="#000000" default-x="227" default-y="-44">
+   <note color="#000000" default-x="226" default-y="-44">
     <pitch>
      <step>D</step>
      <octave>5</octave>
@@ -19584,7 +19497,7 @@ Arranged by [Arranger]</credit-words>
    </note>
   </measure>
   <!--============== Part: P8, Measure: 18 ==============-->
-  <measure number="18" width="247">
+  <measure number="18" width="246">
    <note color="#000000" default-x="15" default-y="-34">
     <pitch>
      <step>E</step>
@@ -19760,7 +19673,7 @@ Arranged by [Arranger]</credit-words>
    </note>
   </measure>
   <!--============== Part: P8, Measure: 20 ==============-->
-  <measure number="20" width="221">
+  <measure number="20" width="220">
    <note color="#000000" default-x="15" default-y="5">
     <pitch>
      <step>G</step>
@@ -19790,7 +19703,7 @@ Arranged by [Arranger]</credit-words>
    </barline>
   </measure>
   <!--============== Part: P8, Measure: 21 ==============-->
-  <measure number="21" width="155">
+  <measure number="21" width="158">
    <attributes>
     <key color="#000000">
      <fifths>3</fifths>
@@ -19809,7 +19722,7 @@ Arranged by [Arranger]</credit-words>
     <stem>up</stem>
     <staff>1</staff>
    </note>
-   <note color="#000000" default-x="51" default-y="-52">
+   <note color="#000000" default-x="50" default-y="-55">
     <pitch>
      <step>B</step>
      <octave>4</octave>
@@ -19820,36 +19733,21 @@ Arranged by [Arranger]</credit-words>
     <type>eighth</type>
     <stem>down</stem>
     <staff>1</staff>
-    <beam number="1">begin</beam>
    </note>
-   <note color="#000000" default-x="77" default-y="-52">
+   <note color="#000000" default-x="80" default-y="-50">
     <pitch>
      <step>C</step>
      <alter>1</alter>
      <octave>5</octave>
     </pitch>
-    <duration>128</duration>
+    <duration>256</duration>
     <instrument id="P8-I1" />
     <voice>1</voice>
-    <type>eighth</type>
+    <type>quarter</type>
     <stem>down</stem>
     <staff>1</staff>
-    <beam number="1">end</beam>
    </note>
-   <note color="#000000" default-x="103" default-y="-42">
-    <pitch>
-     <step>D</step>
-     <octave>5</octave>
-    </pitch>
-    <duration>128</duration>
-    <instrument id="P8-I1" />
-    <voice>1</voice>
-    <type>eighth</type>
-    <stem>down</stem>
-    <staff>1</staff>
-    <beam number="1">begin</beam>
-   </note>
-   <note color="#000000" default-x="129" default-y="-42">
+   <note color="#000000" default-x="132" default-y="-40">
     <pitch>
      <step>E</step>
      <octave>5</octave>
@@ -19860,7 +19758,6 @@ Arranged by [Arranger]</credit-words>
     <type>eighth</type>
     <stem>down</stem>
     <staff>1</staff>
-    <beam number="1">end</beam>
    </note>
   </measure>
   <!--============== Part: P8, Measure: 22 ==============-->
@@ -19893,7 +19790,7 @@ Arranged by [Arranger]</credit-words>
     <staff>1</staff>
     <beam number="1">end</beam>
    </note>
-   <note color="#000000" default-x="67" default-y="-25">
+   <note color="#000000" default-x="66" default-y="-25">
     <pitch>
      <step>A</step>
      <octave>5</octave>
@@ -19927,7 +19824,7 @@ Arranged by [Arranger]</credit-words>
      <tuplet type="start" bracket="no" number="1" default-y="-20" placement="below" />
     </notations>
    </note>
-   <note color="#000000" default-x="176" default-y="-29">
+   <note color="#000000" default-x="175" default-y="-29">
     <pitch>
      <step>A</step>
      <octave>5</octave>
@@ -19945,7 +19842,7 @@ Arranged by [Arranger]</credit-words>
     <staff>1</staff>
     <beam number="1">continue</beam>
    </note>
-   <note color="#000000" default-x="205" default-y="-29">
+   <note color="#000000" default-x="204" default-y="-29">
     <pitch>
      <step>G</step>
      <alter>1</alter>
@@ -22210,7 +22107,7 @@ Arranged by [Arranger]</credit-words>
    </note>
   </measure>
   <!--============== Part: P9, Measure: 17 ==============-->
-  <measure number="17" width="253">
+  <measure number="17" width="252">
    <print new-page="yes">
     <system-layout>
      <system-margins>
@@ -22267,7 +22164,7 @@ Arranged by [Arranger]</credit-words>
    </note>
   </measure>
   <!--============== Part: P9, Measure: 18 ==============-->
-  <measure number="18" width="247">
+  <measure number="18" width="246">
    <note color="#000000" default-x="15" default-y="-40">
     <pitch>
      <step>E</step>
@@ -22308,7 +22205,7 @@ Arranged by [Arranger]</credit-words>
     <beam number="1">continue</beam>
     <beam number="2">continue</beam>
    </note>
-   <note color="#000000" default-x="111" default-y="-42">
+   <note color="#000000" default-x="110" default-y="-42">
     <pitch>
      <step>F</step>
      <octave>5</octave>
@@ -22365,7 +22262,7 @@ Arranged by [Arranger]</credit-words>
     <beam number="1">continue</beam>
     <beam number="2">continue</beam>
    </note>
-   <note color="#000000" default-x="203" default-y="-22">
+   <note color="#000000" default-x="202" default-y="-22">
     <pitch>
      <step>C</step>
      <octave>6</octave>
@@ -22379,7 +22276,7 @@ Arranged by [Arranger]</credit-words>
     <beam number="1">continue</beam>
     <beam number="2">continue</beam>
    </note>
-   <note color="#000000" default-x="225" default-y="-22">
+   <note color="#000000" default-x="224" default-y="-22">
     <pitch>
      <step>B</step>
      <octave>5</octave>
@@ -22499,7 +22396,7 @@ Arranged by [Arranger]</credit-words>
    </note>
   </measure>
   <!--============== Part: P9, Measure: 20 ==============-->
-  <measure number="20" width="221">
+  <measure number="20" width="220">
    <note color="#000000" default-x="15" default-y="-50">
     <pitch>
      <step>C</step>
@@ -22529,7 +22426,7 @@ Arranged by [Arranger]</credit-words>
    </barline>
   </measure>
   <!--============== Part: P9, Measure: 21 ==============-->
-  <measure number="21" width="155">
+  <measure number="21" width="158">
    <attributes>
     <key color="#000000">
      <fifths>2</fifths>
@@ -22548,7 +22445,7 @@ Arranged by [Arranger]</credit-words>
     <stem>down</stem>
     <staff>1</staff>
    </note>
-   <note color="#000000" default-x="51" default-y="10">
+   <note color="#000000" default-x="50" default-y="10">
     <pitch>
      <step>A</step>
      <octave>4</octave>
@@ -22560,7 +22457,7 @@ Arranged by [Arranger]</credit-words>
     <stem>up</stem>
     <staff>1</staff>
    </note>
-   <note color="#000000" default-x="103" default-y="-45">
+   <note color="#000000" default-x="106" default-y="-45">
     <pitch>
      <step>D</step>
      <octave>5</octave>
@@ -22588,7 +22485,7 @@ Arranged by [Arranger]</credit-words>
     <stem>down</stem>
     <staff>1</staff>
    </note>
-   <note color="#000000" default-x="67" default-y="-32">
+   <note color="#000000" default-x="66" default-y="-32">
     <pitch>
      <step>G</step>
      <octave>5</octave>
@@ -22602,7 +22499,7 @@ Arranged by [Arranger]</credit-words>
     <beam number="1">begin</beam>
     <beam number="2">begin</beam>
    </note>
-   <note color="#000000" default-x="87" default-y="-32">
+   <note color="#000000" default-x="86" default-y="-32">
     <pitch>
      <step>F</step>
      <alter>1</alter>
@@ -22688,7 +22585,7 @@ Arranged by [Arranger]</credit-words>
     <beam number="1">continue</beam>
     <beam number="2">continue</beam>
    </note>
-   <note color="#000000" default-x="212" default-y="-22">
+   <note color="#000000" default-x="211" default-y="-22">
     <pitch>
      <step>C</step>
      <alter>1</alter>
@@ -25084,7 +24981,7 @@ Arranged by [Arranger]</credit-words>
    </note>
   </measure>
   <!--============== Part: P10, Measure: 17 ==============-->
-  <measure number="17" width="253">
+  <measure number="17" width="252">
    <print new-page="yes">
     <system-layout>
      <system-margins>
@@ -25141,7 +25038,7 @@ Arranged by [Arranger]</credit-words>
    </note>
   </measure>
   <!--============== Part: P10, Measure: 18 ==============-->
-  <measure number="18" width="247">
+  <measure number="18" width="246">
    <note color="#000000" default-x="15" default-y="-40">
     <pitch>
      <step>E</step>
@@ -25182,7 +25079,7 @@ Arranged by [Arranger]</credit-words>
     <beam number="1">continue</beam>
     <beam number="2">continue</beam>
    </note>
-   <note color="#000000" default-x="111" default-y="-42">
+   <note color="#000000" default-x="110" default-y="-42">
     <pitch>
      <step>F</step>
      <octave>5</octave>
@@ -25239,7 +25136,7 @@ Arranged by [Arranger]</credit-words>
     <beam number="1">continue</beam>
     <beam number="2">continue</beam>
    </note>
-   <note color="#000000" default-x="203" default-y="-22">
+   <note color="#000000" default-x="202" default-y="-22">
     <pitch>
      <step>C</step>
      <octave>6</octave>
@@ -25253,7 +25150,7 @@ Arranged by [Arranger]</credit-words>
     <beam number="1">continue</beam>
     <beam number="2">continue</beam>
    </note>
-   <note color="#000000" default-x="225" default-y="-22">
+   <note color="#000000" default-x="224" default-y="-22">
     <pitch>
      <step>B</step>
      <octave>5</octave>
@@ -25373,7 +25270,7 @@ Arranged by [Arranger]</credit-words>
    </note>
   </measure>
   <!--============== Part: P10, Measure: 20 ==============-->
-  <measure number="20" width="221">
+  <measure number="20" width="220">
    <note color="#000000" default-x="15" default-y="-50">
     <pitch>
      <step>C</step>
@@ -25403,7 +25300,7 @@ Arranged by [Arranger]</credit-words>
    </barline>
   </measure>
   <!--============== Part: P10, Measure: 21 ==============-->
-  <measure number="21" width="155">
+  <measure number="21" width="158">
    <attributes>
     <key color="#000000">
      <fifths>2</fifths>
@@ -25422,7 +25319,7 @@ Arranged by [Arranger]</credit-words>
     <stem>down</stem>
     <staff>1</staff>
    </note>
-   <note color="#000000" default-x="51" default-y="10">
+   <note color="#000000" default-x="50" default-y="10">
     <pitch>
      <step>A</step>
      <octave>4</octave>
@@ -25434,7 +25331,7 @@ Arranged by [Arranger]</credit-words>
     <stem>up</stem>
     <staff>1</staff>
    </note>
-   <note color="#000000" default-x="103" default-y="-45">
+   <note color="#000000" default-x="106" default-y="-45">
     <pitch>
      <step>D</step>
      <octave>5</octave>
@@ -25462,7 +25359,7 @@ Arranged by [Arranger]</credit-words>
     <stem>down</stem>
     <staff>1</staff>
    </note>
-   <note color="#000000" default-x="67" default-y="-32">
+   <note color="#000000" default-x="66" default-y="-32">
     <pitch>
      <step>G</step>
      <octave>5</octave>
@@ -25476,7 +25373,7 @@ Arranged by [Arranger]</credit-words>
     <beam number="1">begin</beam>
     <beam number="2">begin</beam>
    </note>
-   <note color="#000000" default-x="87" default-y="-32">
+   <note color="#000000" default-x="86" default-y="-32">
     <pitch>
      <step>F</step>
      <alter>1</alter>
@@ -25562,7 +25459,7 @@ Arranged by [Arranger]</credit-words>
     <beam number="1">continue</beam>
     <beam number="2">continue</beam>
    </note>
-   <note color="#000000" default-x="212" default-y="-22">
+   <note color="#000000" default-x="211" default-y="-22">
     <pitch>
      <step>C</step>
      <alter>1</alter>
@@ -27970,7 +27867,7 @@ Arranged by [Arranger]</credit-words>
    </note>
   </measure>
   <!--============== Part: P11, Measure: 17 ==============-->
-  <measure number="17" width="253">
+  <measure number="17" width="252">
    <print new-page="yes">
     <system-layout>
      <system-margins>
@@ -28027,7 +27924,7 @@ Arranged by [Arranger]</credit-words>
    </note>
   </measure>
   <!--============== Part: P11, Measure: 18 ==============-->
-  <measure number="18" width="247">
+  <measure number="18" width="246">
    <note color="#000000" default-x="15" default-y="10">
     <pitch>
      <step>A</step>
@@ -28070,7 +27967,7 @@ Arranged by [Arranger]</credit-words>
     <beam number="1">continue</beam>
     <beam number="2">continue</beam>
    </note>
-   <note color="#000000" default-x="111" default-y="-57">
+   <note color="#000000" default-x="110" default-y="-57">
     <pitch>
      <step>B</step>
      <alter>-1</alter>
@@ -28127,7 +28024,7 @@ Arranged by [Arranger]</credit-words>
     <beam number="1">continue</beam>
     <beam number="2">continue</beam>
    </note>
-   <note color="#000000" default-x="203" default-y="-42">
+   <note color="#000000" default-x="202" default-y="-42">
     <pitch>
      <step>F</step>
      <octave>5</octave>
@@ -28141,7 +28038,7 @@ Arranged by [Arranger]</credit-words>
     <beam number="1">continue</beam>
     <beam number="2">continue</beam>
    </note>
-   <note color="#000000" default-x="225" default-y="-42">
+   <note color="#000000" default-x="224" default-y="-42">
     <pitch>
      <step>E</step>
      <octave>5</octave>
@@ -28262,7 +28159,7 @@ Arranged by [Arranger]</credit-words>
    </note>
   </measure>
   <!--============== Part: P11, Measure: 20 ==============-->
-  <measure number="20" width="221">
+  <measure number="20" width="220">
    <note color="#000000" default-x="15">
     <pitch>
      <step>F</step>
@@ -28292,7 +28189,7 @@ Arranged by [Arranger]</credit-words>
    </barline>
   </measure>
   <!--============== Part: P11, Measure: 21 ==============-->
-  <measure number="21" width="155">
+  <measure number="21" width="158">
    <attributes>
     <key color="#000000">
      <fifths>0</fifths>
@@ -28311,7 +28208,7 @@ Arranged by [Arranger]</credit-words>
     <stem>up</stem>
     <staff>1</staff>
    </note>
-   <note color="#000000" default-x="51" default-y="-10">
+   <note color="#000000" default-x="50" default-y="-10">
     <pitch>
      <step>D</step>
      <octave>4</octave>
@@ -28323,7 +28220,7 @@ Arranged by [Arranger]</credit-words>
     <stem>up</stem>
     <staff>1</staff>
    </note>
-   <note color="#000000" default-x="103" default-y="5">
+   <note color="#000000" default-x="106" default-y="5">
     <pitch>
      <step>G</step>
      <octave>4</octave>
@@ -28350,7 +28247,7 @@ Arranged by [Arranger]</credit-words>
     <stem>down</stem>
     <staff>1</staff>
    </note>
-   <note color="#000000" default-x="67" default-y="-52">
+   <note color="#000000" default-x="66" default-y="-52">
     <pitch>
      <step>C</step>
      <octave>5</octave>
@@ -28364,7 +28261,7 @@ Arranged by [Arranger]</credit-words>
     <beam number="1">begin</beam>
     <beam number="2">begin</beam>
    </note>
-   <note color="#000000" default-x="87" default-y="-52">
+   <note color="#000000" default-x="86" default-y="-52">
     <pitch>
      <step>B</step>
      <octave>4</octave>
@@ -28450,7 +28347,7 @@ Arranged by [Arranger]</credit-words>
     <beam number="1">continue</beam>
     <beam number="2">continue</beam>
    </note>
-   <note color="#000000" default-x="212" default-y="-42">
+   <note color="#000000" default-x="211" default-y="-42">
     <pitch>
      <step>F</step>
      <alter>1</alter>
@@ -30871,7 +30768,7 @@ Arranged by [Arranger]</credit-words>
    </note>
   </measure>
   <!--============== Part: P12, Measure: 17 ==============-->
-  <measure number="17" width="253">
+  <measure number="17" width="252">
    <print new-page="yes">
     <system-layout>
      <system-margins>
@@ -30930,7 +30827,7 @@ Arranged by [Arranger]</credit-words>
    </note>
   </measure>
   <!--============== Part: P12, Measure: 18 ==============-->
-  <measure number="18" width="247">
+  <measure number="18" width="246">
    <note color="#000000" default-x="15" default-y="-55">
     <pitch>
      <step>D</step>
@@ -30972,7 +30869,7 @@ Arranged by [Arranger]</credit-words>
     <beam number="1">continue</beam>
     <beam number="2">continue</beam>
    </note>
-   <note color="#000000" default-x="111" default-y="-52">
+   <note color="#000000" default-x="110" default-y="-52">
     <pitch>
      <step>E</step>
      <alter>-1</alter>
@@ -31030,7 +30927,7 @@ Arranged by [Arranger]</credit-words>
     <beam number="1">continue</beam>
     <beam number="2">continue</beam>
    </note>
-   <note color="#000000" default-x="203" default-y="-42">
+   <note color="#000000" default-x="202" default-y="-42">
     <pitch>
      <step>B</step>
      <alter>-1</alter>
@@ -31045,7 +30942,7 @@ Arranged by [Arranger]</credit-words>
     <beam number="1">continue</beam>
     <beam number="2">continue</beam>
    </note>
-   <note color="#000000" default-x="225" default-y="-42">
+   <note color="#000000" default-x="224" default-y="-42">
     <pitch>
      <step>A</step>
      <octave>3</octave>
@@ -31168,7 +31065,7 @@ Arranged by [Arranger]</credit-words>
    </note>
   </measure>
   <!--============== Part: P12, Measure: 20 ==============-->
-  <measure number="20" width="221">
+  <measure number="20" width="220">
    <note color="#000000" default-x="15" default-y="5">
     <pitch>
      <step>B</step>
@@ -31199,7 +31096,7 @@ Arranged by [Arranger]</credit-words>
    </barline>
   </measure>
   <!--============== Part: P12, Measure: 21 ==============-->
-  <measure number="21" width="155">
+  <measure number="21" width="158">
    <attributes>
     <key color="#000000">
      <fifths>0</fifths>
@@ -31218,7 +31115,7 @@ Arranged by [Arranger]</credit-words>
     <stem>up</stem>
     <staff>1</staff>
    </note>
-   <note color="#000000" default-x="51" default-y="-5">
+   <note color="#000000" default-x="50" default-y="-5">
     <pitch>
      <step>G</step>
      <octave>2</octave>
@@ -31230,7 +31127,7 @@ Arranged by [Arranger]</credit-words>
     <stem>up</stem>
     <staff>1</staff>
    </note>
-   <note color="#000000" default-x="103" default-y="10">
+   <note color="#000000" default-x="106" default-y="10">
     <pitch>
      <step>C</step>
      <octave>3</octave>
@@ -31257,7 +31154,7 @@ Arranged by [Arranger]</credit-words>
     <stem>down</stem>
     <staff>1</staff>
    </note>
-   <note color="#000000" default-x="67" default-y="-52">
+   <note color="#000000" default-x="66" default-y="-52">
     <pitch>
      <step>F</step>
      <octave>3</octave>
@@ -31271,7 +31168,7 @@ Arranged by [Arranger]</credit-words>
     <beam number="1">begin</beam>
     <beam number="2">begin</beam>
    </note>
-   <note color="#000000" default-x="87" default-y="-52">
+   <note color="#000000" default-x="86" default-y="-52">
     <pitch>
      <step>E</step>
      <octave>3</octave>
@@ -31355,7 +31252,7 @@ Arranged by [Arranger]</credit-words>
     <beam number="1">continue</beam>
     <beam number="2">continue</beam>
    </note>
-   <note color="#000000" default-x="212" default-y="-32">
+   <note color="#000000" default-x="211" default-y="-32">
     <pitch>
      <step>B</step>
      <octave>3</octave>
@@ -33058,7 +32955,7 @@ Arranged by [Arranger]</credit-words>
    </note>
   </measure>
   <!--============== Part: P13, Measure: 17 ==============-->
-  <measure number="17" width="253">
+  <measure number="17" width="252">
    <print new-page="yes">
     <system-layout>
      <system-margins>
@@ -33121,7 +33018,7 @@ Arranged by [Arranger]</credit-words>
    </note>
   </measure>
   <!--============== Part: P13, Measure: 18 ==============-->
-  <measure number="18" width="247">
+  <measure number="18" width="246">
    <note color="#000000" default-x="15" default-y="5">
     <pitch>
      <step>B</step>
@@ -33205,7 +33102,7 @@ Arranged by [Arranger]</credit-words>
    </note>
   </measure>
   <!--============== Part: P13, Measure: 20 ==============-->
-  <measure number="20" width="221">
+  <measure number="20" width="220">
    <note color="#000000" default-x="15">
     <pitch>
      <step>A</step>
@@ -33245,7 +33142,7 @@ Arranged by [Arranger]</credit-words>
    </barline>
   </measure>
   <!--============== Part: P13, Measure: 21 ==============-->
-  <measure number="21" width="155">
+  <measure number="21" width="158">
    <attributes>
     <key color="#000000">
      <fifths>0</fifths>
@@ -33264,7 +33161,7 @@ Arranged by [Arranger]</credit-words>
     <stem>up</stem>
     <staff>1</staff>
    </note>
-   <note color="#000000" default-x="51" default-y="-5">
+   <note color="#000000" default-x="50" default-y="-5">
     <pitch>
      <step>G</step>
      <octave>2</octave>
@@ -33276,7 +33173,7 @@ Arranged by [Arranger]</credit-words>
     <stem>up</stem>
     <staff>1</staff>
    </note>
-   <note color="#000000" default-x="103" default-y="10">
+   <note color="#000000" default-x="106" default-y="10">
     <pitch>
      <step>C</step>
      <octave>3</octave>
@@ -33313,7 +33210,7 @@ Arranged by [Arranger]</credit-words>
      <tied type="start" orientation="under" />
     </notations>
    </note>
-   <note color="#000000" default-x="67" default-y="10">
+   <note color="#000000" default-x="66" default-y="10">
     <pitch>
      <step>C</step>
      <octave>3</octave>

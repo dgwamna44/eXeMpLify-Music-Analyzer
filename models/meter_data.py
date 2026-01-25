@@ -6,7 +6,9 @@ class MeterData:
     time_signature: str
     grade: float
 
+    type: str | None = None
     duration: int | None = None
     exposure: int | None = None
     confidence: float | None = None
-    comments: dict | None = None
+    comments: str | None = None
+
