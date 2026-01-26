@@ -5,6 +5,8 @@ from .tempo_data import TempoData
 from .partial_note_data import PartialNoteData
 from .rhythm_grade_rules import RhythmGradeRules
 from .articulation_grade_rules import ArticulationGradeRules
+from .base_analyzer import BaseAnalyzer
+
 
 __all__ = [
     "PartialNoteData",
@@ -15,4 +17,5 @@ __all__ = [
     "DurationData",
     "RhythmGradeRules"
     "ArticulationGradeRules"
+    "BaseAnalyzer"
 ]
