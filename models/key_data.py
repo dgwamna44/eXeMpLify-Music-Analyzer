@@ -10,3 +10,4 @@ class KeyData:
     duration: int | None = None
     exposure: float | None = None
     confidence: float | None = None
+    comments: str | None = None

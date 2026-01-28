@@ -2,9 +2,10 @@ import pandas as pd
 from music21 import converter, stream
 
 from data_processing import derive_observed_grades
-from analyzers.rules import get_articulation_confidence  # <-- adjust to your actual path
+from analyzers.rules import get_articulation_confidence 
 
 from models import BaseAnalyzer, PartialNoteData, ArticulationGradeRules
+from utilities import iter_measure_events
 
 
 # ----------------------------
@@ -85,7 +86,7 @@ def analyze_articulation_confidence(score, rules: dict[float, ArticulationGradeR
 
     for part in score.parts:
         for m in part.getElementsByClass(stream.Measure):
-            for n in m.notesAndRests:
+            for n in iter_measure_events(m):
                 if n.isRest or not n.articulations:
                     continue
 
@@ -119,7 +120,7 @@ def analyze_articulation_target(score, rules: dict[float, ArticulationGradeRules
         part_total = 0.0
 
         for m in part.getElementsByClass(stream.Measure):
-            for n in m.notesAndRests:
+            for n in iter_measure_events(m):
                 if n.isRest or not n.articulations:
                     continue
 

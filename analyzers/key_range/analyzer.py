@@ -3,7 +3,7 @@ from __future__ import annotations
 from analyzers.base import BaseAnalyzer
 from analyzers.key_range.extract import extract_key_segments, extract_note_data
 from analyzers.key_range.rules import total_key_confidence, compute_range_confidence
-from utilities import parse_part_name, validate_for_range_analysis, get_rounded_grade
+from utilities import parse_part_name, validate_part_for_analysis, get_rounded_grade, traffic_light
 from music21 import converter
 
 
@@ -46,8 +46,8 @@ class KeyRangeAnalyzer(BaseAnalyzer):
 
         # Compute range confidence per note
         for original_part_name, pdata in note_map.items():
-            pname, _ = parse_part_name(original_part_name)
-            canonical = validate_for_range_analysis(pname)
+            pname = parse_part_name(original_part_name)
+            canonical = validate_part_for_analysis(pname)
 
             # If we can’t map the part to an instrument bucket, skip range scoring for it
             if not canonical or canonical not in ranges:
@@ -95,6 +95,14 @@ class KeyRangeAnalyzer(BaseAnalyzer):
 
         for k in key_segments:
             k.confidence = total_key_confidence(k.key, target_grade)
+            color = traffic_light(k.confidence)
+            if color == "yellow":
+                k.comments = f"{k.key} {k.quality} is somewhat common in grade {target_grade}"
+            elif color == "orange":
+                k.comments = f"{k.key} {k.quality} is uncommon in grade {target_grade}"
+            elif color == "red":
+                k.comments = f"{k.key} {k.quality} is typically not found in grade {target_grade}"
+
 
         # --- Note extraction ---
         note_map = extract_note_data(score, target_grade, ranges, key_segments)
@@ -103,17 +111,17 @@ class KeyRangeAnalyzer(BaseAnalyzer):
         global_total_notes = 0
 
         for original_part_name, pdata in note_map.items():
-            pname, _ = parse_part_name(original_part_name)
-            canonical = validate_for_range_analysis(pname)
+            pname = parse_part_name(original_part_name)
+            valid_part = validate_part_for_analysis(pname)
 
-            if not canonical or canonical not in ranges:
+            if not valid_part or valid_part not in ranges:
                 continue
-            if range_grade not in ranges[canonical]:
+            if range_grade not in ranges[valid_part]:
                 continue
 
-            core = ranges[canonical][range_grade]["core"]
-            ext = ranges[canonical][range_grade]["extended"]
-            total = ranges[canonical]["total_range"]
+            core = ranges[valid_part][range_grade]["core"]
+            ext = ranges[valid_part][range_grade]["extended"]
+            total = ranges[valid_part]["total_range"]
             key_quality = key_segments[-1].quality if key_segments else "major"
 
             for note in pdata.get("Note Data", []):
@@ -135,14 +143,14 @@ class KeyRangeAnalyzer(BaseAnalyzer):
             if key_segments else 0.0
         )
 
+        analysis_notes = {"key_data" : key_segments, "range_data" : note_map}
         summary = {
             "target_grade": target_grade,
             "overall_range_confidence": overall_range_conf,
-            "overall_key_confidence": overall_key_conf,
-            "combined_confidence": (0.75 * overall_range_conf) + (0.25 * overall_key_conf),
+            "overall_key_confidence": overall_key_conf
         }
 
-        return note_map, summary
+        return analysis_notes, summary
 
 
 # -------------------------------------------------------------
@@ -164,11 +172,11 @@ def run_key_range(score_path: str, target_grade: float):
 
     # UI data for target grade
     score = converter.parse(score_path)
-    analysis_data, summary = analyzer.analyze_target(score, target_grade)
+    analysis_notes, summary = analyzer.analyze_target(score, target_grade)
 
     return {
         "observed_grade": observed_grade,
         "confidence": conf_curve,
-        "analysis_notes": analysis_data,
+        "analysis_notes": analysis_notes,
         "summary": summary,
     }

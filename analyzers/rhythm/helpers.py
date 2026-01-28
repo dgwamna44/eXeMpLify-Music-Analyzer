@@ -54,6 +54,7 @@ def annotate_tuplets(notes: list[PartialNoteData], music21_notes):
         signature = (
             pd.measure,
             pd.beat_index,
+            pd.voice_index,
             t.numberNotesActual,
             t.numberNotesNormal
         )

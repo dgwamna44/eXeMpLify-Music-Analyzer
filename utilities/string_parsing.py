@@ -1,27 +1,27 @@
-from app_data import CANONICAL_INSTRUMENTS
+from data_processing import build_instrument_data
 import re, math
 
 def parse_part_name(name):
     if not name:
         return {}
     main = name
-    optional = None
 
     m = re.search(r"\((.*?)\)", name)
     if m:
-        optional = m.group(1)
         main = name[:m.start()].strip()
-    return main, optional
+    return main
 
 def normalize_key_name(name):
     return name.replace("-", "b")
 
-def validate_for_range_analysis(name):
+def validate_part_for_analysis(name):
+    instrument_data = build_instrument_data()
     name = name.lower().replace("♭", "b").strip()
 
-    for canonical, pattern in CANONICAL_INSTRUMENTS.items():
-        if re.search(pattern, name):
-            return canonical
+    for instrument in instrument_data:
+        if re.search(instrument_data[instrument].regex, name):
+            if instrument_data[instrument].range_analysis:
+                return instrument
 
     return "unknown"
 

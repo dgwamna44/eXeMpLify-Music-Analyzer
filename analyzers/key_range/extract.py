@@ -1,10 +1,9 @@
 # extract_key_range.py
 from music21 import stream, key, pitch
 from models import KeyData, PartialNoteData
-from utilities import normalize_key_name, get_rounded_grade
+from utilities import normalize_key_name, get_rounded_grade, iter_measure_events
 from app_data import PITCH_TO_INDEX
-from utilities.instrument_rules import crosses_break
-from utilities import parse_part_name, validate_for_range_analysis
+from utilities import parse_part_name, validate_part_for_analysis
 
 
 def extract_key_segments(score, target_grade):
@@ -57,20 +56,20 @@ def extract_note_data(score, target_grade, combined_ranges, key_segments):
         original_name = part.partName or "Unknown Part"
         analysis_results[original_name] = {"Note Data": []}
 
-        canonical, _ = parse_part_name(original_name)
-        canonical = validate_for_range_analysis(canonical)
+        parsed = parse_part_name(original_name)
+        valid_part = validate_part_for_analysis(parsed)
 
         has_range_rules = (
-            canonical
-            and canonical != "unknown"
-            and canonical in combined_ranges
-            and range_grade in combined_ranges[canonical]
+            valid_part
+            and valid_part != "unknown"
+            and valid_part in combined_ranges
+            and range_grade in combined_ranges[valid_part]
         )
 
         if has_range_rules:
-            core_range  = combined_ranges[canonical][range_grade]["core"]
-            ext_range   = combined_ranges[canonical][range_grade]["extended"]
-            total_range = combined_ranges[canonical]["total_range"]
+            core_range  = combined_ranges[valid_part][range_grade]["core"]
+            ext_range   = combined_ranges[valid_part][range_grade]["extended"]
+            total_range = combined_ranges[valid_part]["total_range"]
         else:
             core_range = ext_range = total_range = None
 
@@ -81,7 +80,7 @@ def extract_note_data(score, target_grade, combined_ranges, key_segments):
                     local_key = ks
                     break
 
-            for n in measure.notesAndRests:
+            for n in iter_measure_events(measure):
                 if not n.isNote:
                     continue
 
@@ -120,7 +119,7 @@ def extract_note_data(score, target_grade, combined_ranges, key_segments):
                     pass
                 else:
                     data.range_confidence = None
-                    data.comments["Range"] = f"No range dataset for '{original_name}' (normalized: '{canonical}')"
+                    data.comments["Range"] = f"No range dataset for '{original_name}' (normalized: '{valid_part}')"
 
                 analysis_results[original_name]["Note Data"].append(data)
 

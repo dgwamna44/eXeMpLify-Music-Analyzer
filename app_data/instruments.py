@@ -1,4 +1,4 @@
-CANONICAL_INSTRUMENTS = {
+NON_PERCUSSION_INSTRUMENTS = {
     "violin": r"violin(?:\s+\d+)?",
     "viola": r"viola(?:\s+\d+)?",
     "cello": r"(?:cello|violoncello)(?:\s+\d+)?",
@@ -19,11 +19,65 @@ CANONICAL_INSTRUMENTS = {
     "euphonium": r"euphonium(?:\s+\d+)?",
     "baritone": r"baritone(?:\s+\d+)?",
     "tuba": r"tuba(?:\s+\d+)?",
-    "bass": r"^(?:bass|double bass)(?:\s+\d+)?$"
+    "bass": r"^(?:bass|double bass)(?:\s+\d+)?$",
+    "piano": r".* piano(?:\s+\d+)?",
+    "synthesizer": r"synthesizer(?:\s+\d+)?",
+    "organ": r".* organ(?:\s+\d+)?",
+    "celesta": r"celesta(?:\s+\d+)?",
+    "harpsichord": r"harpsichord(?:\s+\d+)?",
 }
 
 
-GRADE_TO_INSTRUMENTATION_TABLE = {
+PERCUSSION_INSTRUMENTS = {
+    "snare_drum": r"snare drum(?:\s+\d+)?",
+    "bass_drum": r"bass drum(?:\s+\d+)?",
+    "timpani": r"timpani(?:\s+\d+)?",
+    "drum_set": r"(?:drum set|drum kit)(?:\s+\d+)?",
+    "bells": r"(?:bells|glockenspiel)(?:\s+\d+)?",
+    "xylophone": r"xylophone(?:\s+\d+)?",
+    "marimba": r"marimba(?:\s+\d+)?",
+    "vibraphone": r"vibraphone(?:\s+\d+)?"
+    }
+
+
+FAMILY_MAP = {
+    # strings
+    "violin": "string",
+    "viola": "string",
+    "cello": "string",
+    "bass": "string",
+
+    # winds
+    "piccolo": "wind",
+    "flute": "wind",
+    "oboe": "wind",
+    "bassoon": "wind",
+    "clarinet_bb": "wind",
+    "alto_clarinet": "wind",
+    "bass_clarinet": "wind",
+    "contra_bass_clarinet": "wind",
+    "alto_sax": "wind",
+    "tenor_sax": "wind",
+    "bari_sax": "wind",
+
+    # brass
+    "trumpet_bb": "brass",
+    "horn_f": "brass",
+    "trombone": "brass",
+    "euphonium": "brass",
+    "baritone": "brass",
+    "tuba": "brass",
+
+    #keyboard
+    "piano": "keyboard",
+    "synthesizer": "keyboard",
+    "celesta": "keyboard",
+    "harpsichord": "keyboard",
+    "organ": "keyboard",
+}
+
+
+INST_TO_GRADE_NON_STRING = {
     "piccolo": {
         "ABC": 3, "FJH": 3, "Belwin": 4, "Marlatt": 4
     },
@@ -32,8 +86,8 @@ GRADE_TO_INSTRUMENTATION_TABLE = {
     },
     "bass_flute": {
         "ABC": 4, "FJH": 4, "Belwin": 4, "Marlatt": 5
-    },
-        "flute": {
+    },    
+    "flute": {
         "ABC": 0.5, "FJH": 0.5, "Belwin": 0.5, "Marlatt": 1
     },
     "oboe": {
@@ -45,8 +99,14 @@ GRADE_TO_INSTRUMENTATION_TABLE = {
     "clarinet_bb": {
         "ABC": 0.5, "FJH": 0.5, "Belwin": 0.5, "Marlatt": 1
     },
+    "alto_clarinet":{
+          "ABC": None, "FJH": None, "Belwin": None, "Marlatt": 5
+    },
     "bass_clarinet": {
         "ABC": 2, "FJH": 0.5, "Belwin": 0.5, "Marlatt": 1
+    },
+    "contra_bass_clarinet": {
+        "ABC": None, "FJH": None, "Belwin": None, "Marlatt": 5
     },
     "alto_sax": {
         "ABC": 0.5, "FJH": 0.5, "Belwin": 0.5, "Marlatt": 1
@@ -113,5 +173,5 @@ GRADE_TO_INSTRUMENTATION_TABLE = {
     },
     "xylophone": {
         "ABC": 2, "FJH": 2, "Belwin": 1, "Marlatt": 2
-    },
+    }
 }

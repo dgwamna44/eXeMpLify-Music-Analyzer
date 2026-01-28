@@ -4,6 +4,7 @@ from __future__ import annotations
 from music21 import meter as m21meter, stream
 from models import MeterData, RhythmGradeRules
 from analyzers.meter.helpers import meter_segment_confidence
+from utilities import iter_measure_events
 
 
 def extract_meter_segments(score, *, grade: float, rules_for_grade: RhythmGradeRules) -> list[MeterData]:
@@ -69,7 +70,7 @@ def max_chord_size_in_part(part) -> int:
         (
             len(n.pitches)
             for m in part.getElementsByClass(stream.Measure)
-            for n in m.notesAndRests
+            for n in iter_measure_events(m)
             if n.isChord
         ),
         default=1,

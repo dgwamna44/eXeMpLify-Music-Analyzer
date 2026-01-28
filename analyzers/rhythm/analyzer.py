@@ -8,6 +8,7 @@ from analyzers.rhythm.note_rules import rule_dotted, rule_subdivision, rule_sync
 from analyzers.rhythm.rules import load_rhythm_rules
 from data_processing import derive_observed_grades
 from app_data import GRADES
+from utilities import iter_measure_lines
 
 
 def rhythm_note_confidence(note, rules_for_grade, target_grade):
@@ -37,6 +38,9 @@ def analyze_rhythm_confidence(score, rules, grade: float) -> float | None:
 
         for m in part.getElementsByClass(stream.Measure):
             ts = m.getContextByClass(meter.TimeSignature)
+            if ts is None:
+                local_ts = list(m.getElementsByClass(meter.TimeSignature))
+                ts = local_ts[0] if local_ts else None
             if ts is not None:
                 current_ts = ts
             if current_ts is None:
@@ -53,20 +57,25 @@ def analyze_rhythm_confidence(score, rules, grade: float) -> float | None:
             partial_notes = []
             music21_notes = []
 
-            for n in m.notesAndRests:
-                p = PartialNoteData(
-                    measure=m.number,
-                    offset=n.offset,
-                    grade=grade,
-                    instrument=(part.partName or ""),
-                    duration=n.duration.quarterLength,
-                    rhythm_token=get_rhythm_token(n) + ("r" if n.isRest else ""),
-                    beat_index=int(n.offset // beat_length),
-                    beat_offset=(n.offset % beat_length),
-                    beat_unit=beat_length,
-                )
-                partial_notes.append(p)
-                music21_notes.append(n)
+            for line_index, events in iter_measure_lines(m):
+                for event_index, n in enumerate(events):
+                    p = PartialNoteData(
+                        measure=m.number,
+                        offset=n.offset,
+                        grade=grade,
+                        instrument=(part.partName or ""),
+                        duration=n.duration.quarterLength,
+                        rhythm_token=get_rhythm_token(n) + ("r" if n.isRest else ""),
+                        beat_index=int(n.offset // beat_length),
+                        beat_offset=(n.offset % beat_length),
+                        beat_unit=beat_length,
+                        voice_index=line_index,
+                        chord_index=event_index,
+                        is_chord=bool(getattr(n, "isChord", False)),
+                        chord_size=len(n.pitches) if getattr(n, "isChord", False) else None,
+                    )
+                    partial_notes.append(p)
+                    music21_notes.append(n)
 
             annotate_tuplets(partial_notes, music21_notes)
 
@@ -109,6 +118,9 @@ def analyze_rhythm_target(score, rules, target_grade: float):
 
         for m in part.getElementsByClass(stream.Measure):
             ts = m.getContextByClass(meter.TimeSignature)
+            if ts is None:
+                local_ts = list(m.getElementsByClass(meter.TimeSignature))
+                ts = local_ts[0] if local_ts else None
             if ts is not None:
                 current_ts = ts
             if current_ts is None:
@@ -133,23 +145,28 @@ def analyze_rhythm_target(score, rules, target_grade: float):
                 )
                 continue
 
-            for n in m.notesAndRests:
-                beat_index = int(n.offset // beat_length)
-                beat_offset = n.offset % beat_length
+            for line_index, events in iter_measure_lines(m):
+                for event_index, n in enumerate(events):
+                    beat_index = int(n.offset // beat_length)
+                    beat_offset = n.offset % beat_length
 
-                p = PartialNoteData(
-                    measure=m.number,
-                    offset=n.offset,
-                    grade=target_grade,
-                    instrument=part_name,
-                    duration=n.duration.quarterLength,
-                    rhythm_token=get_rhythm_token(n) + ("r" if n.isRest else ""),
-                    beat_index=beat_index,
-                    beat_offset=beat_offset,
-                    beat_unit=beat_length,
-                )
-                partial_notes.append(p)
-                music21_notes.append(n)
+                    p = PartialNoteData(
+                        measure=m.number,
+                        offset=n.offset,
+                        grade=target_grade,
+                        instrument=part_name,
+                        duration=n.duration.quarterLength,
+                        rhythm_token=get_rhythm_token(n) + ("r" if n.isRest else ""),
+                        beat_index=beat_index,
+                        beat_offset=beat_offset,
+                        beat_unit=beat_length,
+                        chord_index=event_index,
+                        voice_index=line_index,
+                        is_chord=bool(getattr(n, "isChord", False)),
+                        chord_size=len(n.pitches) if getattr(n, "isChord", False) else None,
+                    )
+                    partial_notes.append(p)
+                    music21_notes.append(n)
 
         annotate_tuplets(partial_notes, music21_notes)
         analysis_notes[part_name]["note_data"] = partial_notes

@@ -22,6 +22,11 @@ class PartialNoteData:
     time_signature: str | None = None
     beat_unit: float | None = None
 
+    chord_index: int | None = None
+    voice_index: int | None = None
+    is_chord: bool | None = None
+    chord_size: int | None = None
+
     # tuplets
     tuplet_id: int | None = None
     tuplet_actual: int | None = None
