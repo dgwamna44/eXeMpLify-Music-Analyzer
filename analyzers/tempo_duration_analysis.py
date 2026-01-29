@@ -199,39 +199,6 @@ def run(score_path: str, target_grade: float):
     return ANALYSIS_RESULTS, grade_summary
 
 
-def derive_observed_grades(score_path: str):
-    TOP_CONFIDENCE_THRESHOLD = 0.97
-    tempo_confidences = {}
-    duration_confidences = {}
-
-    for grade in GRADES:
-        summary = run(score_path=score_path, target_grade=grade)[1]
-        tempo_confidences[grade] = summary["composite_tempo_confidence"]
-        duration_confidences[grade] = summary["duration_confidence"]
-    
-    tempo_improvements = {}
-    duration_improvements = {}
-    sorted_grades = sorted(GRADES)
-    for i in range(1,len(sorted_grades)):
-        prev_grade = sorted_grades[i-1]
-        curr_grade = sorted_grades[i]
-        tempo_improvements[curr_grade] = tempo_confidences[curr_grade] - tempo_confidences[prev_grade]
-        duration_improvements[curr_grade] = duration_confidences[curr_grade] - duration_confidences[prev_grade]
-    
-    if min(tempo_improvements.values()) > TOP_CONFIDENCE_THRESHOLD:
-        observed_tempo_grade = min(GRADES)
-    else:
-        observed_tempo_grade = max(tempo_confidences, key=tempo_confidences.get)
-    
-    if min(duration_improvements.values()) > TOP_CONFIDENCE_THRESHOLD:
-        observed_duration_grade = min(GRADES)
-    else:
-        observed_duration_grade = max(duration_confidences, key=duration_confidences.get)
-    return observed_tempo_grade, observed_duration_grade, tempo_confidences, duration_confidences
-
-        
-        
-    
     
 
 

@@ -2,7 +2,7 @@ import pandas as pd
 from music21 import converter, stream
 
 from data_processing import derive_observed_grades
-from analyzers.rules import get_articulation_confidence 
+from analyzers.articulation.articulation_confidence import get_articulation_confidence 
 
 from models import BaseAnalyzer, PartialNoteData, ArticulationGradeRules
 from utilities import iter_measure_events
