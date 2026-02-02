@@ -3,8 +3,10 @@ from models import InstrumentData
 from statistics import median
 import json
 from pathlib import Path
+from functools import lru_cache
 
 
+@lru_cache(maxsize=1)
 def load_range_excluded(path: str = r"data/range_excluded.json") -> set[str]:
     try:
         data = json.loads(Path(path).read_text())
@@ -13,6 +15,7 @@ def load_range_excluded(path: str = r"data/range_excluded.json") -> set[str]:
     excluded = data.get("range_excluded", [])
     return {str(x) for x in excluded}
 
+@lru_cache(maxsize=1)
 def build_instrument_data():
     data = {}
     range_excluded = load_range_excluded()

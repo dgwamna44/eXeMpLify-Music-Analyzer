@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from functools import lru_cache
 from functools import reduce
 import pandas as pd
 from music21 import pitch
@@ -108,6 +109,7 @@ def reconcile_ranges(master: dict) -> dict:
     return combined
 
 
+@lru_cache(maxsize=4)
 def load_combined_ranges(range_dir: str | Path = "data/range", *, file_glob: str = "*.csv") -> dict:
 
     range_dir = Path(range_dir)
@@ -134,5 +136,6 @@ def load_combined_ranges(range_dir: str | Path = "data/range", *, file_glob: str
     return combined
 
 
+@lru_cache(maxsize=2)
 def load_string_ranges(range_dir: str | Path = "data/range") -> dict:
     return load_combined_ranges(range_dir, file_glob="string_range*.csv")

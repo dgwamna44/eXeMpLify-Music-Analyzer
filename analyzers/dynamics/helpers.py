@@ -1,7 +1,9 @@
 import pandas as pd
-from music21 import dynamics, stream
+from music21 import dynamics, stream, expressions
+from functools import lru_cache
 
 
+@lru_cache(maxsize=1)
 def load_dynamics_table(path: str = r"data/dynamics_guidelines.csv") -> dict[float, dict[str, bool]]:
     """
     Returns: {grade: {dynamic: bool}}
@@ -30,8 +32,16 @@ def load_dynamics_table(path: str = r"data/dynamics_guidelines.csv") -> dict[flo
     return rules
 
 
+@lru_cache(maxsize=1)
 def load_dynamics_rules(path: str = r"data/dynamics_guidelines.csv") -> dict[float, dict[str, bool]]:
     return load_dynamics_table(path)
+
+def _is_dynamic_token(text: str) -> bool:
+    return text in {
+        "ppp", "pp", "p", "mp", "mf", "f", "ff", "fff",
+        "sfz", "sfp", "fp", "rfz",
+    }
+
 
 def derive_dynamics_data(score):
     total_length = len(score.parts[0].recurse().getElementsByClass(stream.Measure)) * 4
@@ -40,16 +50,33 @@ def derive_dynamics_data(score):
         part_name = part.partName or f"Part {idx + 1}"
         dyns = []
         end_offset = part.highestTime
-        part_dyns = list(part.recurse().getElementsByClass(dynamics.Dynamic))
-        part_dyns.sort(key=lambda d: d.getOffsetInHierarchy(part))
+        part_dyns = []
+        for d in part.recurse().getElementsByClass(dynamics.Dynamic):
+            part_dyns.append({
+                "value": d.value,
+                "offset": d.getOffsetInHierarchy(part),
+                "measure": d.measureNumber,
+            })
+
+        # Fallback: detect dynamics in text expressions (some MusicXML encodes dynamics as text)
+        for text_expr in part.recurse().getElementsByClass(expressions.TextExpression):
+            token = str(text_expr.content).strip().lower()
+            if _is_dynamic_token(token):
+                part_dyns.append({
+                    "value": token,
+                    "offset": text_expr.getOffsetInHierarchy(part),
+                    "measure": text_expr.measureNumber,
+                })
+
+        part_dyns.sort(key=lambda d: d["offset"])
 
         for i, d in enumerate(part_dyns):
-            start = d.getOffsetInHierarchy(part)
-            end = part_dyns[i + 1].getOffsetInHierarchy(part) if i + 1 < len(part_dyns) else end_offset
+            start = d["offset"]
+            end = part_dyns[i + 1]["offset"] if i + 1 < len(part_dyns) else end_offset
             data = {
                 "part": part_name,
-                "measure": d.measureNumber,
-                "dynamic": d.value,
+                "measure": d["measure"],
+                "dynamic": d["value"],
                 "start_qL": start,
                 "end_qL": end,
                 "effective_duration": max(0.0, end - start),

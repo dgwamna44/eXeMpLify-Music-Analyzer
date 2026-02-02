@@ -87,15 +87,20 @@ def run_meter(
     rules = load_rhythm_rules()
     analyzer = MeterAnalyzer(rules)
 
+    grades = None
     if analysis_options is not None:
         run_observed = analysis_options.run_observed
+        grades = analysis_options.observed_grades
 
     if run_observed:
-        observed_grade, confidences = derive_observed_grades(
-            score_factory=score_factory,
-            analyze_confidence=lambda score, g: analyzer.analyze_confidence(score, g),
-            progress_cb=progress_cb,
-        )
+        kwargs = {
+            "score_factory": score_factory,
+            "analyze_confidence": lambda score, g: analyzer.analyze_confidence(score, g),
+            "progress_cb": progress_cb,
+        }
+        if grades is not None:
+            kwargs["grades"] = grades
+        observed_grade, confidences = derive_observed_grades(**kwargs)
     else:
         observed_grade, confidences = None, {}
 

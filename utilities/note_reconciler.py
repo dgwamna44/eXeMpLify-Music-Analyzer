@@ -6,11 +6,15 @@ class NoteReconciler:
         self._notes = {}
 
     def _key(self, n: PartialNoteData):
+        chord_token = None
+        if n.is_chord and n.chord_size:
+            chord_token = (n.chord_size, n.chord_index)
         return (
             n.instrument,
             n.measure,
             round(n.offset, 5),
-            n.written_midi_value
+            n.written_midi_value,
+            chord_token,
         )
 
     def add(self, n: PartialNoteData):

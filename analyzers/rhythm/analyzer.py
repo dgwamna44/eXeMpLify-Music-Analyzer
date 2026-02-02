@@ -61,12 +61,20 @@ def analyze_rhythm_confidence(score, rules, grade: float) -> float | None:
 
             for line_index, events in iter_measure_lines(m):
                 for event_index, n in enumerate(events):
+                    written_pitch = None
+                    written_midi = None
+                    if not n.isRest and getattr(n, "isChord", False) is False and hasattr(n, "pitch"):
+                        written_pitch = n.pitch.nameWithOctave
+                        written_midi = n.pitch.midi
+
                     p = PartialNoteData(
                         measure=m.number,
                         offset=n.offset,
                         grade=grade,
                         instrument=(part.partName or ""),
                         duration=n.duration.quarterLength,
+                        written_pitch=written_pitch,
+                        written_midi_value=written_midi,
                         rhythm_token=get_rhythm_token(n) + ("r" if n.isRest else ""),
                         beat_index=int(n.offset // beat_length),
                         beat_offset=(n.offset % beat_length),
@@ -152,12 +160,20 @@ def analyze_rhythm_target(score, rules, target_grade: float):
                     beat_index = int(n.offset // beat_length)
                     beat_offset = n.offset % beat_length
 
+                    written_pitch = None
+                    written_midi = None
+                    if not n.isRest and getattr(n, "isChord", False) is False and hasattr(n, "pitch"):
+                        written_pitch = n.pitch.nameWithOctave
+                        written_midi = n.pitch.midi
+
                     p = PartialNoteData(
                         measure=m.number,
                         offset=n.offset,
                         grade=target_grade,
                         instrument=part_name,
                         duration=n.duration.quarterLength,
+                        written_pitch=written_pitch,
+                        written_midi_value=written_midi,
                         rhythm_token=get_rhythm_token(n) + ("r" if n.isRest else ""),
                         beat_index=beat_index,
                         beat_offset=beat_offset,
@@ -228,15 +244,20 @@ def run_rhythm(
     rules = load_rhythm_rules()
 
     # 1) observed grade + confidence curve (across all grades)
+    grades = None
     if analysis_options is not None:
         run_observed = analysis_options.run_observed
+        grades = analysis_options.observed_grades
 
     if run_observed:
-        observed_grade, confidences = derive_observed_grades(
-            score_factory=score_factory,
-            analyze_confidence=lambda score, g: analyze_rhythm_confidence(score, rules, g),
-            progress_cb=progress_cb,
-        )
+        kwargs = {
+            "score_factory": score_factory,
+            "analyze_confidence": lambda score, g: analyze_rhythm_confidence(score, rules, g),
+            "progress_cb": progress_cb,
+        }
+        if grades is not None:
+            kwargs["grades"] = grades
+        observed_grade, confidences = derive_observed_grades(**kwargs)
     else:
         observed_grade, confidences = None, {}
 

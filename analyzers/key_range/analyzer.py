@@ -196,9 +196,11 @@ def run_key_range(
     from analyzers.key_range.ranges import load_combined_ranges, load_string_ranges
     from analyzers.key_range.rules import load_string_key_guidelines, string_key_confidence
 
+    grades = None
     if analysis_options is not None:
         run_observed = analysis_options.run_observed
         string_only = analysis_options.string_only
+        grades = analysis_options.observed_grades
 
     combined_ranges = load_string_ranges("data/range") if string_only else load_combined_ranges("data/range")
     key_confidence_fn = total_key_confidence
@@ -235,20 +237,26 @@ def run_key_range(
             progress_cb(grade, idx, total, "key")
 
     if run_observed:
-        observed_grade_range, conf_curve_range = derive_observed_grades(
-            score_factory=score_factory,
-            analyze_confidence=analyzer.analyze_confidence_range,
-            progress_cb=_progress_range if progress_cb is not None else None,
-        )
+        kwargs = {
+            "score_factory": score_factory,
+            "analyze_confidence": analyzer.analyze_confidence_range,
+            "progress_cb": _progress_range if progress_cb is not None else None,
+        }
+        if grades is not None:
+            kwargs["grades"] = grades
+        observed_grade_range, conf_curve_range = derive_observed_grades(**kwargs)
     else:
         observed_grade_range, conf_curve_range = None, {}
 
     if run_observed:
-        observed_grade_key, conf_curve_key = derive_observed_grades(
-            score_factory=score_factory,
-            analyze_confidence=analyzer.analyze_confidence_key,
-            progress_cb=_progress_key if progress_cb is not None else None,
-        )
+        kwargs = {
+            "score_factory": score_factory,
+            "analyze_confidence": analyzer.analyze_confidence_key,
+            "progress_cb": _progress_key if progress_cb is not None else None,
+        }
+        if grades is not None:
+            kwargs["grades"] = grades
+        observed_grade_key, conf_curve_key = derive_observed_grades(**kwargs)
     else:
         observed_grade_key, conf_curve_key = None, {}
 

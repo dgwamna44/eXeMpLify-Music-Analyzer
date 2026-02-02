@@ -1,6 +1,7 @@
 from copy import deepcopy
 
 import pandas as pd
+from functools import lru_cache
 from music21 import converter, stream
 
 from data_processing import derive_observed_grades
@@ -30,6 +31,7 @@ class ArticulationAnalyzer(BaseAnalyzer):
 # Rules loader
 # ----------------------------
 
+@lru_cache(maxsize=1)
 def load_articulation_rules(path: str = r"data/articulation_guidelines.csv") -> dict[float, ArticulationGradeRules]:
     df = pd.read_csv(path)
     rules: dict[float, ArticulationGradeRules] = {}
@@ -75,15 +77,20 @@ def run_articulation(
             raise ValueError("score_path or score_factory is required")
 
     # 1) Observed grade + confidence curve (fresh parse per grade)
+    grades = None
     if analysis_options is not None:
         run_observed = analysis_options.run_observed
+        grades = analysis_options.observed_grades
 
     if run_observed:
-        observed, confidences = derive_observed_grades(
-            score_factory=score_factory,
-            analyze_confidence=analyzer.analyze_confidence,
-            progress_cb=progress_cb,
-        )
+        kwargs = {
+            "score_factory": score_factory,
+            "analyze_confidence": analyzer.analyze_confidence,
+            "progress_cb": progress_cb,
+        }
+        if grades is not None:
+            kwargs["grades"] = grades
+        observed, confidences = derive_observed_grades(**kwargs)
     else:
         observed, confidences = None, {}
 
@@ -151,12 +158,20 @@ def analyze_articulation_target(score, rules: dict[float, ArticulationGradeRules
                 if n.isRest or not n.articulations:
                     continue
 
+                written_pitch = None
+                written_midi = None
+                if getattr(n, "isChord", False) is False and hasattr(n, "pitch"):
+                    written_pitch = n.pitch.nameWithOctave
+                    written_midi = n.pitch.midi
+
                 data = PartialNoteData(
                     measure=m.number,
                     offset=float(n.offset),
                     grade=target_grade,
                     instrument=part_name,
                     duration=float(n.duration.quarterLength),
+                    written_pitch=written_pitch,
+                    written_midi_value=written_midi,
                 )
 
                 conf, comment, ctype = get_articulation_confidence(n, rules, target_grade)

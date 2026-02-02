@@ -1,145 +1,263 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>MusicXML Analyzer (Verovio)</title>
-
-  <style>
-    body {
-      margin: 0;
-      font-family: system-ui, sans-serif;
-      background: #f4f4f5;
-    }
-
-    header {
-      padding: 12px 16px;
-      background: #0f172a;
-      color: white;
-      display: flex;
-      gap: 16px;
-      align-items: center;
-    }
-
-    main {
-      display: grid;
-      grid-template-columns: 3fr 1fr;
-      height: calc(100vh - 56px);
-    }
-
-    #viewer {
-      background: white;
-      padding: 12px;
-      overflow: hidden; /* important: Verovio handles paging */
-    }
-
-    #analysis {
-      border-left: 1px solid #ddd;
-      background: #fafafa;
-      padding: 16px;
-      font-size: 14px;
-      overflow: auto;
-    }
-
-    button {
-      padding: 4px 8px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      background: #1e40af;
-      color: white;
-    }
-
-    button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-  </style>
+  <title>Score Analyzer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
-<header>
-  <strong>MusicXML Analyzer</strong>
+<div class="app">
+  <header>
+    <div class="brand">Score Analyzer</div>
 
-  <input type="file" id="fileInput" accept=".musicxml,.xml,.mei" />
+    <div class="controls">
+      <button class="btn" id="loadBtn">load</button>
+      <button class="btn" id="analyzeBtn">analyze</button>
+    </div>
 
-  <button id="prevPage">Prev</button>
-  <span id="pageInfo">Page 1</span>
-  <button id="nextPage">Next</button>
-</header>
+    <div class="toggles">
+      <label class="toggle">
+        <input type="checkbox" id="stringsOnly" />
+        <span>Strings Only</span>
+      </label>
+      <label class="toggle">
+        <input type="checkbox" id="targetOnly" />
+        <span>Target Analysis Only</span>
+      </label>
+    </div>
+  </header>
 
-<main>
-  <div id="viewer"></div>
+  <main>
+    <aside class="results">
+      <h2>Results</h2>
+      <div class="bars">
+          <div class="bar-row">
+          <div class="bar-head">
+            <span>Inst. Availability</span>
+            <button class="details-mini">
+              <img src="icons/instrument.svg" alt="Availability">
+            </button>
+          </div>
+          <div class="bar">
+            <img class="marker" src="tickmark.svg" alt="">
+            <div class="bar-ticks">
+              <span></span><span></span><span></span><span></span><span></span>
+              <span></span><span></span><span></span><span></span><span></span>
+            </div>
+          </div>
+          <div class="bar-labels"><span class="low">L</span><span class="high">H</span></div>
+        </div>
+          <div class="bar-row">
+          <div class="bar-head">
+            <span>Dynamics</span>
+            <button class="details-mini">
+              <img src="icons/dynamic.svg" alt="Dynamics">
+            </button>
+          </div>
+          <div class="bar">
+            <img class="marker" src="tickmark.svg" alt="">
+            <div class="bar-ticks">
+              <span></span><span></span><span></span><span></span><span></span>
+              <span></span><span></span><span></span><span></span><span></span>
+            </div>
+          </div>
+          <div class="bar-labels"><span class="low">L</span><span class="high">H</span></div>
+        </div>
+          <div class="bar-row">
+          <div class="bar-head">
+            <span>Key</span>
+            <button class="details-mini">
+              <img src="icons/key.svg" alt="Key">
+            </button>
+          </div>
+          <div class="bar">
+            <img class="marker" src="tickmark.svg" alt="">
+            <div class="bar-ticks">
+              <span></span><span></span><span></span><span></span><span></span>
+              <span></span><span></span><span></span><span></span><span></span>
+            </div>
+          </div>
+          <div class="bar-labels"><span class="low">L</span><span class="high">H</span></div>
+        </div>
+          <div class="bar-row">
+          <div class="bar-head">
+            <span>Range</span>
+            <button class="details-mini">
+              <img src="icons/range.svg" alt="Range">
+            </button>
+          </div>
+          <div class="bar">
+            <img class="marker" src="tickmark.svg" alt="">
+            <div class="bar-ticks">
+              <span></span><span></span><span></span><span></span><span></span>
+              <span></span><span></span><span></span><span></span><span></span>
+            </div>
+          </div>
+          <div class="bar-labels"><span class="low">L</span><span class="high">H</span></div>
+        </div>
+          <div class="bar-row">
+          <div class="bar-head">
+            <span>Tempo</span>
+            <button class="details-mini">
+              <img src="icons/tempo.svg" alt="Tempo">
+            </button>
+          </div>
+          <div class="bar">
+            <img class="marker" src="tickmark.svg" alt="">
+            <div class="bar-ticks">
+              <span></span><span></span><span></span><span></span><span></span>
+              <span></span><span></span><span></span><span></span><span></span>
+            </div>
+          </div>
+          <div class="bar-labels"><span class="low">L</span><span class="high">H</span></div>
+        </div>
+          <div class="bar-row">
+          <div class="bar-head">
+            <span>Duration</span>
+            <button class="details-mini">
+              <img src="icons/duration.svg" alt="Duration">
+            </button>
+          </div>
+          <div class="bar">
+            <img class="marker" src="tickmark.svg" alt="">
+            <div class="bar-ticks">
+              <span></span><span></span><span></span><span></span><span></span>
+              <span></span><span></span><span></span><span></span><span></span>
+            </div>
+          </div>
+          <div class="bar-labels"><span class="low">L</span><span class="high">H</span></div>
+        </div>
+          <div class="bar-row">
+          <div class="bar-head">
+            <span>Articulation</span>
+            <button class="details-mini">
+              <img src="icons/articulation.svg" alt="Articulation">
+            </button>
+          </div>
+          <div class="bar">
+            <img class="marker" src="tickmark.svg" alt="">
+            <div class="bar-ticks">
+              <span></span><span></span><span></span><span></span><span></span>
+              <span></span><span></span><span></span><span></span><span></span>
+            </div>
+          </div>
+          <div class="bar-labels"><span class="low">L</span><span class="high">H</span></div>
+        </div>
+          <div class="bar-row">
+          <div class="bar-head">
+            <span>Rhythm</span>
+            <button class="details-mini">
+              <img src="icons/rhythm.svg" alt="Rhythm">
+            </button>
+          </div>
+          <div class="bar">
+            <img class="marker" src="tickmark.svg" alt="">
+            <div class="bar-ticks">
+              <span></span><span></span><span></span><span></span><span></span>
+              <span></span><span></span><span></span><span></span><span></span>
+            </div>
+          </div>
+          <div class="bar-labels"><span class="low">L</span><span class="high">H</span></div>
+        </div>
+          <div class="bar-row">
+          <div class="bar-head">
+            <span>Meter</span>
+            <button class="details-mini">
+              <img src="icons/meter.svg" alt="Meter">
+            </button>
+          </div>
+          <div class="bar">
+            <img class="marker" src="tickmark.svg" alt="">
+            <div class="bar-ticks">
+              <span></span><span></span><span></span><span></span><span></span>
+              <span></span><span></span><span></span><span></span><span></span>
+            </div>
+          </div>
+          <div class="bar-labels"><span class="low">L</span><span class="high">H</span></div>
+        </div>
+      </div>
+    </aside>
 
-  <div id="analysis">
-    <h3>Analysis</h3>
-    <p>Move the cursor to inspect notes or measures.</p>
-  </div>
-</main>
+    <section class="viewer-wrap">
+      <div id="viewer"></div>
+      <div class="viewer-title">Score</div>
+    </section>
 
-<script type="module">
-  import 'https://editor.verovio.org/javascript/app/verovio-app.js';
+    <aside class="details-pane">
+      <h2>Details</h2>
+      <div class="parts-toggle">
+        <button>By Measure</button>
+        <button>By Part</button>
+      </div>
+      <div class="detail-body">
+      </div>
+    </aside>
+  </main>
 
-  const viewer = document.getElementById("viewer");
-  const fileInput = document.getElementById("fileInput");
-  const pageInfo = document.getElementById("pageInfo");
-  const analysisPanel = document.getElementById("analysis");
+  <footer>
+    <div class="timeline">
+      <h3>Timeline</h3>
+      <div class="slider">
+        <div class="slider-track">
+          <input type="range" min="1" max="200" value="64" />
+        </div>
+      </div>
+      <div class="timeline-range">
+        <span>StartingMeasure</span>
+        <span style="text-align: right;">EndingMeasure</span>
+      </div>
+    </div>
+  </footer>
+</div>
 
-  const app = new Verovio.App(viewer, {
-    layout: "page",
-    defaultView: "page"
-  });
+<script src="../verovio/verovio-toolkit-wasm.js" onload="initVerovio()"></script>
+<script>
+  function initVerovio() {
+    if (!window.verovio || !window.verovio.toolkit) {
+      console.error("Verovio toolkit failed to load.");
+      return;
+    }
 
-  // --- File loading ---
-  fileInput.addEventListener("change", async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+    const tk = new verovio.toolkit();
+    let currentPage = 0;
+    let totalPages = 0;
 
-    const data = await file.text();
-    app.loadData(data);
-
-    app.enableCursor(true);
-    updatePageInfo();
-    attachCursorHooks();
-  });
-
-  // --- Paging ---
-  document.getElementById("prevPage").onclick = () => {
-    app.prevPage();
-    updatePageInfo();
-  };
-
-  document.getElementById("nextPage").onclick = () => {
-    app.nextPage();
-    updatePageInfo();
-  };
-
-  function updatePageInfo() {
-    const page = app.getCurrentPage();
-    const total = app.getPageCount();
-    pageInfo.textContent = `Page ${page + 1} / ${total}`;
-  }
-
-  // --- Cursor → Analysis hook ---
-  function attachCursorHooks() {
-    const cursor = app.getCursor();
-
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "ArrowRight") cursor.next();
-      if (e.key === "ArrowLeft") cursor.prev();
-      updateAnalysis(cursor);
+    tk.setOptions({
+      scale: 40,
+      pageWidth: 2100,
+      pageHeight: 2970,
+      adjustPageHeight: true,
+      adjustPageWidth: true,
+      header: "none",
+      footer: "none",
     });
 
-    updateAnalysis(cursor);
-  }
+    const viewer = document.getElementById("viewer");
+    const fileInput = document.getElementById("fileInput");
 
-  function updateAnalysis(cursor) {
-    const elementId = cursor.getCurrentId();
+    // Placeholder wiring for later
+    document.getElementById("loadBtn").onclick = () => fileInput.click();
 
-    analysisPanel.innerHTML = `
-      <h3>Analysis</h3>
-      <p><strong>Element ID:</strong> ${elementId || "None"}</p>
-      <p>(Hook this into your tessitura / difficulty analyzer)</p>
-    `;
+    const hiddenInput = document.createElement("input");
+    hiddenInput.type = "file";
+    hiddenInput.accept = ".musicxml,.xml,.mei";
+    hiddenInput.style.display = "none";
+    document.body.appendChild(hiddenInput);
+
+    hiddenInput.addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const data = await file.text();
+      tk.loadData(data);
+      currentPage = 0;
+      totalPages = tk.getPageCount();
+      renderPage();
+    });
+
+    function renderPage() {
+      viewer.innerHTML = tk.renderToSVG(currentPage + 1, {});
+    }
   }
 </script>
 </body>

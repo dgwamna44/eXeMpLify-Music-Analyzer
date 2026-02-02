@@ -52,15 +52,20 @@ def run_availability(
         else:
             raise ValueError("score_path or score_factory is required")
 
+    grades = None
     if analysis_options is not None:
         run_observed = analysis_options.run_observed
+        grades = analysis_options.observed_grades
 
     if run_observed:
-        observed, confidences = derive_observed_grades(
-            score_factory=score_factory,
-            analyze_confidence=analyzer.analyze_confidence,
-            progress_cb=progress_cb,
-        )
+        kwargs = {
+            "score_factory": score_factory,
+            "analyze_confidence": analyzer.analyze_confidence,
+            "progress_cb": progress_cb,
+        }
+        if grades is not None:
+            kwargs["grades"] = grades
+        observed, confidences = derive_observed_grades(**kwargs)
     else:
         observed, confidences = None, {}
 

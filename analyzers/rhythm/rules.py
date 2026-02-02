@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from functools import lru_cache
 import pandas as pd
 
 from app_data import GRADES
@@ -85,6 +86,7 @@ def reconcile_rhythm_rules(*rulesets: dict[float, RhythmGradeRules]) -> dict[flo
     return reconciled
 
 
+@lru_cache(maxsize=2)
 def load_rhythm_rules(data_dir: str = "data/rhythm") -> dict[float, RhythmGradeRules]:
     """
     Loads all rhythm CSVs and returns the reconciled grade->rules dict.

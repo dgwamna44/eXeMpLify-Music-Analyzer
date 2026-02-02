@@ -8,6 +8,7 @@ from app_data import (
 from utilities import confidence_curve, normalize_key_name
 from utilities.instrument_rules import clarinet_break_allowed, crosses_break
 import csv
+from functools import lru_cache
 
 
 
@@ -38,6 +39,7 @@ def total_key_confidence(key, grade, key_quality=None):
     return publisher_key_confidence(key, grade) + catalog_key_confidence(key, grade)
 
 
+@lru_cache(maxsize=1)
 def load_string_key_guidelines(path: str = "data/string_key_guidelines.csv") -> dict:
     with open(path, newline="", encoding="utf-8") as f:
         reader = csv.reader(f)

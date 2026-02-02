@@ -1,6 +1,7 @@
 from copy import deepcopy
 from time import perf_counter
 import argparse
+import sys
 
 from music21 import converter
 
@@ -12,6 +13,7 @@ from analyzers.availability.availability import run_availability
 from analyzers.tempo_duration import run_tempo_duration
 from analyzers.dynamics import run_dynamics
 from models import AnalysisOptions
+from utilities.note_reconciler import NoteReconciler
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -27,9 +29,14 @@ if __name__ == "__main__":
         action="store_true",
         help="Use string-only key/range guidelines.",
     )
+    parser.add_argument(
+        "--observed-grades",
+        default="",
+        help="Comma-separated list of grades to evaluate for observed-grade analysis.",
+    )
     args = parser.parse_args()
 
-    target_grade = 3
+    target_grade = 2.0
 
     test_files = [r"input_files\test.musicxml",
                   r"input_files\multiple_meter_madness.musicxml",
@@ -56,13 +63,13 @@ if __name__ == "__main__":
             filled = int((idx / total) * bar_width) if total else 0
             bar = "[" + ("#" * filled) + ("-" * (bar_width - filled)) + "]"
             suffix = f" {label}" if label else ""
-            print(
-                f"{name}{suffix} {bar} {idx}/{total} (grade {grade}) {elapsed:.1f}s",
-                end="\r",
-                flush=True,
+            sys.stdout.write(
+                f"\r{name}{suffix} {bar} {idx}/{total} (grade {grade}) {elapsed:.1f}s"
             )
+            sys.stdout.flush()
             if idx >= total:
-                print()
+                sys.stdout.write("\n")
+                sys.stdout.flush()
 
         return _cb
 
@@ -74,30 +81,77 @@ if __name__ == "__main__":
             elapsed = perf_counter() - started
             filled = int((idx / total) * bar_width) if total else 0
             bar = "[" + ("#" * filled) + ("-" * (bar_width - filled)) + "]"
-            print(f"target_only {bar} {idx}/{total} ({name}) {elapsed:.1f}s", end="\r", flush=True)
+            sys.stdout.write(f"\rtarget_only {bar} {idx}/{total} ({name}) {elapsed:.1f}s")
+            sys.stdout.flush()
             if idx >= total:
-                print()
+                sys.stdout.write("\n")
+                sys.stdout.flush()
 
         return _cb
+
+    observed_grades = None
+    if args.observed_grades:
+        observed_grades = tuple(float(x.strip()) for x in args.observed_grades.split(",") if x.strip())
 
     options = AnalysisOptions(
         run_observed=not args.target_only,
         string_only=args.strings_only,
+        observed_grades=observed_grades,
     )
     target_only = args.target_only
     analyzers = [
-        ("availability", run_availability),
-        ("dynamics", run_dynamics),
-        ("key_range", run_key_range),
-        ("tempo_duration", run_tempo_duration),
-        ("articulation", run_articulation),
-        ("rhythm", run_rhythm),
-        ("meter", run_meter),
+        ("dynamics", run_dynamics, False),
+        ("availability", run_availability, False),
+        ("key_range", run_key_range, True),
+        ("tempo_duration", run_tempo_duration, False),
+        ("articulation", run_articulation, True),
+        ("rhythm", run_rhythm, True),
+        ("meter", run_meter, False),
     ]
+    note_analyzers = [a for a in analyzers if a[2]]
+    other_analyzers = [a for a in analyzers if not a[2]]
     target_progress = target_progress_bar(len(analyzers))
 
+    def collect_partial_notes(result, name, reconciler: NoteReconciler):
+        analysis = result.get("analysis_notes") if result else None
+        if not analysis:
+            return
+        if name == "articulation":
+            for pdata in analysis.values():
+                for note in pdata.get("articulation_data", []):
+                    reconciler.add(note)
+        elif name == "rhythm":
+            for pdata in analysis.values():
+                for note in pdata.get("note_data", []):
+                    reconciler.add(note)
+        elif name == "key_range":
+            range_data = analysis.get("range_data", {})
+            for pdata in range_data.values():
+                for note in pdata.get("Note Data", []):
+                    reconciler.add(note)
+
     results = {}
-    for idx, (name, fn) in enumerate(analyzers, start=1):
+    reconciler = NoteReconciler()
+    step = 0
+
+    for name, fn, _ in note_analyzers:
+        step += 1
+        results[name] = fn(
+            score_path,
+            target_grade,
+            score=score_factory(),
+            score_factory=score_factory,
+            progress_cb=None if target_only else progress_bar(name),
+            analysis_options=options,
+        )
+        collect_partial_notes(results[name], name, reconciler)
+        if target_only:
+            target_progress(step, name)
+
+    results["reconciled_notes"] = reconciler._notes
+
+    for name, fn, _ in other_analyzers:
+        step += 1
         results[name] = fn(
             score_path,
             target_grade,
@@ -107,7 +161,7 @@ if __name__ == "__main__":
             analysis_options=options,
         )
         if target_only:
-            target_progress(idx, name)
+            target_progress(step, name)
 
     ava = results["availability"]
     dyn = results["dynamics"]

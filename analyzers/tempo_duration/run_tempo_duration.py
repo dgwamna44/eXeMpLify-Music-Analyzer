@@ -1,12 +1,13 @@
 from copy import deepcopy
 
 from music21 import converter
+from functools import lru_cache
 import pandas as pd
 
 from data_processing import derive_observed_grades
 from models import DurationGradeBucket
 from .tempo.analyzer import TempoAnalyzer
-from .duration.analyzer import DurationAnalyzer, analyze_duration_target
+from .duration.analyzer import DurationAnalyzer, analyze_duration_target, analyze_duration_confidence
 
 
 def _parse_tempo_range(value: str):
@@ -23,6 +24,7 @@ def _parse_tempo_range(value: str):
     return int(parts[0]), int(parts[1])
 
 
+@lru_cache(maxsize=4)
 def load_tempo_rules(path: str = r"data/tempo_guidelines.csv", column: str = "combined"):
     df = pd.read_csv(path)
     rules = {}
@@ -45,6 +47,7 @@ def _parse_duration_value(value):
     return float(text) * 60.0
 
 
+@lru_cache(maxsize=1)
 def load_duration_rules(path: str = r"data/duration_guidelines.csv"):
     df = pd.read_csv(path)
     rules = {}
@@ -84,15 +87,20 @@ def run_tempo_duration(
             raise ValueError("score_path or score_factory is required")
 
     # observed grade based on tempo only (or you can build a combined curve)
+    grades = None
     if analysis_options is not None:
         run_observed = analysis_options.run_observed
+        grades = analysis_options.observed_grades
 
     if run_observed:
-        observed, confidences = derive_observed_grades(
-            score_factory=score_factory,
-            analyze_confidence=analyzer.analyze_confidence,
-            progress_cb=progress_cb,
-        )
+        kwargs = {
+            "score_factory": score_factory,
+            "analyze_confidence": analyzer.analyze_confidence,
+            "progress_cb": progress_cb,
+        }
+        if grades is not None:
+            kwargs["grades"] = grades
+        observed, confidences = derive_observed_grades(**kwargs)
     else:
         observed, confidences = None, {}
 
@@ -101,6 +109,22 @@ def run_tempo_duration(
         score = score_factory()
     tempo_data, tempo_conf = analyzer.analyze_target(score, target_grade)
     duration_data, duration_conf = analyze_duration_target(score, duration_rules, target_grade, tempo_data=tempo_data)
+
+    # observed grade based on duration (uses tempo-derived duration)
+    if run_observed:
+        def _duration_confidence(s, g):
+            return analyze_duration_confidence(s, duration_rules, g, tempo_data=tempo_data)
+
+        kwargs = {
+            "score_factory": score_factory,
+            "analyze_confidence": _duration_confidence,
+            "progress_cb": progress_cb,
+        }
+        if grades is not None:
+            kwargs["grades"] = grades
+        observed_duration, confidences_duration = derive_observed_grades(**kwargs)
+    else:
+        observed_duration, confidences_duration = None, {}
 
     analysis_notes = {
         "tempo_data": tempo_data,
@@ -116,7 +140,10 @@ def run_tempo_duration(
     return {
         "observed_grade": observed,
         "confidences": confidences,
+        "observed_grade_tempo": observed,
+        "confidence_tempo": confidences,
+        "observed_grade_duration": observed_duration,
+        "confidence_duration": confidences_duration,
         "analysis_notes": analysis_notes,
-        "overall_confidence": None,  # optional composite if you want
         "grade_summary": grade_summary
     }
