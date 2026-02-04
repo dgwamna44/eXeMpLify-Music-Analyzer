@@ -134,7 +134,9 @@ def run_tempo_duration(
     grade_summary = {
         "target_grade": target_grade,
         "composite_tempo_confidence": tempo_conf,
-        "duration_confidence": duration_conf
+        "duration_confidence": duration_conf,
+        "overall_tempo_confidence": tempo_conf,
+        "overall_duration_confidence": duration_conf,
     }
 
     return {
@@ -145,5 +147,6 @@ def run_tempo_duration(
         "observed_grade_duration": observed_duration,
         "confidence_duration": confidences_duration,
         "analysis_notes": analysis_notes,
-        "grade_summary": grade_summary
+        "grade_summary": grade_summary,
+        "summary": grade_summary,
     }

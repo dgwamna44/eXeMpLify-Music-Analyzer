@@ -14,6 +14,7 @@ from analyzers.tempo_duration import run_tempo_duration
 from analyzers.dynamics import run_dynamics
 from models import AnalysisOptions
 from utilities.note_reconciler import NoteReconciler
+from app_data import FULL_GRADES
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -34,9 +35,14 @@ if __name__ == "__main__":
         default="",
         help="Comma-separated list of grades to evaluate for observed-grade analysis.",
     )
+    parser.add_argument(
+        "--full-grade-search",
+        action="store_true",
+        help="Include fractional grades (0.5 steps) in observed-grade analysis.",
+    )
     args = parser.parse_args()
 
-    target_grade = 2.0
+    target_grade = 2
 
     test_files = [r"input_files\test.musicxml",
                   r"input_files\multiple_meter_madness.musicxml",
@@ -92,6 +98,8 @@ if __name__ == "__main__":
     observed_grades = None
     if args.observed_grades:
         observed_grades = tuple(float(x.strip()) for x in args.observed_grades.split(",") if x.strip())
+    elif args.full_grade_search:
+        observed_grades = tuple(FULL_GRADES)
 
     options = AnalysisOptions(
         run_observed=not args.target_only,
@@ -171,4 +179,46 @@ if __name__ == "__main__":
     rhy = results["rhythm"]
     met = results["meter"]
     
-    print("done")
+    confidences = {}
+    notes = {}
+    observed_grades = {}
+
+    if target_only:
+        observed_grades = None
+    else:
+        observed_grades['availability'] = ava.get('observed_grade')
+        observed_grades['dynamics'] = dyn.get('observed_grade')
+        observed_grades['key'] = kr.get('observed_grade_key')
+        observed_grades['range'] = kr.get('observed_grade_range')
+        observed_grades['tempo'] = temp.get('observed_grade_tempo')
+        observed_grades['duration'] = temp.get('observed_grade_duration')
+        observed_grades['articulation'] = art.get('observed_grade')
+        observed_grades['rhythm'] = rhy.get('observed_grade')
+        observed_grades['meter'] = met.get('observed_grade')
+
+
+    confidences['availability'] = results['availability']['overall_confidence']
+    confidences['dynamics'] = results['dynamics']['overall_confidence']
+    confidences['key'] = results['key_range']['summary']['overall_key_confidence']
+    confidences['range'] = results['key_range']['summary']['overall_range_confidence']
+    confidences['tempo'] = results['tempo_duration']['summary']['overall_tempo_confidence']
+    confidences['duration'] = results['tempo_duration']['summary']['overall_duration_confidence']
+    confidences['articulation'] = results['articulation']['overall_confidence']
+    confidences['rhythm'] = results['rhythm']['overall_confidence']
+    confidences['meter'] = results['meter']['overall_confidence']
+
+    notes['availability'] = results['availability'].get('analysis_notes', {})
+    notes['dynamics'] = results['dynamics'].get('analysis_notes', {})
+    notes['key'] = results['key_range'].get('analysis_notes', {}).get('key_data', {})
+    notes['range'] = results['key_range'].get('analysis_notes', {}).get('range_data', {})
+    notes['tempo'] = results['tempo_duration']["analysis_notes"].get('tempo_notes', {})
+    notes['duration'] = results['tempo_duration']["analysis_notes"].get('duration_notes', {})
+    notes['articulation'] = results['articulation'].get('analysis_notes', {})
+    notes['rhythm'] = results['rhythm'].get('analysis_notes', {})
+    notes['meter'] = results['meter'].get('analysis_notes', {})
+
+    final_result = {
+        "observed_grades": observed_grades,
+        "confidences": confidences,
+        "analysis_notes": notes,
+    }

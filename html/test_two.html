@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+  <body>
+    <div id="app" style="min-height:800px;border:1px solid #ccc;"></div>
+
+    <script type="module">
+      await import("https://editor.verovio.org/javascript/app/verovio-app.js");
+
+      const appEl = document.getElementById("app");
+      const app = new window.Verovio.App(appEl, { defaultView: "document", documentZoom: 3 });
+
+      const res = await fetch("https://www.verovio.org/editor/brahms.mei");
+      const txt = await res.text();
+      const p = app.loadData(txt);
+      if (p?.then) await p;
+
+      console.log("Rendered SVGs:", document.querySelectorAll("svg").length);
+      console.log("In app:", document.querySelectorAll("#app svg").length);
+    </script>
+  </body>
+</html>
