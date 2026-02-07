@@ -10,7 +10,7 @@ from analyzers.rhythm.note_rules import rule_dotted, rule_subdivision, rule_sync
 from analyzers.rhythm.rules import load_rhythm_rules
 from data_processing import derive_observed_grades
 from app_data import GRADES
-from utilities import iter_measure_lines
+from utilities import get_closest_grade, iter_measure_lines
 
 
 def rhythm_note_confidence(note, rules_for_grade, target_grade):
@@ -27,7 +27,8 @@ def rhythm_note_confidence(note, rules_for_grade, target_grade):
 # ----------------------------
 
 def analyze_rhythm_confidence(score, rules, grade: float) -> float | None:
-    rules_for_grade = rules.get(grade)
+    rule_grade = get_closest_grade(grade, rules.keys())
+    rules_for_grade = rules.get(rule_grade) if rule_grade is not None else None
     if rules_for_grade is None:
         return None
 
@@ -114,7 +115,8 @@ def analyze_rhythm_confidence(score, rules, grade: float) -> float | None:
 
 def analyze_rhythm_target(score, rules, target_grade: float):
     analysis_notes = {}
-    rules_for_grade = rules.get(target_grade)
+    rule_grade = get_closest_grade(target_grade, rules.keys())
+    rules_for_grade = rules.get(rule_grade) if rule_grade is not None else None
     if rules_for_grade is None:
         return {}, None
 

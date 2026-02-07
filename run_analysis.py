@@ -170,11 +170,18 @@ def build_final_result(results, target_only: bool, total_measures: int | None = 
         "meter": results.get("meter", {}).get("analysis_notes", {}),
     }
 
+    duration_data = notes.get("duration")
+    if isinstance(duration_data, dict):
+        duration_str = duration_data.get("length_string")
+    else:
+        duration_str = getattr(duration_data, "length_string", None)
+
     return {
         "observed_grades": observed_grades,
         "confidences": confidences,
         "analysis_notes": notes,
         "total_measures": total_measures,
+        "duration": duration_str,
     }
 
 if __name__ == "__main__":

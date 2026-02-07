@@ -288,7 +288,7 @@ main {
   display: grid;
   gap: 12px;
   flex: 1;
-  align-content: space-between;
+  align-content: start;
 }
 
 .bar-row {
@@ -525,6 +525,7 @@ footer {
   gap: 10px;
   overflow: visible;
   border: 1px solid #0b4b6b;
+  --timeline-line-offset: 15px;
 }
 
 .timeline-header {
@@ -597,6 +598,10 @@ footer {
   display: none;
 }
 
+.timeline.hide-last-measure #endingMeasureLabel {
+  display: none;
+}
+
 .timeline h3 {
   margin: 0;
   font-size: 32px;
@@ -612,6 +617,7 @@ footer {
   height: 100%;
   overflow-x: auto;
   overflow-y: hidden;
+  padding-bottom: 32px;
 }
 
 .timeline-canvas {
@@ -625,7 +631,7 @@ footer {
   position: absolute;
   left: 0;
   right: 0;
-  top: 50%;
+  top: calc(50% + var(--timeline-line-offset));
   height: 4px;
   background: #0b4b6b;
   transform: translateY(-50%);
@@ -645,7 +651,7 @@ footer {
   height: 26px;
   background: #0b4b6b;
   position: absolute;
-  top: 50%;
+  top: calc(50% + var(--timeline-line-offset));
   left: 50%;
   transform: translate(-50%, -50%);
 }
@@ -674,16 +680,17 @@ footer {
 .tick-top {
   position: absolute;
   top: 4px;
+  bottom: calc(50% + var(--timeline-line-offset) + 6px);
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  justify-content: space-between;
 }
 
 .tick-tempo {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 700;
   letter-spacing: 0.02em;
   line-height: 1;
@@ -693,26 +700,27 @@ footer {
   gap: 6px;
   color: #0b4b6b;
   white-space: nowrap;
+  transform: translateY(10px) translateX(10px);
 }
 
 .tick-tempo-icon {
   display: block;
-  height: 18px;
+  height: 22px;
   width: auto;
 }
 
 .tick-tempo-text {
   line-height: 1;
-  font-size: 14px;
+  font-size: 18px;
   font-weight: 700;
 }
 
 .tick-measure {
-  font-size: 14px;
+  font-size: 18px;
   font-weight: 600;
   line-height: 1;
   position: absolute;
-  bottom: -38px;
+  bottom: -16px;
   left: 50%;
   transform: translateX(-50%);
 }
@@ -720,12 +728,13 @@ footer {
 .tick-key-wrap {
   position: absolute;
   top: 75%;
-  left: 50%;
+  left: 100%;
   transform: translate(-50%, -50%);
   display: inline-flex;
   align-items: center;
   gap: 4px;
   height: 18px;
+  transform: translateY(10px);
 }
 
 .tick-key-icon {
@@ -735,7 +744,6 @@ footer {
 }
 
 .tick-key-letter,
-.tick-key-minor,
 .tick-key-accidental {
   font-family: Georgia, 'Times New Roman', Times, serif;
   line-height: 1;
@@ -745,7 +753,15 @@ footer {
 
 .tick-key-accidental {
   font-size: 18px;
-  line-height: 2;
+  line-height: 3;
+}
+
+.tick-key-minor {
+  font-size: 18px;
+  line-height: 1;
+  position: relative;
+  top: 3px;
+  right: -2px;
 }
 
 .timeline-tick-start {
@@ -763,7 +779,7 @@ footer {
 }
 
 .timeline-tick-start .tick-mark {
-  left: 50%;
+  left: 70%;
   height: 36px;
   width: 5px;
 }

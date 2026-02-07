@@ -131,12 +131,10 @@ function buildTimelineTicks(trackEl, ticks, totalMeasures) {
     mark.className = "tick-mark";
     tickEl.appendChild(mark);
 
-    if (!isStart && !isEnd) {
-      const measureEl = document.createElement("div");
-      measureEl.className = "tick-measure";
-      measureEl.textContent = String(measure);
-      tickEl.appendChild(measureEl);
-    }
+    const measureEl = document.createElement("div");
+    measureEl.className = "tick-measure";
+    measureEl.textContent = String(measure);
+    tickEl.appendChild(measureEl);
 
     if (tick.key) {
       tickEl.appendChild(makeKeySigSvgEl(tick.key, tick.key_quality));
@@ -309,11 +307,27 @@ function prepareTimelineTicks() {
   return [...merged.values()].sort((a, b) => a.measure - b.measure);
 }
 
-function setTimelineLabels(totalMeasures) {
+function setTimelineLabels(totalMeasures, durationString) {
   const startEl = document.querySelector("#startingMeasureLabel");
   const endEl = document.querySelector("#endingMeasureLabel");
+  const durationCheck = document.querySelector("#toggleDuration");
   if (startEl) startEl.textContent = "1";
-  if (endEl) endEl.textContent = totalMeasures ? String(totalMeasures) : "--";
+  let endText = totalMeasures ? String(totalMeasures) : "--";
+  const durationText = durationString != null ? String(durationString) : "";
+  if (durationCheck?.checked && durationText) {
+    const parts = durationText.split("'");
+    if (parts.length > 1) {
+      const min = parts[0];
+      const sec = parts.slice(1).join("'");
+      endText = min === "0" ? sec : durationText;
+    } else {
+      endText = durationText;
+    }
+  }
+  if (endEl) endEl.textContent = endText;
+  if (totalMeasures != null || durationString != null) {
+    window._timelineMeta = { totalMeasures, durationString };
+  }
 }
 
 window.prepareTimelineTicks = prepareTimelineTicks;
@@ -432,8 +446,9 @@ function initAnalysisRequest() {
       if (!window.analysisResult) return;
 
       const totalMeasures = window.analysisResult?.result?.total_measures ?? 0;
+      const durationString = window.analysisResult?.result?.duration ?? 0;
       setMarkerPositions(window.analysisResult?.result?.confidences);
-      setTimelineLabels(totalMeasures);
+      setTimelineLabels(totalMeasures, durationString);
     });
   }
   const labelMap = {
@@ -638,8 +653,9 @@ function initAnalysisRequest() {
             window.analysisResult = result;
 
             const totalMeasures = result?.result?.total_measures ?? 0;
+            const durationString = result?.result?.duration ?? 0;
 
-            setTimelineLabels(totalMeasures);
+            setTimelineLabels(totalMeasures, durationString);
 
             const ticks = prepareTimelineTicks();
             console.log("ticks:", ticks);
@@ -678,6 +694,14 @@ function initTimelineToggles() {
   bind("toggleKey", "hide-key");
   bind("toggleTempo", "hide-tempo");
   bind("toggleMeter", "hide-meter");
+
+  const durationToggle = document.getElementById("toggleDuration");
+  if (durationToggle) {
+    durationToggle.addEventListener("change", () => {
+      const meta = window._timelineMeta || {};
+      setTimelineLabels(meta.totalMeasures, meta.durationString);
+    });
+  }
 }
 
 function extractScoreTitle(text) {

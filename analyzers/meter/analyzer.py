@@ -9,6 +9,7 @@ from analyzers.base import BaseAnalyzer
 from analyzers.shared.score_extract import extract_meter_segments
 from analyzers.rhythm.rules import load_rhythm_rules
 from data_processing import derive_observed_grades
+from utilities import get_closest_grade
 
 
 def apply_meter_change_penalty(base_total: float, meter_data, grade: float) -> float:
@@ -47,7 +48,10 @@ def apply_meter_change_penalty(base_total: float, meter_data, grade: float) -> f
 
 class MeterAnalyzer(BaseAnalyzer):
     def analyze_confidence(self, score, grade: float):
-        rules_for_grade = self.rules[grade]
+        rule_grade = get_closest_grade(grade, self.rules.keys())
+        if rule_grade is None:
+            return None
+        rules_for_grade = self.rules[rule_grade]
         meter_data = extract_meter_segments(score, grade=grade, rules_for_grade=rules_for_grade)
 
         base_total = sum((m.confidence or 0.0) * (m.exposure or 0.0) for m in meter_data)
@@ -57,7 +61,10 @@ class MeterAnalyzer(BaseAnalyzer):
         return total_conf
 
     def analyze_target(self, score, target_grade: float):
-        rules_for_grade = self.rules[target_grade]
+        rule_grade = get_closest_grade(target_grade, self.rules.keys())
+        if rule_grade is None:
+            return [], None
+        rules_for_grade = self.rules[rule_grade]
         meter_data = extract_meter_segments(score, grade=target_grade, rules_for_grade=rules_for_grade)
 
         base_total = sum((m.confidence or 0.0) * (m.exposure or 0.0) for m in meter_data)

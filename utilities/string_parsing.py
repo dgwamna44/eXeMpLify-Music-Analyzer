@@ -54,3 +54,14 @@ def validate_part_for_availability(name):
 
 def get_rounded_grade(grade):  # can only return discrete values for getting ranges
     return 1 if grade == .5 else math.floor(grade)
+
+
+def get_closest_grade(grade, available_grades):
+    if grade is None:
+        return None
+    grades = sorted(float(g) for g in available_grades)
+    if not grades:
+        return None
+    if grade in grades:
+        return grade
+    return min(grades, key=lambda g: (abs(g - grade), -g))
