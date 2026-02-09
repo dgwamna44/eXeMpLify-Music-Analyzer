@@ -5,6 +5,7 @@ from functools import lru_cache
 import pandas as pd
 
 from app_data import GRADES
+from app_data import RHYTHM_TOKEN_MAP
 from models import RhythmGradeRules
 
 TUPLET_CLASS_ORDER = {
@@ -57,12 +58,29 @@ def unpack_rhythm_data(filename: Path) -> dict[float, RhythmGradeRules]:
 def reconcile_rhythm_rules(*rulesets: dict[float, RhythmGradeRules]) -> dict[float, RhythmGradeRules]:
     reconciled: dict[float, RhythmGradeRules] = {}
 
+    duration_map = {data["token"]: data["duration"] for data in RHYTHM_TOKEN_MAP.values()}
+
+    def max_subdivision_strict(values: list[str]) -> str:
+        best_token = None
+        best_duration = None
+        for value in values:
+            token = str(value).strip().lower()
+            if token in {"any", ""}:
+                continue
+            duration = duration_map.get(token)
+            if duration is None:
+                continue
+            if best_duration is None or duration > best_duration:
+                best_duration = duration
+                best_token = token
+        return best_token or "Any"
+
     for grade in GRADES:
         rows = [rs[grade] for rs in rulesets if grade in rs]
         if not rows:
             continue
 
-        allowed_tuplet_classes = set().union(*(r.allowed_tuplet_classes for r in rows))
+        allowed_tuplet_classes = set.intersection(*(set(r.allowed_tuplet_classes) for r in rows)) if rows else set()
 
         # enforce "none only" for grade 0.5; otherwise remove "none"
         if grade == 0.5:
@@ -72,15 +90,15 @@ def reconcile_rhythm_rules(*rulesets: dict[float, RhythmGradeRules]) -> dict[flo
 
         reconciled[grade] = RhythmGradeRules(
             grade=grade,
-            max_subdivision=max(r.max_subdivision for r in rows),
-            allow_dotted=any(r.allow_dotted for r in rows),
-            allow_tuplet=any(r.allow_tuplet for r in rows),
+            max_subdivision=max_subdivision_strict([r.max_subdivision for r in rows]),
+            allow_dotted=all(r.allow_dotted for r in rows),
+            allow_tuplet=all(r.allow_tuplet for r in rows),
             allowed_tuplet_classes=allowed_tuplet_classes,
-            allow_mixed_tuplet=any(r.allow_mixed_tuplet for r in rows),
-            allow_syncopation=any(r.allow_syncopation for r in rows),
-            allow_easy_compound=any(r.allow_easy_compound for r in rows),
-            allow_mixed_compound=any(r.allow_mixed_compound for r in rows),
-            allow_compound=any(r.allow_compound for r in rows),
+            allow_mixed_tuplet=all(r.allow_mixed_tuplet for r in rows),
+            allow_syncopation=all(r.allow_syncopation for r in rows),
+            allow_easy_compound=all(r.allow_easy_compound for r in rows),
+            allow_mixed_compound=all(r.allow_mixed_compound for r in rows),
+            allow_compound=all(r.allow_compound for r in rows),
         )
 
     return reconciled

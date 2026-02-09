@@ -6,7 +6,7 @@ class KeyData:
     grade: float
     key: str
     quality: str
-    pitch_index: int
+    pitch_index: int | None
     duration: int | None = None
     exposure: float | None = None
     confidence: float | None = None

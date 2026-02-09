@@ -7,6 +7,7 @@ from app_data import (
 )
 from utilities import confidence_curve, normalize_key_name
 from utilities.instrument_rules import clarinet_break_allowed, crosses_break
+from music21 import pitch as m21pitch
 import csv
 from functools import lru_cache
 
@@ -18,25 +19,53 @@ from functools import lru_cache
 # ------------------------------
 
 def publisher_key_support(key, grade):
-    return sum(max_grade <= grade for max_grade in GRADE_TO_KEY_TABLE[key].values())
+    values = [
+        v for v in GRADE_TO_KEY_TABLE.get(key, {}).values()
+        if isinstance(v, (int, float))
+    ]
+    return sum(max_grade <= grade for max_grade in values)
 
 
 def publisher_key_confidence(key, grade):
-    total_sources = len(GRADE_TO_KEY_TABLE[key])
+    values = [
+        v for v in GRADE_TO_KEY_TABLE.get(key, {}).values()
+        if isinstance(v, (int, float))
+    ]
+    total_sources = len(values)
     evidence = publisher_key_support(key, grade)
+    if total_sources == 0:
+        return 0.0
     return confidence_curve(evidence, normalize=total_sources, k=2.0, max_conf=0.80)
 
 
 def catalog_key_confidence(key, grade):
     exposure = sum(
-        count for g, count in PUBLISHER_CATALOG_FREQUENCY[key].items() if g <= grade
+        count for g, count in PUBLISHER_CATALOG_FREQUENCY.get(key, {}).items() if g <= grade
     )
-    total = sum(PUBLISHER_CATALOG_FREQUENCY[key].values()) or 1
+    total = sum(PUBLISHER_CATALOG_FREQUENCY.get(key, {}).values()) or 1
     return confidence_curve(exposure, normalize=total, k=1.2, max_conf=0.20)
 
 
+def _relative_major_key(key: str) -> str:
+    try:
+        pitch = m21pitch.Pitch(normalize_key_name(key))
+    except Exception:
+        return key
+    rel = pitch.transpose(3)
+    return normalize_key_name(rel.name).capitalize()
+
+
+def _key_in_tables(key: str) -> bool:
+    return key in GRADE_TO_KEY_TABLE and key in PUBLISHER_CATALOG_FREQUENCY
+
+
 def total_key_confidence(key, grade, key_quality=None):
-    return publisher_key_confidence(key, grade) + catalog_key_confidence(key, grade)
+    eval_key = key
+    if key_quality and str(key_quality).lower().startswith("min") and key != "None":
+        eval_key = _relative_major_key(key)
+    if not _key_in_tables(eval_key):
+        eval_key = key
+    return publisher_key_confidence(eval_key, grade) + catalog_key_confidence(eval_key, grade)
 
 
 @lru_cache(maxsize=1)
@@ -84,10 +113,14 @@ def string_key_confidence(key: str, grade: float, key_quality: str | None, guide
     grades = sorted(guidelines.keys())
     sel = _select_grade(float(grade), grades)
     quality = (key_quality or "major").lower()
+    eval_key = key
+    if quality.startswith("min"):
+        eval_key = _relative_major_key(key)
+        quality = "major"
     bucket = guidelines[sel].get(quality, guidelines[sel].get("major"))
     if bucket is None:
         return 1.0
-    return 1.0 if key in bucket else 0.0
+    return 1.0 if eval_key in bucket else 0.0
 
 
 # ------------------------------
@@ -131,6 +164,8 @@ def compute_range_confidence(note, core, ext, total, target_grade, key_quality):
 
     # -------------- Harmonic Tolerance Penalty --------------
     penalty = harmonic_tolerance_penalty(target_grade)
+    if key_quality in (None, "none") or rel is None:
+        return max(0.0, conf)
     if key_quality == "major":
         if rel not in MAJOR_DIATONIC_MAP:
             conf = max(0.0, conf - penalty)

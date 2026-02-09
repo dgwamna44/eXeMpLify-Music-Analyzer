@@ -133,6 +133,7 @@ function buildTimelineTicks(trackEl, ticks, totalMeasures) {
 
     const measureEl = document.createElement("div");
     measureEl.className = "tick-measure";
+    measureEl.dataset.measure = String(measure);
     measureEl.textContent = String(measure);
     tickEl.appendChild(measureEl);
 
@@ -307,11 +308,52 @@ function prepareTimelineTicks() {
   return [...merged.values()].sort((a, b) => a.measure - b.measure);
 }
 
-function setTimelineLabels(totalMeasures, durationString) {
+function formatTimelineTime(seconds) {
+  if (!Number.isFinite(seconds)) return "--";
+  if (seconds < 60) {
+    return `${Math.ceil(seconds)}"`;
+  }
+  let minutes = Math.floor(seconds / 60);
+  let secs = Math.ceil(seconds % 60);
+  if (secs >= 60) {
+    minutes += 1;
+    secs = 0;
+  }
+  return `${minutes}'${String(secs).padStart(2, "0")}"`;
+}
+
+function getSecondsForMeasure(measure, tempoData, totalMeasures) {
+  if (!Array.isArray(tempoData) || tempoData.length === 0) {
+    return null;
+  }
+  const segments = [...tempoData].sort(
+    (a, b) => Number(a?.measure) - Number(b?.measure),
+  );
+  const total = Number.isFinite(totalMeasures) ? totalMeasures : null;
+  let elapsed = 0;
+
+  for (let i = 0; i < segments.length; i++) {
+    const seg = segments[i];
+    const start = Math.max(1, Number(seg?.measure) || 1);
+    const next = segments[i + 1];
+    const end = Number(next?.measure) || (total != null ? total + 1 : start);
+    const length = Math.max(0, end - start);
+    const quarterBpm = Number(seg?.quarter_bpm ?? seg?.bpm ?? 100);
+    const secPerMeasure = (60 / quarterBpm) * 4;
+
+    if (measure >= start && measure < end) {
+      return elapsed + (measure - start) * secPerMeasure;
+    }
+    elapsed += length * secPerMeasure;
+  }
+
+  return null;
+}
+
+function setTimelineLabels(totalMeasures, durationString, tempoData) {
   const startEl = document.querySelector("#startingMeasureLabel");
   const endEl = document.querySelector("#endingMeasureLabel");
   const durationCheck = document.querySelector("#toggleDuration");
-  if (startEl) startEl.textContent = "1";
   let endText = totalMeasures ? String(totalMeasures) : "--";
   const durationText = durationString != null ? String(durationString) : "";
   if (durationCheck?.checked && durationText) {
@@ -324,10 +366,22 @@ function setTimelineLabels(totalMeasures, durationString) {
       endText = durationText;
     }
   }
+  if (startEl) startEl.textContent = durationCheck?.checked ? "0\"" : "1";
   if (endEl) endEl.textContent = endText;
   if (totalMeasures != null || durationString != null) {
-    window._timelineMeta = { totalMeasures, durationString };
+    window._timelineMeta = { totalMeasures, durationString, tempoData };
   }
+
+  document.querySelectorAll(".tick-measure").forEach((el) => {
+    const measure = Number(el.dataset.measure);
+    if (!Number.isFinite(measure)) return;
+    if (durationCheck?.checked) {
+      const seconds = getSecondsForMeasure(measure, tempoData, totalMeasures);
+      el.textContent = formatTimelineTime(seconds);
+    } else {
+      el.textContent = String(measure);
+    }
+  });
 }
 
 window.prepareTimelineTicks = prepareTimelineTicks;
@@ -447,8 +501,9 @@ function initAnalysisRequest() {
 
       const totalMeasures = window.analysisResult?.result?.total_measures ?? 0;
       const durationString = window.analysisResult?.result?.duration ?? 0;
+      const tempoData = window.analysisResult?.result?.analysis_notes?.tempo ?? [];
       setMarkerPositions(window.analysisResult?.result?.confidences);
-      setTimelineLabels(totalMeasures, durationString);
+      setTimelineLabels(totalMeasures, durationString, tempoData);
     });
   }
   const labelMap = {
@@ -654,8 +709,9 @@ function initAnalysisRequest() {
 
             const totalMeasures = result?.result?.total_measures ?? 0;
             const durationString = result?.result?.duration ?? 0;
+            const tempoData = result?.result?.analysis_notes?.tempo ?? [];
 
-            setTimelineLabels(totalMeasures, durationString);
+            setTimelineLabels(totalMeasures, durationString, tempoData);
 
             const ticks = prepareTimelineTicks();
             console.log("ticks:", ticks);
@@ -699,7 +755,7 @@ function initTimelineToggles() {
   if (durationToggle) {
     durationToggle.addEventListener("change", () => {
       const meta = window._timelineMeta || {};
-      setTimelineLabels(meta.totalMeasures, meta.durationString);
+      setTimelineLabels(meta.totalMeasures, meta.durationString, meta.tempoData);
     });
   }
 }

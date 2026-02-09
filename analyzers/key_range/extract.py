@@ -19,8 +19,14 @@ def extract_key_segments(score, target_grade, *, sounding_score=None):
     key_segments = []
     for ks in keys:
         measure = ks.getContextByClass(stream.Measure).number
-        tonic = normalize_key_name(ks.tonicPitchNameWithCase).capitalize()
-        quality = ks.type
+        if getattr(ks, "sharps", None) is None:
+            tonic = "None"
+            quality = "none"
+            pitch_index = None
+        else:
+            tonic = normalize_key_name(ks.tonicPitchNameWithCase).capitalize()
+            quality = ks.type
+            pitch_index = PITCH_TO_INDEX[tonic]
 
         key_segments.append(
             KeyData(
@@ -28,7 +34,7 @@ def extract_key_segments(score, target_grade, *, sounding_score=None):
                 grade=target_grade,
                 key=tonic,
                 quality=quality,
-                pitch_index=PITCH_TO_INDEX[tonic]
+                pitch_index=pitch_index
             )
         )
 
@@ -110,7 +116,7 @@ def extract_note_data(score, target_grade, combined_ranges, key_segments):
                     sounding_midi_value=sounding_midi,
                 )
 
-                if local_key is not None:
+                if local_key is not None and local_key.key != "None" and local_key.pitch_index is not None:
                     pitch_class = sounding_midi % 12
                     data.relative_key_index = (pitch_class - local_key.pitch_index) % 12
 

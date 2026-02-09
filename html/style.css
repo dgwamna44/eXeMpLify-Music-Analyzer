@@ -12,8 +12,8 @@
   --good: #22c55e;
   --timeline: #eef6ff;
   --results: #eef6ff;
-  --icon-btn-size: 64px;
-  --icon-size: 80px;
+  --icon-btn-size: 56px;
+  --icon-size: 70px;
 }
 
 * {
@@ -332,6 +332,7 @@ main {
 .details-mini {
   width: var(--icon-btn-size);
   height: var(--icon-btn-size);
+  transform: translateY(10px);
   border-radius: 10px;
   border: none;
   background: transparent;
@@ -344,7 +345,7 @@ main {
 }
 
 .details-mini:hover {
-  transform: scale(1.5);
+  transform: scale(1.2);
 }
 
 .details-mini img {

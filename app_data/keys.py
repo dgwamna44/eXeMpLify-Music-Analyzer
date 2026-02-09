@@ -14,6 +14,7 @@ GRADE_TO_KEY_TABLE = {
     "A":  {"ABC": 4, "Marlatt": 4, "Belwin": 4, "RJH": 4, "Fischer": 5, "Newton": 4},
     "Bb": {"ABC": .5, "Marlatt": .5, "Belwin": .5, "RJH": .5, "Fischer": .5, "Newton": .5},
     "B":  {"ABC": 4, "Marlatt": 4, "Belwin": 4, "RJH": 4, "Fischer": 5, "Newton": 4},
+    "None": {"ABC": 5, "Marlatt": 5, "Belwin": 4, "RJH": None, "Fischer": 5, "Newton": None},
 }
 
 PITCH_TO_INDEX = {"C": 0, "C#": 1, "Db": 1, "D": 2, "D#": 3, "Eb": 3, "E": 4, "F": 5, "F#": 6, "Gb": 6, "G": 7, "G#": 8, "Ab": 8, "A": 9, "A#": 10, "Bb": 10, "B": 11, "Cb": 11}
