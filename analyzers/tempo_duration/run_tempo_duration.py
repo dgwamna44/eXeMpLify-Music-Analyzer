@@ -7,7 +7,7 @@ import pandas as pd
 from data_processing import derive_observed_grades
 from models import DurationGradeBucket
 from .tempo.analyzer import TempoAnalyzer
-from .duration.analyzer import DurationAnalyzer, analyze_duration_target, analyze_duration_confidence
+from .duration.analyzer import analyze_duration
 
 
 def _parse_tempo_range(value: str):
@@ -103,7 +103,7 @@ def run_tempo_duration(
     if run_observed:
         kwargs = {
             "score_factory": score_factory,
-            "analyze_confidence": analyzer.analyze_confidence,
+            "analyze_confidence": lambda s, g: analyzer.analyze(s, g, run_target=False),
             "progress_cb": _progress_tempo if progress_cb is not None else None,
         }
         if grades is not None:
@@ -115,11 +115,12 @@ def run_tempo_duration(
     # target-grade UI data
     if score is None:
         score = score_factory()
-    tempo_data, tempo_conf = analyzer.analyze_target(score, target_grade)
-    duration_data, duration_conf = analyze_duration_target(
+    tempo_data, tempo_conf = analyzer.analyze(score, target_grade, run_target=True)
+    duration_data, duration_conf = analyze_duration(
         score,
         duration_rules,
         target_grade,
+        run_target=True,
         tempo_data=tempo_data,
     )
     tempo_conf = min(1.0, max(0.0, tempo_conf))
@@ -128,7 +129,7 @@ def run_tempo_duration(
     # observed grade based on duration (uses tempo-derived duration)
     if run_observed:
         def _duration_confidence(s, g):
-            return analyze_duration_confidence(s, duration_rules, g, tempo_data=tempo_data)
+            return analyze_duration(s, duration_rules, g, run_target=False, tempo_data=tempo_data)
 
         kwargs = {
             "score_factory": score_factory,

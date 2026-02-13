@@ -4,7 +4,7 @@ from __future__ import annotations
 from music21 import meter as m21meter, stream
 from models import MeterData, RhythmGradeRules
 from analyzers.meter.helpers import meter_segment_confidence
-from utilities import iter_measure_events
+from utilities import format_grade, iter_measure_events
 
 
 def extract_meter_segments(score, *, grade: float, rules_for_grade: RhythmGradeRules) -> list[MeterData]:
@@ -46,7 +46,9 @@ def extract_meter_segments(score, *, grade: float, rules_for_grade: RhythmGradeR
         seg.confidence = meter_segment_confidence(seg, rules_for_grade)
 
         if seg.confidence == 0:
-            seg.comments["Time Signature"] = f"{seg.time_signature} not common for grade {grade}"
+            seg.comments["Time Signature"] = (
+                f"{seg.time_signature} not common for grade {format_grade(grade)}"
+            )
 
         segments.append(seg)
 

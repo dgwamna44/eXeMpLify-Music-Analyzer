@@ -4,7 +4,7 @@ import math
 import pandas as pd
 from typing import List
 from models import DurationData, DurationGradeBucket
-from utilities import get_rounded_grade
+from utilities import format_grade, get_rounded_grade
 from app_data import GRADES, ROUNDED_GRADES
 from data_processing import derive_observed_grades
 
@@ -148,7 +148,7 @@ def run(score_path: str, target_grade: float):
         seg.grade = target_grade
         seg.confidence = conf
         seg.comments = (
-            f"Tempo {seg.bpm} BPM outside grade {target_grade} range"
+            f"Tempo {seg.bpm} BPM outside grade {format_grade(target_grade)} range"
             if conf == 0 else None
         )
 

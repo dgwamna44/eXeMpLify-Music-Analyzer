@@ -1,4 +1,4 @@
-from utilities import get_closest_grade
+from utilities import format_grade, get_closest_grade
 
 
 def get_articulation_confidence(note, rules, grade):
@@ -18,9 +18,25 @@ def get_articulation_confidence(note, rules, grade):
         return (1, None, None)
 
     if len(articulations) > 1:
-        return (1, None, None) if rules[rule_grade].multiple_articulations else (0, f"Multiple articulations per note are not common for grade {grade}", "multiple_articulations")
+        return (
+            (1, None, None)
+            if rules[rule_grade].multiple_articulations
+            else (
+                0,
+                f"Multiple articulations per note are not common for grade {format_grade(grade)}",
+                "multiple_articulations",
+            )
+        )
     else:
         for art in articulations:
             if hasattr(rules[rule_grade], art):
-                return (1, None, None) if getattr(rules[rule_grade], art) else (0, f"{art} is not common for grade {grade}", art)
+                return (
+                    (1, None, None)
+                    if getattr(rules[rule_grade], art)
+                    else (
+                        0,
+                        f"{art} is not common for grade {format_grade(grade)}",
+                        art,
+                    )
+                )
         return (1, None, None)  # If no recognized articulation, assume ok

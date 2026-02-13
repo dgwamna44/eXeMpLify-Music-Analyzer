@@ -5,7 +5,7 @@ from app_data import (
     MAJOR_DIATONIC_MAP,
     MINOR_DIATONIC_MAP
 )
-from utilities import confidence_curve, normalize_key_name
+from utilities import confidence_curve, format_grade, normalize_key_name
 from utilities.instrument_rules import clarinet_break_allowed, crosses_break
 from music21 import pitch as m21pitch
 import csv
@@ -35,6 +35,8 @@ def publisher_key_confidence(key, grade):
     evidence = publisher_key_support(key, grade)
     if total_sources == 0:
         return 0.0
+    if evidence == total_sources:
+        return confidence_curve(evidence, normalize=total_sources, k=3.5, max_conf=1)
     return confidence_curve(evidence, normalize=total_sources, k=2.0, max_conf=0.80)
 
 
@@ -59,13 +61,24 @@ def _key_in_tables(key: str) -> bool:
     return key in GRADE_TO_KEY_TABLE and key in PUBLISHER_CATALOG_FREQUENCY
 
 
+def _min_publisher_grade(key: str) -> float | None:
+    values = [
+        v for v in GRADE_TO_KEY_TABLE.get(key, {}).values()
+        if isinstance(v, (int, float))
+    ]
+    return min(values) if values else None
+
+
 def total_key_confidence(key, grade, key_quality=None):
     eval_key = key
     if key_quality and str(key_quality).lower().startswith("min") and key != "None":
         eval_key = _relative_major_key(key)
     if not _key_in_tables(eval_key):
         eval_key = key
-    return publisher_key_confidence(eval_key, grade) + catalog_key_confidence(eval_key, grade)
+    min_grade = _min_publisher_grade(eval_key)
+    if min_grade is not None and grade < min_grade:
+        return 0.0
+    return min(1.0, publisher_key_confidence(eval_key, grade) + catalog_key_confidence(eval_key, grade))
 
 
 @lru_cache(maxsize=1)
@@ -128,6 +141,8 @@ def string_key_confidence(key: str, grade: float, key_quality: str | None, guide
 # ------------------------------
 
 def harmonic_tolerance_penalty(grade):
+    if grade >= 5:
+        return 0.0
     return 0.45 - ((grade - 1) * 0.1)
 
 
@@ -143,10 +158,14 @@ def compute_range_confidence(note, core, ext, total, target_grade, key_quality):
         conf = 1.0
     elif ext[0] <= midi <= ext[1]:
         conf = 0.6
-        note.comments["range"] = f"{note.written_pitch} in extended range for grade {target_grade}"
+        note.comments["range"] = (
+            f"{note.written_pitch} in extended range for grade {format_grade(target_grade)}"
+        )
     elif total[0] <= midi <= total[1]:
         conf = 0.25
-        note.comments["range"] = f"{note.written_pitch} out of range for grade {target_grade}"
+        note.comments["range"] = (
+            f"{note.written_pitch} out of range for grade {format_grade(target_grade)}"
+        )
     else:
         conf = 0.0
         note.comments["range"] = f"{note.written_pitch} out of range altogether for {note.instrument}"
@@ -157,22 +176,38 @@ def compute_range_confidence(note, core, ext, total, target_grade, key_quality):
             allowed = clarinet_break_allowed(target_grade, note.instrument)
             if allowed:
                 conf = max(0.0, conf - 0.1)
-                note.comments["crosses_break"] = f"Clarinet break crossed (allowed for grade {target_grade}/{note.instrument})"
+                note.comments["crosses_break"] = (
+                    "Clarinet break crossed (allowed for grade "
+                    f"{format_grade(target_grade)}/{note.instrument})"
+                )
             else:
                 conf = max(0.0, conf - 0.25)
-                note.comments["crosses_break"] = f"Clarinet break crossed (not allowed for grade {target_grade})"
+                note.comments["crosses_break"] = (
+                    f"Clarinet break crossed (not allowed for grade {format_grade(target_grade)})"
+                )
 
     # -------------- Harmonic Tolerance Penalty --------------
     penalty = harmonic_tolerance_penalty(target_grade)
-    if key_quality in (None, "none") or rel is None:
-        return max(0.0, conf)
-    if key_quality == "major":
-        if rel not in MAJOR_DIATONIC_MAP:
-            conf = max(0.0, conf - penalty)
-            note.comments["harmonic_tolerance"] = f"Non-diatonic note {note.written_pitch} in major key for grade {target_grade}"
-    else:  # minor
-        if (rel not in MINOR_DIATONIC_MAP) and rel != 11:
-            conf = max(0.0, conf - penalty)
-            note.comments["harmonic_tolerance"] = f"Non-diatonic note {note.written_pitch} in minor key for grade {target_grade}"
+    key_q = (key_quality or "").lower()
+    if key_q not in ("", "none") and rel is not None:
+        if key_q.startswith("maj"):
+            if rel not in MAJOR_DIATONIC_MAP:
+                conf = max(0.0, conf - penalty)
+                note.comments["harmonic_tolerance"] = (
+                    "Non-diatonic note "
+                    f"{note.written_pitch} in major key for grade {format_grade(target_grade)}"
+                )
+        else:  # minor
+            if (rel not in MINOR_DIATONIC_MAP) and rel != 11:
+                conf = max(0.0, conf - penalty)
+                note.comments["harmonic_tolerance"] = (
+                    "Non-diatonic note "
+                    f"{note.written_pitch} in minor key for grade {format_grade(target_grade)}"
+                )
+
+    if conf < 1.0 and not note.comments:
+        note.comments["range"] = (
+            f"{note.written_pitch} penalized for grade {format_grade(target_grade)}"
+        )
 
     return max(0.0, conf)

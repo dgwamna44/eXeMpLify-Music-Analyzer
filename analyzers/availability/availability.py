@@ -2,7 +2,7 @@ from copy import deepcopy
 
 from data_processing import build_instrument_data, derive_observed_grades
 from models import BaseAnalyzer
-from utilities import validate_part_for_availability
+from utilities import format_grade, validate_part_for_availability
 from music21 import converter
 from statistics import mean
 
@@ -25,10 +25,8 @@ def _stepwise_penalty(delta: float) -> float:
     return 0.20
 
 class AvailabilityAnalyzer(BaseAnalyzer):
-    def analyze_confidence(self, score, grade):
-        return analyze_availability_confidence(score, self.rules, grade)
-    def analyze_target(self, score, target_grade):
-        return analyze_availablity_target(score, self.rules, target_grade)
+    def analyze(self, score, grade, *, run_target=False):
+        return analyze_availability(score, self.rules, grade, run_target=run_target)
     
 def run_availability(
     score_path: str,
@@ -60,7 +58,7 @@ def run_availability(
     if run_observed:
         kwargs = {
             "score_factory": score_factory,
-            "analyze_confidence": analyzer.analyze_confidence,
+            "analyze_confidence": lambda s, g: analyzer.analyze(s, g, run_target=False),
             "progress_cb": progress_cb,
         }
         if grades is not None:
@@ -71,7 +69,7 @@ def run_availability(
 
     if score is None:
         score = score_factory()
-    overall_conf, analysis_notes = analyze_availablity_target(score, rules, target_grade)
+    overall_conf, analysis_notes = analyzer.analyze(score, target_grade, run_target=True)
     
     return {
         "observed_grade": observed,
@@ -81,57 +79,47 @@ def run_availability(
     }
 
 
-def analyze_availability_confidence(score, rules: dict, grade):
+def analyze_availability(score, rules: dict, grade, *, run_target: bool = False):
     conf_data = []
     penalty_total = 0.0
+    analysis_notes = {} if run_target else None
+
     for part in score.parts:
-        if part.partName and "percussion" in part.partName.lower():
+        original_part_name = part.partName
+        validated_part = validate_part_for_availability(part.partName)
+        if run_target:
+            analysis_notes[original_part_name] = {}
+
+        if original_part_name and "percussion" in original_part_name.lower():
+            if run_target:
+                analysis_notes[original_part_name]["availability_confidence"] = 1
+                analysis_notes[original_part_name]["availability"] = "Percussion part given a free pass"
             conf_data.append(1)
             continue
-        vaildated_part = validate_part_for_availability(part.partName)
-        if vaildated_part not in rules:
-            continue
-        else:
-            availability_grade = rules[vaildated_part]
-            conf = 1 if availability_grade <= grade else 0
-            conf_data.append(conf)
-            if conf == 0:
-                penalty_total += _stepwise_penalty(availability_grade - grade)
-    base_conf = mean(conf_data) if len(conf_data) > 0 else None
-    return _apply_unavailable_penalty(base_conf, penalty_total)
-            
 
-def analyze_availablity_target(score, rules: dict, target_grade):
-    analysis_notes = {}
-    penalty_total = 0.0
-    for part in score.parts:
-        original_part_name, vaildated_part = part.partName, validate_part_for_availability(part.partName)
-        analysis_notes[original_part_name] = {}
-        if original_part_name and "percussion" in original_part_name.lower():
-            analysis_notes[original_part_name]["availability_confidence"] = 1
-            analysis_notes[original_part_name]["availability"] = "Percussion part given a free pass"
+        if validated_part not in rules:
+            if run_target:
+                analysis_notes[original_part_name] = {
+                    "no_instrument_found": f"Unable to find {original_part_name} in availability database",
+                    "availability_confidence": None,
+                }
             continue
-        if vaildated_part not in rules:
-            analysis_notes[original_part_name] = {
-                "no_instrument_found": f"Unable to find {original_part_name} in availability database",
-                "availability_confidence": None,
-            }
-        else:
-            availability_grade = rules[vaildated_part]
-            if availability_grade <= target_grade:
-                analysis_notes[original_part_name]["availability_confidence"] = 1
-            else:
+
+        availability_grade = rules[validated_part]
+        conf = 1 if availability_grade <= grade else 0
+        conf_data.append(conf)
+        if conf == 0:
+            penalty_total += _stepwise_penalty(availability_grade - grade)
+            if run_target:
                 analysis_notes[original_part_name]["availability_confidence"] = 0
                 analysis_notes[original_part_name]["availability"] = (
-                    f"{original_part_name} typically not found in grade {target_grade}"
+                    f"{original_part_name} typically not found in grade {format_grade(grade)}"
                 )
-                penalty_total += _stepwise_penalty(availability_grade - target_grade)
+        elif run_target:
+            analysis_notes[original_part_name]["availability_confidence"] = 1
 
-    confidences = [
-        i["availability_confidence"]
-        for i in analysis_notes.values()
-        if i.get("availability_confidence") is not None
-    ]
-    base_conf = mean(confidences) if confidences else None
+    base_conf = mean(conf_data) if conf_data else None
     overall_conf = _apply_unavailable_penalty(base_conf, penalty_total)
-    return overall_conf, analysis_notes
+    if run_target:
+        return overall_conf, analysis_notes
+    return overall_conf

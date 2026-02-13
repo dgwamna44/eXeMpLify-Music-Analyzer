@@ -55,30 +55,12 @@ def extract_key_segments(score, target_grade, *, sounding_score=None):
     return key_segments
 
 
-def extract_note_data(score, target_grade, combined_ranges, key_segments):
+def extract_note_data(score, target_grade, key_segments):
     analysis_results = {}
-    range_grade = get_rounded_grade(target_grade)
 
     for part in score.parts:
         original_name = part.partName or "Unknown Part"
         analysis_results[original_name] = {"Note Data": []}
-
-        parsed = parse_part_name(original_name)
-        valid_part = validate_part_for_range_analysis(parsed)
-
-        has_range_rules = (
-            valid_part
-            and valid_part != "unknown"
-            and valid_part in combined_ranges
-            and range_grade in combined_ranges[valid_part]
-        )
-
-        if has_range_rules:
-            core_range  = combined_ranges[valid_part][range_grade]["core"]
-            ext_range   = combined_ranges[valid_part][range_grade]["extended"]
-            total_range = combined_ranges[valid_part]["total_range"]
-        else:
-            core_range = ext_range = total_range = None
 
         for measure in part.getElementsByClass(stream.Measure):
             local_key = None
@@ -119,14 +101,6 @@ def extract_note_data(score, target_grade, combined_ranges, key_segments):
                 if local_key is not None and local_key.key != "None" and local_key.pitch_index is not None:
                     pitch_class = sounding_midi % 12
                     data.relative_key_index = (pitch_class - local_key.pitch_index) % 12
-
-                # Range application is optional
-                if has_range_rules:
-                    # TODO: apply your range confidence buckets here
-                    pass
-                else:
-                    data.range_confidence = None
-                    data.comments["Range"] = f"No range dataset for '{original_name}' (normalized: '{valid_part}')"
 
                 analysis_results[original_name]["Note Data"].append(data)
 

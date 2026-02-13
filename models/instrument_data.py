@@ -7,3 +7,4 @@ class InstrumentData:
     type: str
     range_analysis: bool = True
     availability: float | None = None
+    partials : dict | None = None

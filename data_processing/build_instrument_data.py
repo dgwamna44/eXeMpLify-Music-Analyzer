@@ -1,6 +1,6 @@
 from app_data import NON_PERCUSSION_INSTRUMENTS, PERCUSSION_INSTRUMENTS, FAMILY_MAP, INST_TO_GRADE_NON_STRING
 from models import InstrumentData
-from statistics import median
+from utilities.instrument_rules import HARMONIC_SERIES, get_brass_partials
 import json
 from pathlib import Path
 from functools import lru_cache
@@ -27,6 +27,8 @@ def build_instrument_data():
             availability=apply_availability(instrument),
             type=FAMILY_MAP.get(instrument, "unknown"),
         )
+        if data[instrument].type == "brass":
+            data[instrument].partials = get_brass_partials(instrument)
     for instrument, pattern in PERCUSSION_INSTRUMENTS.items():        
         data[instrument] = InstrumentData(
             instrument=instrument,
@@ -35,6 +37,8 @@ def build_instrument_data():
             availability=apply_availability(instrument),
             type="percussion",
         )
+        if data[instrument].type == "brass":
+            data[instrument]
     return data
 
 def apply_availability(instrument):

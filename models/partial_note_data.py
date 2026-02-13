@@ -15,6 +15,7 @@ class PartialNoteData:
     written_pitch: str | None = None
     sounding_midi_value: int | None = None
     sounding_pitch: str | None = None
+    brass_partial: int | None = None
 
     # rhythm context
     beat_index: int | None = None

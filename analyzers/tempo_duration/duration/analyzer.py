@@ -5,7 +5,7 @@ def compute_total_seconds_from_tempo_data(tempo_data) -> float:
     return sum((60.0 / t.quarter_bpm) * t.qtr_len for t in tempo_data)
 
 
-def analyze_duration_target(score, rules: dict[float, DurationGradeBucket], target_grade, tempo_data=None):
+def analyze_duration(score, rules: dict[float, DurationGradeBucket], grade, *, run_target: bool = False, tempo_data=None):
     """
     If tempo_data is provided, duration is computed using tempo segments.
     If not, we fall back to assuming 100 BPM across whole piece.
@@ -25,10 +25,10 @@ def analyze_duration_target(score, rules: dict[float, DurationGradeBucket], targ
     duration_data = DurationData(
         duration=int(total_seconds),
         length_string=f"{int(minutes)}'{int(math.ceil(seconds))}\"",
-        grade=target_grade,
+        grade=grade,
     )
 
-    bucket = rules[target_grade]
+    bucket = rules[grade]
 
     if bucket.core_max == "Any" or duration_data.duration <= bucket.core_max:
         duration_data.confidence = 1.0
@@ -39,19 +39,15 @@ def analyze_duration_target(score, rules: dict[float, DurationGradeBucket], targ
         duration_data.confidence = 0.0
         duration_data.comments = "Duration too long for grade"
 
-    return duration_data, duration_data.confidence
+    if run_target:
+        return duration_data, duration_data.confidence
+    return duration_data.confidence
 
 
-def analyze_duration_confidence(score, rules, grade, tempo_data=None):
-    _, conf = analyze_duration_target(score, rules, grade, tempo_data=tempo_data)
-    return conf
 
 
 class DurationAnalyzer(BaseAnalyzer):
-    def analyze_confidence(self, score, grade):
-        # For observed-grade curves, you probably *do* want tempo_data;
-        # but if you're running these independently, fallback is fine.
-        return analyze_duration_confidence(score, self.rules, grade, tempo_data=None)
-
-    def analyze_target(self, score, target_grade):
-        return analyze_duration_target(score, self.rules, target_grade, tempo_data=None)
+    def analyze(self, score, grade, *, run_target: bool = False):
+        if run_target:
+            return analyze_duration(score, self.rules, grade, run_target=True, tempo_data=None)
+        return analyze_duration(score, self.rules, grade, run_target=False, tempo_data=None)

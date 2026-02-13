@@ -1,7 +1,7 @@
 from copy import deepcopy
 
 from models import BaseAnalyzer
-from utilities import get_rounded_grade
+from utilities import format_grade, get_rounded_grade
 from music21 import converter
 from statistics import mean
 
@@ -10,11 +10,8 @@ from .helpers import load_dynamics_rules, derive_dynamics_data
 
 class DynamicsAnalyzer(BaseAnalyzer):
     
-    def analyze_confidence(self, score, grade: float):
-        return analyze_dynamics_confidence(score, self.rules, grade)
-
-    def analyze_target(self, score, target_grade: float):
-        return analyze_dynamics_target(score, self.rules, target_grade)
+    def analyze(self, score, grade: float, *, run_target=False):
+        return analyze_dynamics(score, self.rules, grade, run_target=run_target)
     
 def run_dynamics(
     score_path,
@@ -45,7 +42,7 @@ def run_dynamics(
     if run_observed:
         kwargs = {
             "score_factory": score_factory,
-            "analyze_confidence": analyzer.analyze_confidence,
+            "analyze_confidence": lambda s, g: analyzer.analyze(s, g, run_target=False),
             "progress_cb": progress_cb,
         }
         if grades is not None:
@@ -56,7 +53,7 @@ def run_dynamics(
 
     if score is None:
         score = score_factory()
-    analysis_notes, overall_conf = analyzer.analyze_target(score, target_grade)
+    analysis_notes, overall_conf = analyzer.analyze(score, target_grade, run_target=True)
 
     return {
         "observed_grade": observed,
@@ -65,52 +62,42 @@ def run_dynamics(
         "overall_confidence": overall_conf,
     }
 
-def analyze_dynamics_confidence(score, rules_table, grade):
+def analyze_dynamics(score, rules_table, grade, *, run_target: bool = False):
     rounded_grade = get_rounded_grade(grade)
     rules = rules_table.get(rounded_grade, {})
+    dynamics_data = derive_dynamics_data(score)
     part_confidences = []
-    dynamics_data = derive_dynamics_data(score)
-    for part in dynamics_data:
-        part_valid = 0.0
-        part_total = 0.0
-        for dynamic in dynamics_data[part]:
-            part_total += dynamic["exposure"]
-            if rules.get(dynamic["dynamic"]) is True:
-                part_valid += dynamic["exposure"]
-        if part_total > 0:
-            part_confidences.append(part_valid / part_total)
-    return mean(part_confidences) if part_confidences else None
+    analysis_notes = {} if run_target else None
 
-        
-def analyze_dynamics_target(score, rules_table, target_grade):
-    rounded_grade = get_rounded_grade(target_grade)
-    rules = rules_table.get(rounded_grade, {})
-    analysis_notes = {}
-    dynamics_data = derive_dynamics_data(score)
-    confidences = []
     for part_name, part_dyns in dynamics_data.items():
         part_valid = 0.0
         part_total = 0.0
-        analysis_notes[part_name] = {"dynamics": []}
+        if run_target:
+            analysis_notes[part_name] = {"dynamics": []}
         for dynamic in part_dyns:
             dyn_name = dynamic["dynamic"]
+            exposure = dynamic["exposure"]
             allowed = rules.get(dyn_name) is True
-            analysis_notes[part_name]["dynamics"].append(
-                {
-                    "dynamic": dyn_name,
-                    "measure": dynamic.get("measure"),
-                    "exposure": dynamic.get("exposure"),
-                    "allowed": allowed,
-                }
-            )
-            part_total += dynamic["exposure"]
+            part_total += exposure
             if allowed:
-                part_valid += dynamic["exposure"]
-            else:
-                analysis_notes[part_name][dyn_name] = (
-                    f"{dyn_name} at measure {dynamic['measure']} not common for grade {target_grade}."
+                part_valid += exposure
+            if run_target:
+                analysis_notes[part_name]["dynamics"].append(
+                    {
+                        "dynamic": dyn_name,
+                        "measure": dynamic.get("measure"),
+                        "exposure": exposure,
+                        "allowed": allowed,
+                    }
                 )
+                if not allowed:
+                    analysis_notes[part_name][dyn_name] = (
+                        f"{dyn_name} at measure {dynamic['measure']} not common for grade {format_grade(grade)}."
+                    )
         if part_total > 0:
-            confidences.append(part_valid / part_total)
-    overall_conf = mean(confidences) if confidences else None
-    return analysis_notes, overall_conf
+            part_confidences.append(part_valid / part_total)
+
+    overall_conf = mean(part_confidences) if part_confidences else None
+    if run_target:
+        return analysis_notes, overall_conf
+    return overall_conf

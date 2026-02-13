@@ -20,11 +20,8 @@ class ArticulationAnalyzer(BaseAnalyzer):
     Expects BaseAnalyzer to store self.rules (dict[grade -> rules_for_grade])
     """
 
-    def analyze_confidence(self, score, grade: float):
-        return analyze_articulation_confidence(score, self.rules, grade)
-
-    def analyze_target(self, score, target_grade: float):
-        return analyze_articulation_target(score, self.rules, target_grade)
+    def analyze(self, score, grade: float, *, run_target: bool = False):
+        return analyze_articulation(score, self.rules, grade, run_target=run_target)
 
 
 # ----------------------------
@@ -85,7 +82,7 @@ def run_articulation(
     if run_observed:
         kwargs = {
             "score_factory": score_factory,
-            "analyze_confidence": analyzer.analyze_confidence,
+            "analyze_confidence": lambda s, g: analyzer.analyze(s, g, run_target=False),
             "progress_cb": progress_cb,
         }
         if grades is not None:
@@ -97,7 +94,7 @@ def run_articulation(
     # 2) Target-grade UI data (single parse)
     if score is None:
         score = score_factory()
-    analysis_notes, overall_conf = analyzer.analyze_target(score, target_grade)
+    analysis_notes, overall_conf = analyzer.analyze(score, target_grade, run_target=True)
 
     return {
         "observed_grade": observed,
@@ -111,45 +108,16 @@ def run_articulation(
 # Confidence-only pass
 # ----------------------------
 
-def analyze_articulation_confidence(score, rules: dict[float, ArticulationGradeRules], grade: float):
-    """
-    Returns a single confidence scalar for this grade, or None if no articulated notes exist.
-    """
+def analyze_articulation(score, rules: dict[float, ArticulationGradeRules], grade: float, *, run_target: bool = False):
     total_weighted = 0.0
     total_dur = 0.0
-
-    for part in score.parts:
-        for m in part.getElementsByClass(stream.Measure):
-            for n in iter_measure_events(m):
-                if n.isRest or not n.articulations:
-                    continue
-
-                conf, _, _ = get_articulation_confidence(n, rules, grade)
-                d = float(n.duration.quarterLength)
-                total_weighted += float(conf) * d
-                total_dur += d
-
-    return (total_weighted / total_dur) if total_dur > 0 else None
-
-
-# ----------------------------
-# Target-grade detailed pass
-# ----------------------------
-
-def analyze_articulation_target(score, rules: dict[float, ArticulationGradeRules], target_grade: float):
-    """
-    Returns:
-      analysis_notes: {part_name: {"articulation_data": [PartialNoteData...], "articulation_confidence": float|None}}
-      overall_conf: float|None
-    """
-    analysis_notes: dict = {}
+    analysis_notes: dict | None = {} if run_target else None
     overall_weighted = 0.0
     overall_total = 0.0
 
     for part in score.parts:
         part_name = part.partName or "Unknown Part"
         part_notes: list[PartialNoteData] = []
-
         part_weighted = 0.0
         part_total = 0.0
 
@@ -158,43 +126,46 @@ def analyze_articulation_target(score, rules: dict[float, ArticulationGradeRules
                 if n.isRest or not n.articulations:
                     continue
 
-                written_pitch = None
-                written_midi = None
-                if getattr(n, "isChord", False) is False and hasattr(n, "pitch"):
-                    written_pitch = n.pitch.nameWithOctave
-                    written_midi = n.pitch.midi
+                conf, comment, ctype = get_articulation_confidence(n, rules, grade)
+                d = float(n.duration.quarterLength)
+                total_weighted += float(conf) * d
+                total_dur += d
 
-                data = PartialNoteData(
-                    measure=m.number,
-                    offset=float(n.offset),
-                    grade=target_grade,
-                    instrument=part_name,
-                    duration=float(n.duration.quarterLength),
-                    written_pitch=written_pitch,
-                    written_midi_value=written_midi,
-                )
+                if run_target:
+                    written_pitch = None
+                    written_midi = None
+                    if getattr(n, "isChord", False) is False and hasattr(n, "pitch"):
+                        written_pitch = n.pitch.nameWithOctave
+                        written_midi = n.pitch.midi
 
-                conf, comment, ctype = get_articulation_confidence(n, rules, target_grade)
-                data.articulation_confidence = float(conf)
+                    data = PartialNoteData(
+                        measure=m.number,
+                        offset=float(n.offset),
+                        grade=grade,
+                        instrument=part_name,
+                        duration=float(n.duration.quarterLength),
+                        written_pitch=written_pitch,
+                        written_midi_value=written_midi,
+                    )
+                    data.articulation_confidence = float(conf)
+                    if conf == 0 and ctype:
+                        data.comments[ctype] = comment
+                    part_notes.append(data)
+                    part_weighted += float(conf) * data.duration
+                    part_total += data.duration
 
-                if conf == 0 and ctype:
-                    data.comments[ctype] = comment
+        if run_target:
+            part_conf = (part_weighted / part_total) if part_total > 0 else None
+            analysis_notes[part_name] = {
+                "articulation_data": part_notes,
+                "articulation_confidence": part_conf,
+            }
+            if part_total > 0:
+                overall_weighted += part_weighted
+                overall_total += part_total
 
-                part_notes.append(data)
-
-                part_weighted += float(conf) * data.duration
-                part_total += data.duration
-
-        part_conf = (part_weighted / part_total) if part_total > 0 else None
-
-        analysis_notes[part_name] = {
-            "articulation_data": part_notes,
-            "articulation_confidence": part_conf,
-        }
-
-        if part_total > 0:
-            overall_weighted += part_weighted
-            overall_total += part_total
-
-    overall_conf = (overall_weighted / overall_total) if overall_total > 0 else None
-    return analysis_notes, overall_conf
+    overall_conf = (total_weighted / total_dur) if total_dur > 0 else None
+    if run_target:
+        overall_conf = (overall_weighted / overall_total) if overall_total > 0 else None
+        return analysis_notes, overall_conf
+    return overall_conf

@@ -19,11 +19,6 @@
         <div class="header-controls">
           <div class="toggles">
             <label class="form-check form-switch toggle" data-bs-toggle="tooltip"
-              title="Check if piece has strings only. Orcehstral grading has different rules, as it impacts analysis for keys and instrument availabilty">
-              <input class="form-check-input" type="checkbox" id="stringsOnly" />
-              <span class="form-check-label">Strings Only</span>
-            </label>
-            <label class="form-check form-switch toggle" data-bs-toggle="tooltip"
               title="Only run analysis for given grade; reduces overall processing time in lieu of providing an observed grade">
               <input class="form-check-input" type="checkbox" id="targetOnly" />
               <span class="form-check-label">Target Analysis Only</span>
@@ -33,6 +28,11 @@
               <input class="form-check-input" type="checkbox" id="fullGradeSearch" />
               <span class="form-check-label">Full Grade Search</span>
             </label>
+            <button class="btn btn-outline-primary btn-sm key-analysis-btn" id="keyAnalysisBtn"
+              data-bs-toggle="tooltip"
+              title="Choose how key spellings are interpreted.">
+              Key Analysis: Standard
+            </button>
           </div>
         </div>
       </div>
@@ -138,7 +138,7 @@
 
           <div class="bar-row">
             <div class="bar-head">
-              <span>Inst. Availability</span>
+              <span>Availability</span>
               <span class="bar-score" data-bar-score="availability">--</span>
               <button class="details-mini" data-bs-toggle="tooltip"
                 title="Displays availability information on the details panel. Highlights potential issues for given grade.">
@@ -275,16 +275,9 @@
         <h2>Analysis Details</h2>
         <div class="observed-grade-pane" id="observedGradePane">
           <div class="observed-grade-title">
-            Observed Grade:
+            Overall Observed Grade:
             <span class="observed-grade-value" id="observedGradeValue">--</span>
           </div>
-        </div>
-        <div class="parts-toggle">
-          <h3 class="sort">SORT BY:</h3>
-          <button data-bs-toggle="tooltip" title="Displays measure-level information on the details panel."
-            class="btn btn-outline-secondary btn-sm">Measure Number</button>
-          <button data-bs-toggle="tooltip" title="Displays part-level information on the details panel."
-            class="btn btn-outline-secondary btn-sm">Score Order</button>
         </div>
         <div class="detail-body">
         </div>
@@ -341,6 +334,35 @@
         </div>
         <div class="modal-footer">
           <button type="button" id="progressOkBtn" class="btn btn-primary" data-bs-dismiss="modal" disabled>OK</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="keyAnalysisModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content key-analysis-modal">
+        <div class="modal-header">
+          <h5 class="modal-title mb-0">Key Analysis Mode</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="key-analysis-lead" id="keyAnalysisDetectedLabel">String instruments detected</div>
+          <div class="key-analysis-desc" id="keyAnalysisDetectedDesc">
+            This score includes one or more string parts (e.g., violin/viola/cello/bass).
+            String players typically prefer sharp-based keys over equivalent flat keys, so your key analysis can be interpreted in two ways:
+          </div>
+          <div class="key-analysis-options">
+            <button type="button" class="btn btn-primary" id="keyAnalysisStringBtn">
+              String Key Analysis (standard for orchestral repertoire)
+            </button>
+            <button type="button" class="btn btn-outline-primary" id="keyAnalysisStandardBtn">
+              Standard Key Analysis (standard for wind band repertoire)
+            </button>
+          </div>
+          <div class="small text-muted key-analysis-footnote">
+            You can switch this at any time — it only affects how key spellings are interpreted, not the notes in your score.
+          </div>
         </div>
       </div>
     </div>

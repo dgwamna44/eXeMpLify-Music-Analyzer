@@ -12,65 +12,49 @@ from data_processing import derive_observed_grades
 from utilities import get_closest_grade
 
 
-def apply_meter_change_penalty(base_total: float, meter_data, grade: float) -> float:
+def apply_meter_change_penalty(base_total: float, meter_data, grade: float):
     """
-    Returns penalized confidence for meter changes, and annotates comments when penalized.
+    Returns (penalized_confidence, comment|None) for meter changes.
     """
-    if grade < 2 and len(meter_data) > 1:
-        for m in meter_data:
-            m.comments["meter_changes"] = "Meter changes not common for lower grades"
-        return 0.6 * base_total
+    meter_changes = max(0, len(meter_data) - 1)
+    if meter_changes == 0:
+        return base_total, None
 
-    if grade < 3 and len(meter_data) > 3:
-        for m in meter_data:
-            m.comments["meter_changes"] = "Frequent meter changes not common for mid grades"
-        return 0.6 * base_total
+    penalty = 0.0
+    comment = None
 
-    return base_total
+    if grade < 2:
+        penalty = 0.4
+        comment = "Meter changes not common for lower grades"
+    elif grade < 2.5:
+        penalty = min(0.03 * meter_changes, 0.3)
+        comment = "Meter changes penalized at 0.03 per change (cap 0.3)"
+    elif grade < 3:
+        penalty = min(0.025 * meter_changes, 0.25)
+        comment = "Meter changes penalized at 0.025 per change (cap 0.25)"
 
+    if penalty <= 0:
+        return base_total, None
 
-def apply_meter_change_penalty(base_total: float, meter_data, grade: float) -> float:
-    """
-    Returns penalized confidence for meter changes, and annotates comments when penalized.
-    """
-    if grade < 2 and len(meter_data) > 1:
-        for m in meter_data:
-            m.comments["meter_changes"] = "Meter changes not common for lower grades"
-        return 0.6 * base_total
-
-    if grade < 3 and len(meter_data) > 3:
-        for m in meter_data:
-            m.comments["meter_changes"] = "Frequent meter changes not common for mid grades"
-        return 0.6 * base_total
-
-    return base_total
+    return max(0.0, base_total - penalty), comment
 
 
 class MeterAnalyzer(BaseAnalyzer):
-    def analyze_confidence(self, score, grade: float):
+    def analyze(self, score, grade: float, *, run_target: bool = False):
         rule_grade = get_closest_grade(grade, self.rules.keys())
         if rule_grade is None:
-            return None
+            return ([], None) if run_target else None
         rules_for_grade = self.rules[rule_grade]
         meter_data = extract_meter_segments(score, grade=grade, rules_for_grade=rules_for_grade)
 
         base_total = sum((m.confidence or 0.0) * (m.exposure or 0.0) for m in meter_data)
+        total_conf, meter_comment = apply_meter_change_penalty(base_total, meter_data, grade)
 
-        # IMPORTANT: apply SAME penalty logic here
-        total_conf = apply_meter_change_penalty(base_total, meter_data, grade)
+        if run_target:
+            if meter_comment and meter_data:
+                meter_data[0].comments["meter_changes"] = meter_comment
+            return meter_data, total_conf
         return total_conf
-
-    def analyze_target(self, score, target_grade: float):
-        rule_grade = get_closest_grade(target_grade, self.rules.keys())
-        if rule_grade is None:
-            return [], None
-        rules_for_grade = self.rules[rule_grade]
-        meter_data = extract_meter_segments(score, grade=target_grade, rules_for_grade=rules_for_grade)
-
-        base_total = sum((m.confidence or 0.0) * (m.exposure or 0.0) for m in meter_data)
-        total_conf = apply_meter_change_penalty(base_total, meter_data, target_grade)
-
-        return meter_data, total_conf
 
 def run_meter(
     score_path: str,
@@ -102,7 +86,7 @@ def run_meter(
     if run_observed:
         kwargs = {
             "score_factory": score_factory,
-            "analyze_confidence": lambda score, g: analyzer.analyze_confidence(score, g),
+            "analyze_confidence": lambda score, g: analyzer.analyze(score, g, run_target=False),
             "progress_cb": progress_cb,
         }
         if grades is not None:
@@ -113,7 +97,7 @@ def run_meter(
 
     if score is None:
         score = score_factory()
-    meter_segments, overall_conf = analyzer.analyze_target(score, target_grade)
+    meter_segments, overall_conf = analyzer.analyze(score, target_grade, run_target=True)
 
     return {
         "observed_grade": observed_grade,

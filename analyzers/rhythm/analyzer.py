@@ -356,6 +356,10 @@ def analyze_rhythm_target(score, rules, target_grade: float):
     overall_conf = (sum(part_confs) / len(part_confs)) if part_confs else None
     return analysis_notes, overall_conf
 
+def analyze_rhythm(score, rules, grade: float, *, run_target: bool = False):
+    if run_target:
+        return analyze_rhythm_target(score, rules, grade)
+    return analyze_rhythm_confidence(score, rules, grade)
 
 # ----------------------------
 # ENTRY POINT
@@ -389,7 +393,7 @@ def run_rhythm(
     if run_observed:
         kwargs = {
             "score_factory": score_factory,
-            "analyze_confidence": lambda sc, g: analyze_rhythm_confidence(sc, rules, g),
+            "analyze_confidence": lambda sc, g: analyze_rhythm(sc, rules, g, run_target=False),
             "progress_cb": progress_cb,
         }
         if grades is not None:
@@ -401,7 +405,7 @@ def run_rhythm(
     if score is None:
         score = score_factory()
 
-    analysis_notes, overall_conf = analyze_rhythm_target(score, rules, target_grade)
+    analysis_notes, overall_conf = analyze_rhythm(score, rules, target_grade, run_target=True)
 
     return {
         "observed_grade": observed_grade,

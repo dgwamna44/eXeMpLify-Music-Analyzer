@@ -5,7 +5,15 @@ from copy import deepcopy
 from analyzers.base import BaseAnalyzer
 from analyzers.key_range.extract import extract_key_segments, extract_note_data
 from analyzers.key_range.rules import total_key_confidence, compute_range_confidence
-from utilities import parse_part_name, validate_part_for_range_analysis, get_rounded_grade, traffic_light
+from data_processing import build_instrument_data
+import math
+from utilities import (
+    format_grade,
+    get_rounded_grade,
+    parse_part_name,
+    traffic_light,
+    validate_part_for_range_analysis,
+)
 from music21 import converter
 
 
@@ -28,33 +36,66 @@ class KeyRangeAnalyzer(BaseAnalyzer):
             k.grade = grade
         return key_segments
 
+    @staticmethod
+    def _get_brass_partial(sounding_midi: int | None, partials: dict | None) -> int | None:
+        if sounding_midi is None or not partials:
+            return None
+        closest = min(partials.items(), key=lambda kv: abs(kv[1] - sounding_midi))
+        return int(closest[0]) + 1  # store partial number (1-based)
+
+    @staticmethod
+    def _partial_jump_penalty(grade: float) -> float:
+        if grade is None:
+            return 0.0
+        capped = min(float(grade), 3.0)
+        steps = int(math.floor((capped - 0.5) / 0.5 + 1e-6))
+        return max(0.0, 0.3 - 0.05 * steps)
+
     # -------------------------------------------------------------
-    # CONFIDENCE CURVE (for derive_observed_grades)
+    # CORE ANALYSIS (confidence-only or target)
     # -------------------------------------------------------------
 
-    def analyze_confidence(self, score, grade: float):
-
+    def analyze(self, score, grade: float, *, run_target: bool = False):
         ranges = self.rules
         range_grade = float(get_rounded_grade(grade))
+        instrument_data = build_instrument_data()
 
         # --- Key segments ---
         key_segments = self._get_key_segments(score, grade)
+        key_changes = len(key_segments) - 1
 
         for k in key_segments:
             k.confidence = self._key_confidence_fn(k.key, grade, k.quality)
+            if run_target:
+                color = traffic_light(k.confidence)
+                if color == "yellow":
+                    k.comments = (
+                        f"{k.key} {k.quality} is somewhat common in grade {format_grade(grade)}"
+                    )
+                elif color == "orange":
+                    k.comments = f"{k.key} {k.quality} is uncommon in grade {format_grade(grade)}"
+                elif color == "red":
+                    k.comments = (
+                        f"{k.key} {k.quality} is typically not found in grade {format_grade(grade)}"
+                    )
 
+        
+        # apply key change penalty, if applicable. Max penalty scaled to grade, from .5 to .3.
+        MAX_PEN = .5 - (.1 * (grade - .5)) if grade < 3 else None
+        key_change_penalty = min(MAX_PEN, MAX_PEN/5 * key_changes) if MAX_PEN else None
         combined_conf_key = (
             sum((k.confidence or 0.0) * (k.exposure or 0.0) for k in key_segments)
             if key_segments else 0.0
         )
+        if key_change_penalty:
+            combined_conf_key = max(0.0, combined_conf_key - key_change_penalty)
 
-        # --- Note extraction (no confidence yet) ---
-        note_map = extract_note_data(score, grade, ranges, key_segments)
+        # --- Note extraction ---
+        note_map = extract_note_data(score, grade, key_segments)
 
         total_exposure = 0.0
         total_conf = 0.0
 
-        # Compute range confidence per note
         for original_part_name, pdata in note_map.items():
             pname = parse_part_name(original_part_name)
             canonical = validate_part_for_range_analysis(pname)
@@ -72,6 +113,10 @@ class KeyRangeAnalyzer(BaseAnalyzer):
 
             # Use the last key segment quality as a fallback
             key_quality = key_segments[-1].quality if key_segments else "major"
+            inst_meta = instrument_data.get(canonical)
+            brass_partials = inst_meta.partials if inst_meta and inst_meta.type == "brass" else None
+            prev_partial = None
+            prev_note_name = None
 
             for note in pdata.get("Note Data", []):
                 conf = compute_range_confidence(
@@ -82,106 +127,51 @@ class KeyRangeAnalyzer(BaseAnalyzer):
                     target_grade=grade,
                     key_quality=key_quality,
                 )
+                if conf < 1.0 and not note.comments:
+                    label = note.written_pitch or note.sounding_pitch or "note"
+                    note.comments["range"] = f"{label} flagged for grade {format_grade(grade)}"
+                note.brass_partial = self._get_brass_partial(
+                    note.sounding_midi_value, brass_partials
+                )
+                if prev_partial is not None and note.brass_partial is not None:
+                    if (
+                        note.brass_partial > prev_partial
+                        and prev_partial <= 3
+                        and note.brass_partial > 3
+                        and (note.brass_partial - prev_partial) > 1
+                    ):
+                        penalty = self._partial_jump_penalty(grade)
+                        conf = max(0.0, conf - penalty)
+                        prev_label = prev_note_name or "previous note"
+                        curr_label = note.written_pitch or note.sounding_pitch or "current note"
+                        note.comments["partial_change"] = (
+                            f"partial jump detected from {prev_label} to {curr_label}"
+                        )
+
+                if note.brass_partial is not None:
+                    prev_partial = note.brass_partial
+                    prev_note_name = note.written_pitch or note.sounding_pitch
                 exposure = float(note.duration or 0.0)
                 note.range_exposure = exposure
+                if run_target:
+                    note.range_confidence = conf
                 total_exposure += exposure
                 total_conf += conf * exposure
 
         avg_range_conf = (total_conf / total_exposure) if total_exposure else 0.0
 
-        return (avg_range_conf, combined_conf_key)
+        if not run_target:
+            return (avg_range_conf, combined_conf_key)
 
-    def analyze_confidence_range(self, score, grade: float) -> float:
-        return self.analyze_confidence(score, grade)[0]
-
-    def analyze_confidence_key(self, score, grade: float) -> float:
-        return self.analyze_confidence(score, grade)[1]
-
-    # -------------------------------------------------------------
-    # TARGET-GRADE ANALYSIS (UI layer)
-    # -------------------------------------------------------------
-
-    def analyze_target(self, score, target_grade: float):
-        """
-        Returns (analysis_results, summary) suitable for UI.
-        """
-        ranges = self.rules
-        range_grade = float(get_rounded_grade(target_grade))
-
-        # --- Key segments ---
-        key_segments = self._get_key_segments(score, target_grade)
-
-        for k in key_segments:
-            k.confidence = self._key_confidence_fn(k.key, target_grade, k.quality)
-            color = traffic_light(k.confidence)
-            if color == "yellow":
-                k.comments = f"{k.key} {k.quality} is somewhat common in grade {target_grade}"
-            elif color == "orange":
-                k.comments = f"{k.key} {k.quality} is uncommon in grade {target_grade}"
-            elif color == "red":
-                k.comments = f"{k.key} {k.quality} is typically not found in grade {target_grade}"
-
-
-        # --- Note extraction ---
-        note_map = extract_note_data(score, target_grade, ranges, key_segments)
-
-        global_total_conf = 0.0
-        global_total_exposure = 0.0
-
-        for original_part_name, pdata in note_map.items():
-            pname = parse_part_name(original_part_name)
-            valid_part = validate_part_for_range_analysis(pname)
-
-            if not valid_part or valid_part not in ranges:
-                continue
-            if range_grade not in ranges[valid_part]:
-                continue
-
-            core = ranges[valid_part][range_grade]["core"]
-            ext = ranges[valid_part][range_grade]["extended"]
-            total = ranges[valid_part]["total_range"]
-            key_quality = key_segments[-1].quality if key_segments else "major"
-
-            for note in pdata.get("Note Data", []):
-                conf = compute_range_confidence(
-                    note,
-                    core=core,
-                    ext=ext,
-                    total=total,
-                    target_grade=target_grade,
-                    key_quality=key_quality,
-                )
-                note.range_confidence = conf
-                exposure = float(note.duration or 0.0)
-                note.range_exposure = exposure
-                global_total_conf += conf * exposure
-                global_total_exposure += exposure
-
-        overall_range_conf = (
-            (global_total_conf / global_total_exposure) if global_total_exposure else 0.0
-        )
-        overall_key_conf = (
-            sum((k.confidence or 0.0) * (k.exposure or 0.0) for k in key_segments)
-            if key_segments else 0.0
-        )
-
-        analysis_notes = {"key_data" : key_segments, "range_data" : note_map}
+        analysis_notes = {"key_data": {"segments": key_segments}, "range_data": note_map}
+        if key_change_penalty:
+            analysis_notes["key_data"]["key_changes"] = f"Multiple key changes found, {key_changes}."
         summary = {
-            "target_grade": target_grade,
-            "overall_range_confidence": overall_range_conf,
-            "overall_key_confidence": overall_key_conf
+            "target_grade": grade,
+            "overall_range_confidence": avg_range_conf,
+            "overall_key_confidence": combined_conf_key,
         }
-
-        return analysis_notes, summary
-
-
-def analyze_confidence_range(analyzer: KeyRangeAnalyzer, score, grade: float) -> float:
-    return analyzer.analyze_confidence_range(score, grade)
-
-
-def analyze_confidence_key(analyzer: KeyRangeAnalyzer, score, grade: float) -> float:
-    return analyzer.analyze_confidence_key(score, grade)
-
+        return (avg_range_conf, combined_conf_key, analysis_notes, summary)
 
 # -------------------------------------------------------------
 # ENTRY POINT
@@ -199,7 +189,7 @@ def run_key_range(
     analysis_options=None,
 ):
     from data_processing import derive_observed_grades
-    from analyzers.key_range.ranges import load_combined_ranges, load_string_ranges
+    from analyzers.key_range.ranges import load_combined_ranges
     from analyzers.key_range.rules import load_string_key_guidelines, string_key_confidence
 
     grades = None
@@ -208,7 +198,7 @@ def run_key_range(
         string_only = analysis_options.string_only
         grades = analysis_options.observed_grades
 
-    combined_ranges = load_string_ranges("data/range") if string_only else load_combined_ranges("data/range")
+    combined_ranges = load_combined_ranges("data/range")
     key_confidence_fn = total_key_confidence
     if string_only:
         string_guidelines = load_string_key_guidelines()
@@ -245,7 +235,7 @@ def run_key_range(
     if run_observed:
         kwargs = {
             "score_factory": score_factory,
-            "analyze_confidence": analyzer.analyze_confidence_range,
+            "analyze_confidence": lambda s, g: analyzer.analyze(s, g, run_target=False)[0],
             "progress_cb": _progress_range if progress_cb is not None else None,
         }
         if grades is not None:
@@ -257,7 +247,7 @@ def run_key_range(
     if run_observed:
         kwargs = {
             "score_factory": score_factory,
-            "analyze_confidence": analyzer.analyze_confidence_key,
+            "analyze_confidence": lambda s, g: analyzer.analyze(s, g, run_target=False)[1],
             "progress_cb": _progress_key if progress_cb is not None else None,
         }
         if grades is not None:
@@ -271,7 +261,7 @@ def run_key_range(
     if score is None:
         score = base_score
 
-    analysis_notes, summary = analyzer.analyze_target(score, target_grade)
+    _, _, analysis_notes, summary = analyzer.analyze(score, target_grade, run_target=True)
 
     return {
         "observed_grade_range": observed_grade_range,

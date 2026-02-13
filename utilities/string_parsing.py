@@ -55,6 +55,19 @@ def validate_part_for_availability(name):
 def get_rounded_grade(grade):  # can only return discrete values for getting ranges
     return 1 if grade == .5 else math.floor(grade)
 
+def format_grade(grade) -> str:
+    if grade is None:
+        return ""
+    try:
+        val = float(grade)
+    except (TypeError, ValueError):
+        return str(grade)
+    if not math.isfinite(val):
+        return str(grade)
+    if val.is_integer():
+        return str(int(val))
+    return f"{val:g}"
+
 
 def get_closest_grade(grade, available_grades):
     if grade is None:

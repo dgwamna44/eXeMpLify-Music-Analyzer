@@ -26,7 +26,10 @@ class NoteReconciler:
 
     def merge(self, base: PartialNoteData, incoming: PartialNoteData):
         for f in base.__dataclass_fields__:
+            if f == "comments":
+                continue
             val = getattr(incoming, f)
             if val is not None:
                 setattr(base, f, val)
-        base.comments.update(incoming.comments)
+        if incoming.comments:
+            base.comments.update(incoming.comments)
