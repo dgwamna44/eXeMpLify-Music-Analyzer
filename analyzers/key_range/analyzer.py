@@ -14,6 +14,7 @@ from utilities import (
     traffic_light,
     validate_part_for_range_analysis,
 )
+from utilities.instrument_rules import clarinet_break_allowed
 from music21 import converter
 
 
@@ -117,6 +118,8 @@ class KeyRangeAnalyzer(BaseAnalyzer):
             brass_partials = inst_meta.partials if inst_meta and inst_meta.type == "brass" else None
             prev_partial = None
             prev_note_name = None
+            break_allowed = clarinet_break_allowed(grade, original_part_name)
+            prev_written_midi = None
 
             for note in pdata.get("Note Data", []):
                 conf = compute_range_confidence(
@@ -151,6 +154,24 @@ class KeyRangeAnalyzer(BaseAnalyzer):
                 if note.brass_partial is not None:
                     prev_partial = note.brass_partial
                     prev_note_name = note.written_pitch or note.sounding_pitch
+                if break_allowed is not None:
+                    curr_midi = note.written_midi_value
+                    if prev_written_midi is not None and curr_midi is not None:
+                        if prev_written_midi < 70 <= curr_midi:
+                            if break_allowed:
+                                conf = max(0.0, conf - 0.1)
+                                note.comments["crosses_break"] = (
+                                    "Clarinet break crossed (allowed for grade "
+                                    f"{format_grade(grade)}/{note.instrument})"
+                                )
+                            else:
+                                conf = max(0.0, conf - 0.25)
+                                note.comments["crosses_break"] = (
+                                    "Clarinet break crossed (not allowed for grade "
+                                    f"{format_grade(grade)})"
+                                )
+                    if curr_midi is not None:
+                        prev_written_midi = curr_midi
                 exposure = float(note.duration or 0.0)
                 note.range_exposure = exposure
                 if run_target:

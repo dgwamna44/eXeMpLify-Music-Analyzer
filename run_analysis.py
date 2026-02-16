@@ -383,9 +383,21 @@ def build_final_result(
 
     meter_payload = full_notes.get("meter") or {}
     meter_data = meter_payload.get("meter_data", []) if isinstance(meter_payload, dict) else []
+
+    def _has_comments(obj) -> bool:
+        comments = getattr(obj, "comments", None)
+        if comments is None:
+            return False
+        if isinstance(comments, str):
+            return bool(comments.strip())
+        if isinstance(comments, dict):
+            return any(str(val).strip() for val in comments.values())
+        return bool(comments)
+
     filtered_meter = [
         m for m in meter_data
-        if (conf := getattr(m, "confidence", None)) is not None and conf < 1
+        if ((conf := getattr(m, "confidence", None)) is not None and conf < 1)
+        or _has_comments(m)
     ]
     filtered_notes["meter"] = filtered_meter
 

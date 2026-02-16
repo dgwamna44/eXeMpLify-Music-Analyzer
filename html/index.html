@@ -214,10 +214,9 @@
 
           <div class="timeline-header results-timeline-header">
             <div class="timeline-controls">
-              <div id="controls-label">Annotations</div>
               <label class="timeline-toggle">
-                <input type="checkbox" id="toggleMeasures" checked />
-                <span>Measures</span>
+                <input type="checkbox" id="toggleIssueMeasures" checked />
+                <span>Show Measures with Issues</span>
               </label>
               <label class="timeline-toggle">
                 <input type="checkbox" id="toggleKey" checked />
@@ -352,6 +351,7 @@
             This score includes one or more string parts (e.g., violin/viola/cello/bass).
             String players typically prefer sharp-based keys over equivalent flat keys, so your key analysis can be interpreted in two ways:
           </div>
+          <div class="key-analysis-list" id="keyAnalysisDetectedList"></div>
           <div class="key-analysis-options">
             <button type="button" class="btn btn-primary" id="keyAnalysisStringBtn">
               String Key Analysis (standard for orchestral repertoire)
@@ -359,9 +359,6 @@
             <button type="button" class="btn btn-outline-primary" id="keyAnalysisStandardBtn">
               Standard Key Analysis (standard for wind band repertoire)
             </button>
-          </div>
-          <div class="small text-muted key-analysis-footnote">
-            You can switch this at any time — it only affects how key spellings are interpreted, not the notes in your score.
           </div>
         </div>
       </div>

@@ -122,7 +122,7 @@ def analyze_articulation(score, rules: dict[float, ArticulationGradeRules], grad
         part_total = 0.0
 
         for m in part.getElementsByClass(stream.Measure):
-            for n in iter_measure_events(m):
+            for n in iter_measure_events(m, expand_chords=True):
                 if n.isRest or not n.articulations:
                     continue
 

@@ -37,6 +37,57 @@ function extractCommentList(comments) {
     .filter((val) => val);
 }
 
+const RANGE_COMMENT_KEYS = new Set([
+  "range",
+  "crosses_break",
+  "harmonic_tolerance",
+  "partial_change",
+]);
+
+function extractRangeCommentList(comments) {
+  if (!comments) return [];
+  if (typeof comments === "string") {
+    const text = comments.trim();
+    return text ? [text] : [];
+  }
+  if (Array.isArray(comments)) {
+    return comments
+      .map((val) => String(val || "").trim())
+      .filter((val) => val);
+  }
+  if (typeof comments === "object") {
+    return Object.entries(comments)
+      .filter(([key]) => RANGE_COMMENT_KEYS.has(String(key)))
+      .map(([, val]) => String(val || "").trim())
+      .filter((val) => val);
+  }
+  return [];
+}
+
+function extractSegmentComments(segment) {
+  if (!segment) return [];
+  const raw = segment.comments ?? segment.comment ?? null;
+  if (typeof raw === "string") {
+    const text = raw.trim();
+    return text ? [text] : [];
+  }
+  if (raw && typeof raw === "object") {
+    return extractCommentList(raw);
+  }
+  return [];
+}
+
+function getBeatNumber(note) {
+  const beatIndex = Number(note?.beat_index);
+  if (Number.isFinite(beatIndex)) {
+    return beatIndex + 1;
+  }
+  const offset = Number(note?.offset);
+  if (!Number.isFinite(offset)) return null;
+  const beat = Math.floor(offset) + 1;
+  return beat > 0 ? beat : 1;
+}
+
 function normalizeMeasureKey(value) {
   const num = Number(value);
   return Number.isFinite(num) ? String(num) : "—";
@@ -74,9 +125,10 @@ function buildAnalyzerInstrumentIssues(analyzer, instrument, filteredNotes) {
     const data = filteredNotes?.range?.[instrument];
     const notes = data?.["Note Data"] || [];
     notes.forEach((note) => {
-      const comments = extractCommentList(note?.comments);
+      const comments = extractRangeCommentList(note?.comments);
+      const beatNum = getBeatNumber(note);
       comments.forEach((comment) => {
-        addIssue(note?.measure, null, comment);
+        addIssue(note?.measure, beatNum, comment);
       });
     });
   } else if (analyzer === "articulation") {
@@ -84,8 +136,9 @@ function buildAnalyzerInstrumentIssues(analyzer, instrument, filteredNotes) {
     const notes = data?.articulation_data || [];
     notes.forEach((note) => {
       const comments = extractCommentList(note?.comments);
+      const beatNum = getBeatNumber(note);
       comments.forEach((comment) => {
-        addIssue(note?.measure, null, comment);
+        addIssue(note?.measure, beatNum, comment);
       });
     });
   } else if (analyzer === "rhythm") {
@@ -93,18 +146,10 @@ function buildAnalyzerInstrumentIssues(analyzer, instrument, filteredNotes) {
     const notes = data?.note_data || [];
     notes.forEach((note) => {
       const comments = extractCommentList(note?.comments);
-      const beatNum = Number.isFinite(Number(note?.beat_index))
-        ? Number(note.beat_index) + 1
-        : null;
+      const beatNum = getBeatNumber(note);
       comments.forEach((comment) => {
         addIssue(note?.measure, beatNum, comment);
       });
-    });
-    const extremeMeasures = Array.isArray(data?.extreme_measures)
-      ? data.extreme_measures
-      : [];
-    extremeMeasures.forEach((measure) => {
-      addIssue(measure, null, "Extreme rhythm measure");
     });
   } else if (analyzer === "dynamics") {
     const data = filteredNotes?.dynamics?.[instrument];
@@ -131,11 +176,216 @@ function buildAnalyzerInstrumentIssues(analyzer, instrument, filteredNotes) {
   return issues;
 }
 
+function renderGlobalAnalyzerDetails(analyzer, payload) {
+  const detailsPane = document.getElementsByClassName("detail-body")[0];
+  if (!detailsPane) return;
+  detailsPane.innerHTML = "";
+  detailsPane.classList.remove(
+    "detail-body--measure",
+    "detail-body--analyzer",
+    "detail-body--global",
+  );
+  detailsPane.classList.add("detail-body--global");
+
+  if (typeof payload === "string") {
+    detailsPane.textContent = payload;
+    return;
+  }
+
+  const blocks = [];
+  const changeComments = new Set();
+  const analyzerLabel = analyzer.charAt(0).toUpperCase() + analyzer.slice(1);
+  const takeChangeComments = (comments) => {
+    const remaining = [];
+    comments.forEach((comment) => {
+      const text = String(comment || "").trim();
+      if (!text) return;
+      if (/changes?/i.test(text)) {
+        changeComments.add(text);
+      } else {
+        remaining.push(text);
+      }
+    });
+    return remaining;
+  };
+
+  if (analyzer === "key") {
+    const segments = Array.isArray(payload?.segments) ? payload.segments : [];
+    segments.forEach((seg) => {
+      const keyName = seg?.key || seg?.tonic || seg?.name || "Unknown";
+      const quality =
+        seg?.quality && String(seg.quality).toLowerCase() !== "none"
+          ? String(seg.quality)
+          : "";
+      const title = quality ? `Key: ${keyName} ${quality}` : `Key: ${keyName}`;
+      const comments = takeChangeComments(extractSegmentComments(seg));
+      blocks.push({
+        title,
+        measure: seg?.measure,
+        comments,
+      });
+    });
+    if (payload?.key_changes && typeof payload.key_changes === "string") {
+      const text = payload.key_changes.trim();
+      if (text) changeComments.add(text);
+    }
+  } else if (analyzer === "tempo") {
+    const segments = Array.isArray(payload) ? payload : [];
+    segments.forEach((seg) => {
+      const bpm = seg?.bpm ?? seg?.tempo ?? seg?.number;
+      const beatUnit = seg?.beat_unit;
+      const beatText = beatUnit ? ` (${beatUnit})` : "";
+      const title =
+        bpm != null ? `Tempo: ${bpm} BPM${beatText}` : "Tempo issue";
+      blocks.push({
+        title,
+        measure: seg?.measure,
+        comments: extractSegmentComments(seg),
+      });
+    });
+  } else if (analyzer === "meter") {
+    const segments = Array.isArray(payload) ? payload : [];
+    segments.forEach((seg) => {
+      const ts = seg?.time_signature || seg?.meter || "Unknown";
+      const comments = takeChangeComments(extractSegmentComments(seg));
+      blocks.push({
+        title: `Meter: ${ts}`,
+        measure: seg?.measure,
+        comments,
+      });
+    });
+  } else if (analyzer === "duration") {
+    if (payload && typeof payload === "object") {
+      const length = payload.length_string || payload.length || payload.duration;
+      const comments = takeChangeComments(extractSegmentComments(payload));
+      blocks.push({
+        title: length ? `Duration: ${length}` : "Duration issue",
+        measure: null,
+        comments,
+      });
+    }
+  }
+
+  if (analyzer !== "tempo" && changeComments.size > 0) {
+    blocks.unshift({
+      title: `${analyzerLabel} changes`,
+      measure: null,
+      comments: [...changeComments],
+    });
+  }
+
+  if (blocks.length === 0) {
+    detailsPane.textContent = "";
+    return;
+  }
+
+  blocks.forEach((block) => {
+    const wrap = document.createElement("div");
+    wrap.className = "detail-block";
+
+    const title = document.createElement("div");
+    title.className = "detail-block-title";
+    title.textContent = block.title;
+    wrap.appendChild(title);
+
+    const line = document.createElement("div");
+    line.className = "detail-block-line";
+    wrap.appendChild(line);
+
+    if (block.measure != null && Number.isFinite(Number(block.measure))) {
+      const measureEl = document.createElement("div");
+      measureEl.className = "detail-block-measure";
+      measureEl.textContent = `Measure ${block.measure}`;
+      wrap.appendChild(measureEl);
+    }
+
+    const comments = block.comments || [];
+    if (comments.length > 0) {
+      const list = document.createElement("ul");
+      list.className = "measure-issue-list";
+      comments.forEach((comment) => {
+        const item = document.createElement("li");
+        item.className = "measure-issue-item";
+        item.textContent = comment;
+        list.appendChild(item);
+      });
+      wrap.appendChild(list);
+    }
+
+    detailsPane.appendChild(wrap);
+  });
+}
+
+function renderAvailabilityDetails(payload) {
+  const detailsPane = document.getElementsByClassName("detail-body")[0];
+  if (!detailsPane) return;
+  detailsPane.innerHTML = "";
+  detailsPane.classList.remove(
+    "detail-body--measure",
+    "detail-body--analyzer",
+    "detail-body--global",
+  );
+  detailsPane.classList.add("detail-body--global");
+
+  if (typeof payload === "string") {
+    detailsPane.textContent = payload;
+    return;
+  }
+
+  if (!payload || typeof payload !== "object") {
+    detailsPane.textContent = "";
+    return;
+  }
+
+  const instruments = Object.keys(payload || {});
+  if (instruments.length === 0) {
+    detailsPane.textContent = "No issues found.";
+    return;
+  }
+
+  const targetGrade = Number(
+    document.getElementById("targetGradeSelect")?.value ?? NaN,
+  );
+  const gradeText = Number.isFinite(targetGrade)
+    ? ` for grade ${formatGrade(targetGrade)}`
+    : "";
+
+  const wrap = document.createElement("div");
+  wrap.className = "detail-block";
+
+  const title = document.createElement("div");
+  title.className = "detail-block-title";
+  title.textContent = `Uncommon instruments detected${gradeText}`;
+  wrap.appendChild(title);
+
+  const line = document.createElement("div");
+  line.className = "detail-block-line";
+  wrap.appendChild(line);
+
+  const list = document.createElement("ul");
+  list.className = "measure-issue-list";
+  instruments
+    .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }))
+    .forEach((instrument) => {
+      const item = document.createElement("li");
+      item.className = "measure-issue-item";
+      item.textContent = instrument;
+      list.appendChild(item);
+    });
+  wrap.appendChild(list);
+
+  detailsPane.appendChild(wrap);
+}
+
 function renderAnalyzerInstrumentList(analyzer, payload) {
   const detailsPane = document.getElementsByClassName("detail-body")[0];
   if (!detailsPane) return;
   detailsPane.innerHTML = "";
-  detailsPane.classList.remove("detail-body--measure", "detail-body--analyzer");
+  detailsPane.classList.remove(
+    "detail-body--measure",
+    "detail-body--analyzer",
+    "detail-body--global",
+  );
   window._detailLastView = { type: "analyzer_list", analyzer };
 
   const instrumentList = Object.keys(payload || {});
@@ -166,7 +416,7 @@ function renderAnalyzerInstrumentDetails(analyzer, instrument) {
   const detailsPane = document.getElementsByClassName("detail-body")[0];
   if (!detailsPane) return;
   detailsPane.innerHTML = "";
-  detailsPane.classList.remove("detail-body--measure");
+  detailsPane.classList.remove("detail-body--measure", "detail-body--global");
   detailsPane.classList.add("detail-body--analyzer");
   window._detailLastView = { type: "analyzer_detail", analyzer, instrument };
 
@@ -246,7 +496,11 @@ function handleDetailBack() {
     const detailsPane = document.getElementsByClassName("detail-body")[0];
     if (detailsPane) {
       detailsPane.innerHTML = "";
-      detailsPane.classList.remove("detail-body--measure", "detail-body--analyzer");
+      detailsPane.classList.remove(
+        "detail-body--measure",
+        "detail-body--analyzer",
+        "detail-body--global",
+      );
     }
     return;
   }
@@ -258,7 +512,11 @@ function handleDetailBack() {
     const detailsPane = document.getElementsByClassName("detail-body")[0];
     if (detailsPane) {
       detailsPane.innerHTML = "";
-      detailsPane.classList.remove("detail-body--measure", "detail-body--analyzer");
+      detailsPane.classList.remove(
+        "detail-body--measure",
+        "detail-body--analyzer",
+        "detail-body--global",
+      );
     }
   }
 }
@@ -292,8 +550,11 @@ function buildMeasureIssueIndex(filteredNotes) {
     const notes = data?.["Note Data"] || [];
     notes.forEach((note) => {
       const measure = Number(note?.measure);
-      const comments = extractCommentList(note?.comments);
-      noteIssue(measure, part, "range", comments);
+      const comments = extractRangeCommentList(note?.comments);
+      const beatNum = getBeatNumber(note);
+      const prefix = Number.isFinite(beatNum) ? `On beat ${beatNum}: ` : "";
+      const formatted = comments.map((comment) => `${prefix}${comment}`);
+      noteIssue(measure, part, "range", formatted);
     });
   });
 
@@ -303,7 +564,10 @@ function buildMeasureIssueIndex(filteredNotes) {
     notes.forEach((note) => {
       const measure = Number(note?.measure);
       const comments = extractCommentList(note?.comments);
-      noteIssue(measure, part, "articulation", comments);
+      const beatNum = getBeatNumber(note);
+      const prefix = Number.isFinite(beatNum) ? `On beat ${beatNum}: ` : "";
+      const formatted = comments.map((comment) => `${prefix}${comment}`);
+      noteIssue(measure, part, "articulation", formatted);
     });
   });
 
@@ -313,21 +577,10 @@ function buildMeasureIssueIndex(filteredNotes) {
     notes.forEach((note) => {
       const measure = Number(note?.measure);
       const comments = extractCommentList(note?.comments);
-      const beatIndex = Number(note?.beat_index);
-      const beatPrefix = Number.isFinite(beatIndex)
-        ? `On beat ${beatIndex + 1}: `
-        : "";
-      const formatted = comments.map((comment) => `${beatPrefix}${comment}`);
+      const beatNum = getBeatNumber(note);
+      const prefix = Number.isFinite(beatNum) ? `On beat ${beatNum}: ` : "";
+      const formatted = comments.map((comment) => `${prefix}${comment}`);
       noteIssue(measure, part, "rhythm", formatted);
-    });
-    const extremeMeasures = Array.isArray(data?.extreme_measures)
-      ? data.extreme_measures
-      : [];
-    extremeMeasures.forEach((measure) => {
-      const m = Number(measure);
-      if (!Number.isFinite(m)) return;
-      addMeasureIssue(index, m, part, "rhythm", "Extreme rhythm measure");
-      measures.add(m);
     });
   });
 
@@ -359,7 +612,7 @@ function renderMeasureDetails(measure) {
   if (!detailsPane) return;
   detailsPane.innerHTML = "";
   detailsPane.classList.add("detail-body--measure");
-  detailsPane.classList.remove("detail-body--analyzer");
+  detailsPane.classList.remove("detail-body--analyzer", "detail-body--global");
 
   const header = document.createElement("div");
   header.className = "detail-header";
@@ -419,63 +672,46 @@ function renderMeasureDetails(measure) {
         analyzerTitle.textContent = label;
         analyzerBlock.appendChild(analyzerTitle);
 
-        if (analyzer === "rhythm") {
-          const beatGroups = new Map();
-          const general = [];
-          comments.forEach((comment) => {
-            const match = String(comment).match(/^On beat\s+(\d+):\s*(.*)$/i);
-            if (match) {
-              const beatNum = Number(match[1]);
-              const text = (match[2] || "").trim();
-              if (!Number.isFinite(beatNum)) {
-                if (text) general.push(text);
-                return;
-              }
-              if (!beatGroups.has(beatNum)) beatGroups.set(beatNum, []);
-              if (text) beatGroups.get(beatNum).push(text);
-            } else {
-              general.push(String(comment));
+        const beatGroups = new Map();
+        const general = [];
+        comments.forEach((comment) => {
+          const match = String(comment).match(/^On beat\s+(\d+):\s*(.*)$/i);
+          if (match) {
+            const beatNum = Number(match[1]);
+            const text = (match[2] || "").trim();
+            if (!Number.isFinite(beatNum)) {
+              if (text) general.push(text);
+              return;
             }
-          });
-
-          const beatNums = [...beatGroups.keys()].sort((a, b) => a - b);
-          beatNums.forEach((beatNum) => {
-            const beatTitle = document.createElement("div");
-            beatTitle.className = "measure-beat-title";
-            beatTitle.textContent = `On beat ${beatNum}`;
-            analyzerBlock.appendChild(beatTitle);
-
-            const list = document.createElement("ul");
-            list.className = "measure-issue-list";
-            beatGroups.get(beatNum).forEach((comment) => {
-              const item = document.createElement("li");
-              item.className = "measure-issue-item";
-              item.textContent = comment;
-              list.appendChild(item);
-            });
-            analyzerBlock.appendChild(list);
-          });
-
-          if (general.length > 0) {
-            const generalTitle = document.createElement("div");
-            generalTitle.className = "measure-beat-title";
-            generalTitle.textContent = "General";
-            analyzerBlock.appendChild(generalTitle);
-
-            const list = document.createElement("ul");
-            list.className = "measure-issue-list";
-            general.forEach((comment) => {
-              const item = document.createElement("li");
-              item.className = "measure-issue-item";
-              item.textContent = comment;
-              list.appendChild(item);
-            });
-            analyzerBlock.appendChild(list);
+            if (!beatGroups.has(beatNum)) beatGroups.set(beatNum, []);
+            if (text) beatGroups.get(beatNum).push(text);
+          } else {
+            general.push(String(comment));
           }
-        } else {
+        });
+
+        const beatNums = [...beatGroups.keys()].sort((a, b) => a - b);
+        beatNums.forEach((beatNum) => {
+          const beatTitle = document.createElement("div");
+          beatTitle.className = "measure-beat-title";
+          beatTitle.textContent = `On beat ${beatNum}`;
+          analyzerBlock.appendChild(beatTitle);
+
           const list = document.createElement("ul");
           list.className = "measure-issue-list";
-          comments.forEach((comment) => {
+          beatGroups.get(beatNum).forEach((comment) => {
+            const item = document.createElement("li");
+            item.className = "measure-issue-item";
+            item.textContent = comment;
+            list.appendChild(item);
+          });
+          analyzerBlock.appendChild(list);
+        });
+
+        if (general.length > 0) {
+          const list = document.createElement("ul");
+          list.className = "measure-issue-list";
+          general.forEach((comment) => {
             const item = document.createElement("li");
             item.className = "measure-issue-item";
             item.textContent = comment;
@@ -497,11 +733,22 @@ const STRING_INSTRUMENT_PATTERNS = [
   /\bcello(s)?\b/i,
   /\bdouble\s+bass\b/i,
   /\bstring\s+bass\b/i,
-  /\bcontrabass\b/i,
   /\bupright\s+bass\b/i,
+  /\bbass\s*viol\b/i,
   /\bharp\b/i,
   /\bguitar\b/i,
   /\bstrings?\b/i,
+];
+
+const STRING_INSTRUMENT_EXCLUDE = [
+  /\bcontrabassoon\b/i,
+  /\bcontra\s*bassoon\b/i,
+  /\bcontrabass\s+clarinet\b/i,
+  /\bcontra\s*bass\s+clarinet\b/i,
+  /\bcontrabass\s+saxophone\b/i,
+  /\bcontra\s*bass\s+saxophone\b/i,
+  /\bcontrabass\s+trombone\b/i,
+  /\bcontra\s*bass\s+trombone\b/i,
 ];
 
 function extractInstrumentNames(text) {
@@ -527,10 +774,24 @@ function extractInstrumentNames(text) {
 }
 
 function detectStringInstruments(scoreText) {
-  if (!scoreText) return false;
+  if (!scoreText) return [];
   const names = extractInstrumentNames(scoreText);
+  const detected = names.filter((name) => {
+    const text = String(name || "");
+    if (STRING_INSTRUMENT_EXCLUDE.some((pattern) => pattern.test(text))) {
+      return false;
+    }
+    return STRING_INSTRUMENT_PATTERNS.some((pattern) => pattern.test(text));
+  });
+  if (detected.length > 0) return [...new Set(detected)];
   const haystack = (names.length ? names.join(" ") : scoreText).toLowerCase();
-  return STRING_INSTRUMENT_PATTERNS.some((pattern) => pattern.test(haystack));
+  if (
+    STRING_INSTRUMENT_PATTERNS.some((pattern) => pattern.test(haystack)) &&
+    !STRING_INSTRUMENT_EXCLUDE.some((pattern) => pattern.test(haystack))
+  ) {
+    return ["String part(s) detected"];
+  }
+  return [];
 }
 
 function setKeyAnalysisMode(mode, opts = {}) {
@@ -583,7 +844,9 @@ function openKeyAnalysisModal() {
   modalEl.classList.add("key-analysis-modal");
   const labelEl = document.getElementById("keyAnalysisDetectedLabel");
   const descEl = document.getElementById("keyAnalysisDetectedDesc");
+  const listEl = document.getElementById("keyAnalysisDetectedList");
   const hasStrings = Boolean(window._keyAnalysisHasStrings);
+  const detected = window._keyAnalysisDetected || [];
   if (labelEl) {
     labelEl.textContent = hasStrings
       ? "String instruments detected"
@@ -593,6 +856,18 @@ function openKeyAnalysisModal() {
     descEl.textContent = hasStrings
       ? "This score includes one or more string parts (e.g., violin/viola/cello/bass). String players typically prefer sharp-based keys over equivalent flat keys, so your key analysis can be interpreted in two ways:"
       : "This score does not appear to include string parts, but you can still choose how key spellings are interpreted for this analysis.";
+  }
+  if (listEl) {
+    listEl.innerHTML = "";
+    if (hasStrings && detected.length > 0) {
+      const list = document.createElement("ul");
+      detected.forEach((name) => {
+        const item = document.createElement("li");
+        item.textContent = name;
+        list.appendChild(item);
+      });
+      listEl.appendChild(list);
+    }
   }
   const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
   modal.show();
@@ -752,6 +1027,9 @@ function buildTimelineTicks(trackEl, ticks, totalMeasures) {
 
     const hasMeter = Boolean(tick.meter);
     const hasTempo = tick.tempo_bpm != null || tick.tempo;
+    const hasKey = Boolean(tick.key);
+    const issueOnly = hasIssue && !hasMeter && !hasTempo && !hasKey;
+    if (issueOnly) tickEl.classList.add("timeline-tick-issue-only");
     if (hasMeter || hasTempo) {
       const topRow = document.createElement("div");
       topRow.className = "tick-top";
@@ -1105,10 +1383,17 @@ function bindBarHeadDetailPaneClicks() {
 
       if (!analyzer) return;
 
-      // Only build instrument buttons for part analyzers
-      if (!PART_ANALYZERS.includes(analyzer)) return;
-
       const payload = filtered?.[analyzer];
+
+      if (analyzer === "availability") {
+        renderAvailabilityDetails(payload);
+        return;
+      }
+
+      if (!PART_ANALYZERS.includes(analyzer)) {
+        renderGlobalAnalyzerDetails(analyzer, payload);
+        return;
+      }
 
       // Case 1: Backend returned an instrument->something object
       // (and it has at least one key)
@@ -1341,6 +1626,18 @@ function initAnalysisRequest() {
     meter: "Meter",
   };
 
+  const iconMap = {
+    range: "icons/range.svg",
+    key: "icons/key.svg",
+    articulation: "icons/articulation.svg",
+    rhythm: "icons/rhythm.svg",
+    dynamics: "icons/dynamic.svg",
+    availability: "icons/instrument.svg",
+    tempo: "icons/tempo.svg",
+    duration: "icons/duration.svg",
+    meter: "icons/meter.svg",
+  };
+
   const colorMap = {
     range: "red",
     key: "orange",
@@ -1375,15 +1672,25 @@ function initAnalysisRequest() {
       row.className = "progress-row";
       const head = document.createElement("div");
       head.className = "progress-head";
-      const headLabel = document.createElement("div");
+      const headLabelWrap = document.createElement("div");
+      headLabelWrap.className = "progress-label";
+      const headLabel = document.createElement("span");
       headLabel.className = "label";
       headLabel.id = barIds[key].label;
       headLabel.textContent = label;
+      headLabelWrap.appendChild(headLabel);
+      if (iconMap[key]) {
+        const icon = document.createElement("img");
+        icon.className = "progress-icon";
+        icon.src = iconMap[key];
+        icon.alt = `${label} icon`;
+        headLabelWrap.appendChild(icon);
+      }
       const pct = document.createElement("div");
       pct.className = "progress-percent";
       pct.id = barIds[key].pct;
       pct.textContent = "0%";
-      head.appendChild(headLabel);
+      head.appendChild(headLabelWrap);
       head.appendChild(pct);
       const barWrap = document.createElement("div");
       barWrap.className = "progress";
@@ -1588,7 +1895,15 @@ function initTimelineToggles() {
     sync();
   };
 
-  bind("toggleMeasures", "hide-measures");
+  const issueToggle = document.getElementById("toggleIssueMeasures");
+  if (issueToggle) {
+    const syncIssue = () => {
+      timeline.classList.toggle("show-issue-measures", issueToggle.checked);
+    };
+    issueToggle.addEventListener("change", syncIssue);
+    syncIssue();
+  }
+
   bind("toggleKey", "hide-key");
   bind("toggleTempo", "hide-tempo");
   bind("toggleMeter", "hide-meter");
@@ -1741,7 +2056,8 @@ async function initVerovio() {
     try {
       const text = await file.text();
       window.__lastScoreText = text;
-      window._keyAnalysisHasStrings = detectStringInstruments(text);
+      window._keyAnalysisDetected = detectStringInstruments(text);
+      window._keyAnalysisHasStrings = window._keyAnalysisDetected.length > 0;
       window._keyAnalysisUserChoice = false;
       setKeyAnalysisMode(
         window._keyAnalysisHasStrings

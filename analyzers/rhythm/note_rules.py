@@ -82,6 +82,14 @@ def rule_subdivision(note, rules, target_grade):
             f"64th notes or smaller not common for grade {format_grade(target_grade)}",
             "Subdivision",
         )
+    if float(target_grade) == 0.5 and getattr(note, "eighth_pair_ok", False):
+        return (1, None, None)
+    if float(target_grade) == 0.5 and getattr(note, "eighth_pair_overflow", False):
+        return (
+            0.0,
+            f"consecutive eighth notes not common for grade {format_grade(target_grade)}",
+            "Subdivision",
+        )
     max_allowed = _max_allowed_duration(rules)
     if max_allowed is None:
         return (1, None, None)

@@ -9,6 +9,7 @@ from analyzers.rhythm.helpers import (
     annotate_tuplets,
     is_implicit_empty_measure,
     is_extreme_hit,   # expects: is_extreme_hit(note, rule_results, grade)->bool
+    mark_eighth_pairs,
 )
 from analyzers.rhythm.note_rules import rule_dotted, rule_subdivision, rule_syncopation, rule_tuplet
 from analyzers.rhythm.rules import load_rhythm_rules
@@ -132,6 +133,7 @@ def analyze_rhythm_confidence(score, rules, grade: float) -> float | None:
                     music21_notes.append(n)
 
             annotate_tuplets(partial_notes, music21_notes)
+            mark_eighth_pairs(partial_notes, grade=grade)
 
             measure_conf_sum = 0.0
             measure_dur = 0.0
@@ -275,6 +277,7 @@ def analyze_rhythm_target(score, rules, target_grade: float):
                     music21_notes.append(n)
 
         annotate_tuplets(partial_notes, music21_notes)
+        mark_eighth_pairs(partial_notes, grade=target_grade)
         analysis_notes[part_name]["note_data"] = partial_notes
 
     # Score per part + attach comments

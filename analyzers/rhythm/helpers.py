@@ -67,6 +67,69 @@ def get_quarter_length(token):
     return total
 
 
+def _is_plain_eighth(note: PartialNoteData) -> bool:
+    token = str(note.rhythm_token or "").lower()
+    if not token or "r" in token:
+        return False
+    if "d" in token:
+        return False
+    base = token.rstrip("d")
+    if base != "e":
+        return False
+    dur = note.duration
+    if dur is None:
+        return False
+    return math.isclose(dur, 0.5, abs_tol=1e-3)
+
+
+def mark_eighth_pairs(notes: list[PartialNoteData], *, grade: float) -> None:
+    if float(grade) != 0.5:
+        return
+
+    for note in notes:
+        note.eighth_pair_ok = False
+        note.eighth_pair_overflow = False
+
+    groups: dict[tuple[int | None, int | None], list[PartialNoteData]] = {}
+    for note in notes:
+        if not _is_plain_eighth(note):
+            continue
+        key = (note.measure, note.voice_index)
+        groups.setdefault(key, []).append(note)
+
+    for group in groups.values():
+        group.sort(key=lambda n: n.offset or 0.0)
+        run: list[PartialNoteData] = []
+        for note in group:
+            if not run:
+                run.append(note)
+                continue
+            prev = run[-1]
+            if prev.duration is None or note.duration is None:
+                run = [note]
+                continue
+            if prev.offset is None or note.offset is None:
+                run = [note]
+                continue
+            if math.isclose(prev.offset + prev.duration, note.offset, abs_tol=1e-3):
+                run.append(note)
+            else:
+                if len(run) == 2:
+                    for n in run:
+                        n.eighth_pair_ok = True
+                elif len(run) > 2:
+                    for n in run:
+                        n.eighth_pair_overflow = True
+                run = [note]
+        if run:
+            if len(run) == 2:
+                for n in run:
+                    n.eighth_pair_ok = True
+            elif len(run) > 2:
+                for n in run:
+                    n.eighth_pair_overflow = True
+
+
 def is_implicit_empty_measure(measure, ts):
     events = list(measure.notesAndRests)
     if len(events) != 1:

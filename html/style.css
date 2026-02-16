@@ -499,6 +499,32 @@ main {
   display: block;
 }
 
+.detail-body.detail-body--global {
+  display: block;
+}
+
+.detail-block {
+  padding: 10px 0;
+}
+
+.detail-block-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.detail-block-line {
+  border-bottom: 3px solid #0b4b6b;
+  margin: 6px 0 8px;
+}
+
+.detail-block-measure {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+
 .detail-header {
   position: sticky;
   top: 0;
@@ -656,7 +682,7 @@ main {
 }
 
 .observed-grade-value {
-  font-size: 20px;
+  font-size: 28px;
   font-weight: 700;
   color: var(--ink);
 }
@@ -694,6 +720,21 @@ main {
   margin: 0;
 }
 
+.key-analysis-list {
+  font-size: 18px;
+  color: var(--ink);
+  margin: 0;
+}
+
+.key-analysis-list ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.key-analysis-list li {
+  margin-bottom: 4px;
+}
+
 
 .key-analysis-options {
   display: grid;
@@ -721,14 +762,6 @@ main {
   font-weight: 500;
   opacity: 0.85;
   margin-top: 3px;
-}
-
-
-.key-analysis-footnote {
-  font-size: 18px; 
-  color: var(--muted);
-  line-height: 1.3;
-  margin-top: 2px;
 }
 
 .key-analysis-modal .btn-close {
@@ -831,9 +864,20 @@ footer {
   accent-color: var(--accent);
 }
 
-.timeline.hide-measures .tick-measure,
-.timeline.hide-measures .timeline-range {
+.timeline .tick-measure {
   display: none;
+}
+
+.timeline .timeline-tick-issue-only .tick-mark {
+  display: none;
+}
+
+.timeline.show-issue-measures .timeline-tick-issue-only .tick-mark {
+  display: block;
+}
+
+.timeline.show-issue-measures .tick-measure-issue {
+  display: inline-flex;
 }
 
 .timeline.hide-key .tick-key-wrap {
@@ -1134,6 +1178,18 @@ footer {
   justify-content: space-between;
   align-items: baseline;
   gap: 12px;
+}
+
+.progress-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.progress-icon {
+  width: 32px;
+  height: 32px;
+  display: inline-block;
 }
 
 .progress-percent {

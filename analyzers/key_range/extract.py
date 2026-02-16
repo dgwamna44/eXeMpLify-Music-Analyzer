@@ -69,7 +69,7 @@ def extract_note_data(score, target_grade, key_segments):
                     local_key = ks
                     break
 
-            for n in iter_measure_events(measure):
+            for n in iter_measure_events(measure, expand_chords=True):
                 if not n.isNote:
                     continue
 

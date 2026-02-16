@@ -6,7 +6,6 @@ from app_data import (
     MINOR_DIATONIC_MAP
 )
 from utilities import confidence_curve, format_grade, normalize_key_name
-from utilities.instrument_rules import clarinet_break_allowed, crosses_break
 from music21 import pitch as m21pitch
 import csv
 from functools import lru_cache
@@ -169,22 +168,6 @@ def compute_range_confidence(note, core, ext, total, target_grade, key_quality):
     else:
         conf = 0.0
         note.comments["range"] = f"{note.written_pitch} out of range altogether for {note.instrument}"
-
-    # -------------- Clarinet break penalty --------------
-    if clarinet_break_allowed(target_grade, note.instrument) is not None:
-        if crosses_break(note.written_pitch):
-            allowed = clarinet_break_allowed(target_grade, note.instrument)
-            if allowed:
-                conf = max(0.0, conf - 0.1)
-                note.comments["crosses_break"] = (
-                    "Clarinet break crossed (allowed for grade "
-                    f"{format_grade(target_grade)}/{note.instrument})"
-                )
-            else:
-                conf = max(0.0, conf - 0.25)
-                note.comments["crosses_break"] = (
-                    f"Clarinet break crossed (not allowed for grade {format_grade(target_grade)})"
-                )
 
     # -------------- Harmonic Tolerance Penalty --------------
     penalty = harmonic_tolerance_penalty(target_grade)

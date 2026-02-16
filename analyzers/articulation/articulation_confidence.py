@@ -35,7 +35,7 @@ def get_articulation_confidence(note, rules, grade):
                     if getattr(rules[rule_grade], art)
                     else (
                         0,
-                        f"{art} is not common for grade {format_grade(grade)}",
+                        f"{art}s are not common for grade {format_grade(grade)}",
                         art,
                     )
                 )
