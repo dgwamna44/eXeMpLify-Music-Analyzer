@@ -4,6 +4,7 @@ import queue
 import threading
 import tempfile
 import uuid
+import hashlib
 
 from flask import Flask, Response, jsonify, request, stream_with_context, send_from_directory
 from werkzeug.utils import secure_filename
@@ -94,9 +95,13 @@ def analyze():
         if uploaded:
             filename = secure_filename(uploaded.filename or "score.musicxml")
             ext = os.path.splitext(filename)[1] or ".musicxml"
-            file_id = f"{uuid.uuid4()}{ext}"
+            data = uploaded.read()
+            digest = hashlib.sha256(data).hexdigest()
+            file_id = f"{digest}{ext}"
             save_path = os.path.join(UPLOAD_DIR, file_id)
-            uploaded.save(save_path)
+            if not os.path.exists(save_path):
+                with open(save_path, "wb") as f:
+                    f.write(data)
             payload["score_path"] = save_path
         payload["target_only"] = form.get("target_only") == "true"
         payload["strings_only"] = form.get("strings_only") == "true"

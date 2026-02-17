@@ -28,8 +28,7 @@
               <input class="form-check-input" type="checkbox" id="fullGradeSearch" />
               <span class="form-check-label">Full Grade Search</span>
             </label>
-            <button class="btn btn-outline-primary btn-sm key-analysis-btn" id="keyAnalysisBtn"
-              data-bs-toggle="tooltip"
+            <button class="btn btn-outline-primary btn-sm key-analysis-btn" id="keyAnalysisBtn" data-bs-toggle="tooltip"
               title="Choose how key spellings are interpreted.">
               Key Analysis: Standard
             </button>
@@ -157,6 +156,25 @@
 
           <div class="bar-row">
             <div class="bar-head">
+              <span>Scoring</span>
+              <span class="bar-score" data-bar-score="scoring">--</span>
+              <button class="details-mini" data-bs-toggle="tooltip"
+                title="Displays scoring and texture information on the details panel. Highlights potential issues for given grade.">
+                <img src="icons/scoring.svg" alt="Scoring">
+              </button>
+            </div>
+            <div class="bar">
+              <img class="bar-image" src="confidence_bar.png" alt="">
+              <img class="marker" src="tickmark.svg" alt="">
+              <div class="bar-ticks">
+                <span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="bar-row">
+            <div class="bar-head">
               <span>Tempo</span>
               <span class="bar-score" data-bar-score="tempo">--</span>
               <button class="details-mini" data-bs-toggle="tooltip"
@@ -212,6 +230,7 @@
             </div>
           </div>
 
+
           <div class="timeline-header results-timeline-header">
             <div class="timeline-controls">
               <label class="timeline-toggle">
@@ -230,7 +249,7 @@
                 <input type="checkbox" id="toggleMeter" checked />
                 <span>Meter</span>
               </label>
-                <label class="timeline-toggle">
+              <label class="timeline-toggle">
                 <input type="checkbox" id="toggleDuration" unchecked />
                 <span>Duration</span>
               </label>
@@ -349,7 +368,8 @@
           <div class="key-analysis-lead" id="keyAnalysisDetectedLabel">String instruments detected</div>
           <div class="key-analysis-desc" id="keyAnalysisDetectedDesc">
             This score includes one or more string parts (e.g., violin/viola/cello/bass).
-            String players typically prefer sharp-based keys over equivalent flat keys, so your key analysis can be interpreted in two ways:
+            String players typically prefer sharp-based keys over equivalent flat keys, so your key analysis can be
+            interpreted in two ways:
           </div>
           <div class="key-analysis-list" id="keyAnalysisDetectedList"></div>
           <div class="key-analysis-options">

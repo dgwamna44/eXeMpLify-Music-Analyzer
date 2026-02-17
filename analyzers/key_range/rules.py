@@ -82,14 +82,14 @@ def total_key_confidence(key, grade, key_quality=None):
 
 @lru_cache(maxsize=1)
 def load_string_key_guidelines(path: str = "data/string_key_guidelines.csv") -> dict:
-    with open(path, newline="", encoding="utf-8") as f:
+    with open(path, newline="", encoding="utf-8-sig") as f:
         reader = csv.reader(f)
         rows = [row for row in reader if row]
 
     if not rows:
         raise ValueError(f"{path} is empty")
 
-    grades = [float(g.strip()) for g in rows[0]]
+    grades = [float(str(g).strip().lstrip("\ufeff")) for g in rows[0]]
     data_rows = rows[1:]
     if not data_rows:
         raise ValueError(f"{path} has no data rows")

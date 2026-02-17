@@ -14,9 +14,11 @@ from analyzers.key_range import run_key_range
 from analyzers.availability.availability import run_availability
 from analyzers.tempo_duration import run_tempo_duration
 from analyzers.dynamics import run_dynamics
+from analyzers.scoring import run_scoring
 from models import AnalysisOptions
+from data_processing import build_instrument_data
 from utilities.note_reconciler import NoteReconciler
-from utilities import format_grade
+from utilities import format_grade, parse_part_name, validate_part_for_availability
 from app_data import FULL_GRADES
 
 _OBSERVED_CACHE: dict[tuple, dict] = {}
@@ -37,6 +39,7 @@ _OBSERVED_KEYS = {
     "articulation": ["observed_grade", "confidences"],
     "rhythm": ["observed_grade", "confidences"],
     "meter": ["observed_grade", "confidences"],
+    "scoring": ["observed_grade", "confidences"],
 }
 
 
@@ -83,18 +86,46 @@ def run_analysis_engine(
     cache_key = _cache_key(score_path, analysis_options)
     requested_grades = analysis_options.observed_grades if analysis_options.run_observed else None
     base_score = converter.parse(score_path)
-    total_measures = len(list(base_score.parts[0].getElementsByClass(stream.Measure)))
+    parts = list(base_score.parts)
+    instrument_data = build_instrument_data()
+    part_order = []
+    part_families = {}
+    for part in parts:
+        name = part.partName or part.partAbbreviation
+        if not name:
+            inst = part.getInstrument(returnDefault=False)
+            if inst is not None:
+                name = inst.instrumentName or inst.bestName()
+        display_name = name or "Unknown Part"
+        part_order.append(display_name)
+        normalized = parse_part_name(display_name)
+        instrument_key = validate_part_for_availability(normalized)
+        if instrument_key == "unknown":
+            instrument_key = validate_part_for_availability(display_name)
+        family = (
+            instrument_data.get(instrument_key).type
+            if instrument_key in instrument_data
+            else "unknown"
+        )
+        part_families[display_name] = family
+    total_measures = (
+        len(list(parts[0].getElementsByClass(stream.Measure))) if parts else 0
+    )
+    skip_scoring = len(parts) <= 1
     score_factory = lambda: deepcopy(base_score)
 
     analyzers = [
         ("dynamics", run_dynamics, False),
         ("availability", run_availability, False),
+        ("scoring", run_scoring, False),
         ("key_range", run_key_range, True),
         ("tempo_duration", run_tempo_duration, False),
         ("articulation", run_articulation, True),
         ("rhythm", run_rhythm, True),
         ("meter", run_meter, False),
     ]
+    if skip_scoring:
+        analyzers = [entry for entry in analyzers if entry[0] != "scoring"]
     note_analyzers = [a for a in analyzers if a[2]]
     other_analyzers = [a for a in analyzers if not a[2]]
 
@@ -198,8 +229,23 @@ def run_analysis_engine(
             _set_cached_observed(cache_key, name, requested_grades, results[name])
         analyzer_progress(step, name)
 
+    if skip_scoring:
+        results["scoring"] = {
+            "analysis_notes": {
+                "message": "Scoring analysis skipped for solo pieces.",
+            },
+            "overall_confidence": None,
+        }
+
     emit({"type": "done"})
-    return build_final_result(results, target_only, total_measures, target_grade)
+    return build_final_result(
+        results,
+        target_only,
+        total_measures,
+        target_grade,
+        part_order=part_order,
+        part_families=part_families,
+    )
 
 
 def build_final_result(
@@ -207,6 +253,8 @@ def build_final_result(
     target_only: bool,
     total_measures: int | None = None,
     target_grade: float | None = None,
+    part_order: list[str] | None = None,
+    part_families: dict[str, str] | None = None,
 ):
     def clamp_conf(value):
         if value is None:
@@ -223,6 +271,7 @@ def build_final_result(
         observed_grades = {
             "availability": results.get("availability", {}).get("observed_grade"),
             "dynamics": results.get("dynamics", {}).get("observed_grade"),
+            "scoring": results.get("scoring", {}).get("observed_grade"),
             "key": results.get("key_range", {}).get("observed_grade_key"),
             "range": results.get("key_range", {}).get("observed_grade_range"),
             "tempo": results.get("tempo_duration", {}).get("observed_grade_tempo"),
@@ -232,16 +281,18 @@ def build_final_result(
             "meter": results.get("meter", {}).get("observed_grade"),
         }
         weights = {
-            "rhythm": 0.25,
-            "range": 0.25,
-            "meter": 0.10,
-            "key": 0.10,
-            "tempo": 0.10,
-            "duration": 0.05,
-            "availability": 0.05,
-            "articulation": 0.05,
-            "dynamics": 0.05,
+            "articulation": 2.0,
+            "dynamics": 2.0,
+            "duration": 2.0,
+            "availability": 2.0,
+            "key": 3.0,
+            "meter": 3.0,
+            "tempo": 3.0,
+            "range": 6.0,
+            "rhythm": 6.0,
+            "scoring": 7.0,
         }
+        power = 3.5
         total_weight = 0.0
         weighted_sum = 0.0
         for name, weight in weights.items():
@@ -252,10 +303,10 @@ def build_final_result(
                 num = float(val)
             except (TypeError, ValueError):
                 continue
-            weighted_sum += num * weight
+            weighted_sum += (num ** power) * weight
             total_weight += weight
         if total_weight > 0:
-            overall = weighted_sum / total_weight
+            overall = (weighted_sum / total_weight) ** (1 / power)
             observed_grade_overall = (int(overall * 2 + 0.5)) / 2
             observed_grade_overall_range = (
                 math.floor(overall * 2) / 2,
@@ -265,6 +316,7 @@ def build_final_result(
     confidences = {
         "availability": clamp_conf(results.get("availability", {}).get("overall_confidence")),
         "dynamics": clamp_conf(results.get("dynamics", {}).get("overall_confidence")),
+        "scoring": clamp_conf(results.get("scoring", {}).get("overall_confidence")),
         "key": clamp_conf(results.get("key_range", {}).get("summary", {}).get("overall_key_confidence")),
         "range": clamp_conf(results.get("key_range", {}).get("summary", {}).get("overall_range_confidence")),
         "tempo": clamp_conf(results.get("tempo_duration", {}).get("summary", {}).get("overall_tempo_confidence")),
@@ -277,6 +329,7 @@ def build_final_result(
     full_notes = {
         "availability": results.get("availability", {}).get("analysis_notes", {}),
         "dynamics": results.get("dynamics", {}).get("analysis_notes", {}),
+        "scoring": results.get("scoring", {}).get("analysis_notes", {}),
         "key": results.get("key_range", {}).get("analysis_notes", {}).get("key_data", {}),
         "range": results.get("key_range", {}).get("analysis_notes", {}).get("range_data", {}),
         "tempo": results.get("tempo_duration", {}).get("analysis_notes", {}).get("tempo_data", {}),
@@ -401,6 +454,9 @@ def build_final_result(
     ]
     filtered_notes["meter"] = filtered_meter
 
+    scoring_notes = full_notes.get("scoring") or {}
+    filtered_notes["scoring"] = scoring_notes
+
     if target_grade is not None:
         def _empty_payload(value):
             if value is None:
@@ -441,6 +497,17 @@ def build_final_result(
                 f"All instruments are valid for grade {grade_str}"
             )
 
+        scoring_payload = filtered_notes.get("scoring")
+        if isinstance(scoring_payload, dict):
+            issues = scoring_payload.get("issues") or []
+            if not issues:
+                scoring_payload["message"] = no_issue_msg.format(
+                    name="scoring",
+                    grade=grade_str,
+                )
+        elif _empty_payload(scoring_payload):
+            filtered_notes["scoring"] = no_issue_msg.format(name="scoring", grade=grade_str)
+
         duration_payload = filtered_notes.get("duration")
         if duration_payload is None:
             filtered_notes["duration"] = (
@@ -462,6 +529,8 @@ def build_final_result(
         "analysis_notes_filtered": filtered_notes,
         "total_measures": total_measures,
         "duration": duration_str,
+        "part_order": part_order or [],
+        "part_families": part_families or {},
     }
 
 if __name__ == "__main__":
@@ -501,7 +570,7 @@ if __name__ == "__main__":
                   r"input_files\dynamics_test.musicxml",
                   r"input_files\ijo.musicxml"]
     
-    score_path = test_files[-1]
+    score_path = test_files[-3]
 
     def progress_bar(name):
         bar_width = 50
@@ -556,7 +625,7 @@ if __name__ == "__main__":
         if event.get("type") == "observed":
             progress_bar(event["analyzer"])(event["grade"], event["idx"], event["total"], event.get("label"))
         elif event.get("type") == "analyzer":
-            target_progress_bar(7)(event["idx"], event["analyzer"])
+            target_progress_bar(event.get("total", 8))(event["idx"], event["analyzer"])
 
     final_result = run_analysis_engine(
         score_path,

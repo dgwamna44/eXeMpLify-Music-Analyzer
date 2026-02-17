@@ -380,7 +380,7 @@ main {
 
 .bar {
   position: relative;
-  height: 30px;
+  height: 24px;
   background: transparent;
   border-radius: 2px;
   box-shadow: none;
@@ -398,7 +398,7 @@ main {
   position: absolute;
   left: 1px;
   right: 1px;
-  bottom: 2px;
+  bottom: 0px;
   height: 30%;
   pointer-events: none;
   background-image:
@@ -501,6 +501,59 @@ main {
 
 .detail-body.detail-body--global {
   display: block;
+}
+
+.detail-body.detail-body--list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detail-list-btn {
+  width: 100%;
+  padding: 6px 10px;
+  font-size: 20px;
+  text-align: left;
+  border: 1px solid #c9d6e6;
+  background: #f8fbff;
+  color: var(--muted);
+  border-radius: 8px;
+}
+
+.detail-list-btn:hover {
+  color: var(--ink);
+  border-color: #9ab0cc;
+}
+
+.detail-list-btn--wind {
+  background: #2ef507;
+  border-color: #a0cc83;
+  color: #1f2a37;
+}
+
+.detail-list-btn--brass {
+  background: #faffad;
+  border-color: #f2d46d;
+  color: #1f2a37;
+}
+
+.detail-list-btn--percussion {
+  background: #2fb6eb;
+  border-color: #054ce6;
+  color: #1f2a37;
+}
+
+.detail-list-btn--string {
+  background: #ffd6d6;
+  border-color: #f0a0a0;
+  color: #1f2a37;
+}
+
+.detail-list-btn--keyboard,
+.detail-list-btn--unknown {
+  background: #d9f5d8;
+  border-color: #9fd9a5;
+  color: #1f2a37;
 }
 
 .detail-block {
@@ -1067,18 +1120,18 @@ footer {
   right: calc(50%);
 }
 
-.timeline-tick-start .tick-top,
-.timeline-tick-start .tick-measure
-{
-  left: calc(50% + 20px);
+.timeline-tick-start .tick-top {
+  left: 0;
+  transform: translateX(6px);
 }
 
 .timeline-tick-start .tick-key-wrap {
-  left: calc(50%);
+  left: 0;
 }
 
 .timeline-tick-start .tick-mark {
-  left: 70%;
+  left: 0;
+  transform: translate(0, -50%);
   height: 36px;
   width: 5px;
 }
@@ -1141,8 +1194,8 @@ footer {
   opacity: 0.9;
 }
 
-.modal-content {
-  height: 1000px;
+#progressModal .modal-content {
+  min-height: 1100px;
 }
 
 .tooltip .tooltip-inner {
@@ -1270,6 +1323,10 @@ footer {
 }
 .progress-bar.indigo {
   background-color: #3949ab;
+}
+.progress-bar.teal {
+  background-color: #0ea5a4;
+  color: #1f2a37;
 }
 
 @media (max-width: 991px) {

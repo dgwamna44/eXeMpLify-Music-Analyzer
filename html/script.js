@@ -184,6 +184,7 @@ function renderGlobalAnalyzerDetails(analyzer, payload) {
     "detail-body--measure",
     "detail-body--analyzer",
     "detail-body--global",
+    "detail-body--list",
   );
   detailsPane.classList.add("detail-body--global");
 
@@ -377,7 +378,7 @@ function renderAvailabilityDetails(payload) {
   detailsPane.appendChild(wrap);
 }
 
-function renderAnalyzerInstrumentList(analyzer, payload) {
+function renderScoringDetails(payload) {
   const detailsPane = document.getElementsByClassName("detail-body")[0];
   if (!detailsPane) return;
   detailsPane.innerHTML = "";
@@ -386,6 +387,142 @@ function renderAnalyzerInstrumentList(analyzer, payload) {
     "detail-body--analyzer",
     "detail-body--global",
   );
+  detailsPane.classList.add("detail-body--global");
+
+  if (typeof payload === "string") {
+    detailsPane.textContent = payload;
+    return;
+  }
+
+  if (!payload || typeof payload !== "object") {
+    detailsPane.textContent = "";
+    return;
+  }
+
+  const summary = payload.summary || {};
+  const message = payload.message ? String(payload.message) : "";
+  const gradeEstimate = payload.grade_estimate;
+
+  const familyLabels = {
+    wind: "Woodwinds",
+    brass: "Brass",
+    string: "Strings",
+    percussion: "Percussion",
+    keyboard: "Keyboard",
+  };
+  const groupLabels = {
+    high_woodwinds: "High woodwinds",
+    mid_woodwinds: "Mid woodwinds",
+    low_woodwinds: "Low woodwinds",
+    high_brass: "High brass",
+    low_brass: "Low brass",
+    high_strings: "High strings",
+    low_strings: "Low strings",
+    percussion: "Percussion",
+    keyboard: "Keyboard",
+  };
+
+  const appendBlock = (titleText, items) => {
+    const listItems = Array.isArray(items)
+      ? items.map((val) => String(val || "").trim()).filter((val) => val)
+      : [];
+    if (!titleText && listItems.length === 0) return;
+
+    const wrap = document.createElement("div");
+    wrap.className = "detail-block";
+
+    if (titleText) {
+      const title = document.createElement("div");
+      title.className = "detail-block-title";
+      title.textContent = titleText;
+      wrap.appendChild(title);
+
+      const line = document.createElement("div");
+      line.className = "detail-block-line";
+      wrap.appendChild(line);
+    }
+
+    if (listItems.length > 0) {
+      const list = document.createElement("ul");
+      list.className = "measure-issue-list";
+      listItems.forEach((itemText) => {
+        const item = document.createElement("li");
+        item.className = "measure-issue-item";
+        item.textContent = itemText;
+        list.appendChild(item);
+      });
+      wrap.appendChild(list);
+    }
+
+    detailsPane.appendChild(wrap);
+  };
+
+  const summaryLines = [];
+  if (Number.isFinite(summary.total_parts)) {
+    summaryLines.push(`Total parts: ${summary.total_parts}`);
+  }
+
+  if (summary.families && typeof summary.families === "object") {
+    const familyText = Object.entries(summary.families)
+      .map(([name, count]) => {
+        const label = familyLabels[name] || String(name).replace(/_/g, " ");
+        return `${label} (${count})`;
+      })
+      .join(", ");
+    if (familyText) summaryLines.push(`Families: ${familyText}`);
+  }
+
+  if (summary.groups && typeof summary.groups === "object") {
+    const groupText = Object.entries(summary.groups)
+      .map(([name, count]) => {
+        const label = groupLabels[name] || String(name).replace(/_/g, " ");
+        return `${label} (${count})`;
+      })
+      .join(", ");
+    if (groupText) summaryLines.push(`Subgroups: ${groupText}`);
+  }
+
+  if (Number.isFinite(summary.texture_density)) {
+    const pct = Math.round(summary.texture_density * 100);
+    const label = summary.texture_label || "Texture density";
+    summaryLines.push(`${label}: ${pct}% of parts active on average`);
+  }
+
+  if (Number.isFinite(summary.rhythmic_congruency)) {
+    const pct = Math.round(summary.rhythmic_congruency * 100);
+    summaryLines.push(`Rhythmic congruency: ${pct}%`);
+  }
+
+  if (Number.isFinite(summary.harmonic_congruency)) {
+    const pct = Math.round(summary.harmonic_congruency * 100);
+    summaryLines.push(`Harmonic congruency: ${pct}%`);
+  }
+
+  if (Number.isFinite(summary.overall_congruency)) {
+    const pct = Math.round(summary.overall_congruency * 100);
+    summaryLines.push(`Overall congruency: ${pct}% (harmonic weighted)`);
+  }
+
+  void gradeEstimate;
+
+  if (summaryLines.length > 0) {
+    appendBlock("Scoring overview", summaryLines);
+  } else if (message) {
+    detailsPane.textContent = message;
+  }
+}
+
+function renderAnalyzerInstrumentList(analyzer, payload) {
+  const detailsPane = document.getElementsByClassName("detail-body")[0];
+  if (!detailsPane) return;
+  detailsPane.innerHTML = "";
+  detailsPane.classList.remove(
+    "detail-body--measure",
+    "detail-body--analyzer",
+    "detail-body--global",
+    "detail-body--list",
+  );
+  detailsPane.classList.add("detail-body--list");
   window._detailLastView = { type: "analyzer_list", analyzer };
 
   const instrumentList = Object.keys(payload || {});
@@ -394,11 +531,33 @@ function renderAnalyzerInstrumentList(analyzer, payload) {
     return;
   }
 
+  const partOrder = window.analysisResult?.result?.part_order;
+  const partFamilies = window.analysisResult?.result?.part_families || {};
+  if (Array.isArray(partOrder) && partOrder.length > 0) {
+    const orderMap = new Map();
+    partOrder.forEach((name, idx) => {
+      if (!orderMap.has(name)) orderMap.set(name, idx);
+    });
+    const ordered = instrumentList.map((name, index) => ({
+      name,
+      index,
+      order: orderMap.has(name) ? orderMap.get(name) : Number.POSITIVE_INFINITY,
+    }));
+    ordered.sort((a, b) => {
+      if (a.order !== b.order) return a.order - b.order;
+      return a.index - b.index;
+    });
+    instrumentList.length = 0;
+    ordered.forEach((item) => instrumentList.push(item.name));
+  }
+
   instrumentList.forEach((ins) => {
     const btn = document.createElement("button");
-    btn.style.width = "auto";
-    btn.style.height = "auto";
-    btn.style.fontSize = "25px";
+    btn.className = "detail-list-btn";
+    const family = partFamilies?.[ins];
+    if (family) {
+      btn.classList.add(`detail-list-btn--${family}`);
+    }
     btn.textContent = ins;
 
     btn.dataset.analyzer = analyzer;
@@ -416,7 +575,11 @@ function renderAnalyzerInstrumentDetails(analyzer, instrument) {
   const detailsPane = document.getElementsByClassName("detail-body")[0];
   if (!detailsPane) return;
   detailsPane.innerHTML = "";
-  detailsPane.classList.remove("detail-body--measure", "detail-body--global");
+  detailsPane.classList.remove(
+    "detail-body--measure",
+    "detail-body--global",
+    "detail-body--list",
+  );
   detailsPane.classList.add("detail-body--analyzer");
   window._detailLastView = { type: "analyzer_detail", analyzer, instrument };
 
@@ -500,6 +663,7 @@ function handleDetailBack() {
         "detail-body--measure",
         "detail-body--analyzer",
         "detail-body--global",
+        "detail-body--list",
       );
     }
     return;
@@ -516,6 +680,7 @@ function handleDetailBack() {
         "detail-body--measure",
         "detail-body--analyzer",
         "detail-body--global",
+        "detail-body--list",
       );
     }
   }
@@ -612,7 +777,11 @@ function renderMeasureDetails(measure) {
   if (!detailsPane) return;
   detailsPane.innerHTML = "";
   detailsPane.classList.add("detail-body--measure");
-  detailsPane.classList.remove("detail-body--analyzer", "detail-body--global");
+  detailsPane.classList.remove(
+    "detail-body--analyzer",
+    "detail-body--global",
+    "detail-body--list",
+  );
 
   const header = document.createElement("div");
   header.className = "detail-header";
@@ -985,7 +1154,7 @@ function buildTimelineTicks(trackEl, ticks, totalMeasures) {
   // Expect ticks like: [{ measure: 12 }, { measure: 48 }, ...]
   // If you're currently passing objects with tempo/meter/key/etc, that's fine —
   // we ignore all of it now and only use measure.
-  const tickList = Array.isArray(ticks) ? [...ticks] : [];
+  let tickList = Array.isArray(ticks) ? [...ticks] : [];
   const startMeasure = 1;
   const endMeasure = Number.isFinite(totalMeasures) ? totalMeasures : null;
 
@@ -1385,6 +1554,11 @@ function bindBarHeadDetailPaneClicks() {
 
       const payload = filtered?.[analyzer];
 
+      if (analyzer === "scoring") {
+        renderScoringDetails(payload);
+        return;
+      }
+
       if (analyzer === "availability") {
         renderAvailabilityDetails(payload);
         return;
@@ -1439,6 +1613,7 @@ function setMarkerPositions(confidences, opts = {}) {
   const labelMap = {
     availability: "Availability",
     dynamics: "Dynamics",
+    scoring: "Scoring",
     key: "Key",
     range: "Range",
     tempo: "Tempo",
@@ -1621,12 +1796,14 @@ function initAnalysisRequest() {
     rhythm: "Rhythm",
     dynamics: "Dynamics",
     availability: "Availability",
+    scoring: "Scoring",
     tempo: "Tempo",
     duration: "Duration",
     meter: "Meter",
   };
 
   const iconMap = {
+    scoring: "icons/scoring.svg",
     range: "icons/range.svg",
     key: "icons/key.svg",
     articulation: "icons/articulation.svg",
@@ -1639,6 +1816,7 @@ function initAnalysisRequest() {
   };
 
   const colorMap = {
+    scoring: "teal",
     range: "red",
     key: "orange",
     articulation: "light-green",
@@ -1855,6 +2033,12 @@ function initAnalysisRequest() {
               result?.result?.observed_grade_overall,
               result?.result?.observed_grade_overall_range,
             );
+            const scoringPayload =
+              result?.result?.analysis_notes_filtered?.scoring ??
+              result?.result?.analysis_notes?.scoring;
+            if (scoringPayload) {
+              renderScoringDetails(scoringPayload);
+            }
 
             const totalMeasures = result?.result?.total_measures ?? 0;
             const durationString = result?.result?.duration ?? 0;
@@ -1976,8 +2160,8 @@ async function initVerovio() {
   appEl.style.border = "1px solid lightgray";
 
   let app = new window.Verovio.App(appEl, {
-    defaultView: "document",
-    documentZoom: 3,
+    defaultView: "responsive",
+    documentZoom: 3
   });
 
   function ensureZoomWrapper() {
@@ -2112,14 +2296,14 @@ async function initVerovio() {
   }
 
   clearBtn?.addEventListener("click", () => {
-    document.getElementsByClassName("detail-body")[0];
+    const detailsPane = document.getElementsByClassName("detail-body")[0];
     if (fileInput) fileInput.value = "";
     if (titleEl) titleEl.textContent = "Score Title: --";
 
     appEl.innerHTML = "";
     app = new window.Verovio.App(appEl, {
-      defaultView: "document",
-      documentZoom: 3,
+      defaultView: "responsive",
+      documentZoom: 3
     });
 
     hasActiveScore = false;
@@ -2136,6 +2320,7 @@ async function initVerovio() {
         articulation: null,
         rhythm: null,
         meter: null,
+        scoring: null,
       },
       { emptyLabel: "--" },
     );
@@ -2144,7 +2329,15 @@ async function initVerovio() {
     if (track) {
       track.querySelectorAll(".timeline-tick").forEach((node) => node.remove());
     }
-    detailsPane.innerHTML = "";
+    if (detailsPane) {
+      detailsPane.innerHTML = "";
+      detailsPane.classList.remove(
+        "detail-body--measure",
+        "detail-body--analyzer",
+        "detail-body--global",
+        "detail-body--list",
+      );
+    }
     setTimelineLabels();
     updatePartAnalyzerIssueTooltips(null);
     setObservedGrade(null);
