@@ -309,6 +309,11 @@ main {
   gap: 12px;
   flex: 1;
   align-content: start;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-gutter: stable;
+  padding-right: 6px;
 }
 
 .bar-row {
