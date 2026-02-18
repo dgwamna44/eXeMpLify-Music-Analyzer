@@ -6,6 +6,8 @@ After working with my fellow colleagues who write for the concert band medium, I
 
 Most composers work with a score writing software like Sibelius or Musescore, and have the capability of saving their music as a .musicXML file to share amongst people using different software.
 
+Special shoutout to the folks from the Composer's Cove discord :)
+
 Without further ado...
 
 
