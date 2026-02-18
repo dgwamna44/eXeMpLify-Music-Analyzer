@@ -1272,7 +1272,8 @@ footer {
   position: sticky;
   left: 0;
   right: 0;
-  bottom: 6px;
+  bottom: 0;
+  margin-top: auto;
   z-index: 3;
   background: var(--timeline);
   padding-top: 6px;

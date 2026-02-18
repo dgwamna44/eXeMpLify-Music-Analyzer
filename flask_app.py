@@ -5,6 +5,7 @@ import threading
 import tempfile
 import uuid
 import hashlib
+import time
 
 from flask import Flask, Response, jsonify, request, stream_with_context, send_from_directory
 from werkzeug.utils import secure_filename
@@ -132,14 +133,20 @@ def progress(job_id):
     q = job["queue"]
 
     def generate():
+        last_heartbeat = time.time()
         while True:
             try:
                 event = q.get(timeout=0.5)
             except queue.Empty:
                 if job.get("done"):
                     break
+                now = time.time()
+                if now - last_heartbeat >= 10:
+                    last_heartbeat = now
+                    yield f"data: {json.dumps({'type': 'heartbeat'})}\n\n"
                 continue
             yield f"data: {json.dumps(event)}\n\n"
+            last_heartbeat = time.time()
             if event.get("type") == "done":
                 break
 

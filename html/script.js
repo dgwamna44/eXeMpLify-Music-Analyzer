@@ -1997,9 +1997,18 @@ function initAnalysisRequest() {
       }, 200);
     }
 
-    const es = new EventSource(`${API_BASE}/api/progress/${jobId}`);
-    es.onmessage = (evt) => {
+    let es = null;
+    let reconnectAttempts = 0;
+    const maxReconnects = 5;
+    let reconnectTimer = null;
+    let streamDone = false;
+
+    const connectProgressStream = () => {
+      if (es) es.close();
+      es = new EventSource(`${API_BASE}/api/progress/${jobId}`);
+      es.onmessage = (evt) => {
       const data = JSON.parse(evt.data);
+      if (data.type === "heartbeat") return;
       if (data.type === "observed") {
         const pct = data.total ? Math.round((data.idx / data.total) * 100) : 0;
         const analyzerKey =
@@ -2063,6 +2072,7 @@ function initAnalysisRequest() {
           if (durationPct) durationPct.textContent = "100%";
         }
       } else if (data.type === "done") {
+        streamDone = true;
         Object.values(barIds).forEach((ids) => {
           const bar = document.getElementById(ids.bar);
           const pctEl = document.getElementById(ids.pct);
@@ -2072,6 +2082,7 @@ function initAnalysisRequest() {
         if (progressText) progressText.textContent = "Done.";
         if (progressOkBtn) progressOkBtn.disabled = false;
         if (timerId) clearInterval(timerId);
+        if (reconnectTimer) clearTimeout(reconnectTimer);
         es.close();
         fetch(`${API_BASE}/api/result/${jobId}`)
           .then((r) => r.json())
@@ -2116,12 +2127,27 @@ function initAnalysisRequest() {
       }
     };
 
-    es.onerror = () => {
-      es.close();
-      if (progressText) progressText.textContent = "Connection lost.";
-      if (timerId) clearInterval(timerId);
-      console.warn("Progress stream error; analysisResult not set yet.");
+      es.onerror = () => {
+        if (streamDone) return;
+        reconnectAttempts += 1;
+        if (reconnectAttempts <= maxReconnects) {
+          const delay = Math.min(2000 * reconnectAttempts, 10000);
+          if (progressText) {
+            progressText.textContent = `Connection lost. Reconnecting (${reconnectAttempts}/${maxReconnects})...`;
+          }
+          if (reconnectTimer) clearTimeout(reconnectTimer);
+          es.close();
+          reconnectTimer = setTimeout(connectProgressStream, delay);
+        } else {
+          if (progressText) progressText.textContent = "Connection lost.";
+          if (timerId) clearInterval(timerId);
+          es.close();
+          console.warn("Progress stream error; analysisResult not set yet.");
+        }
+      };
     };
+
+    connectProgressStream();
   });
 }
 
