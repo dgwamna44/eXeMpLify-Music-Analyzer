@@ -26,7 +26,9 @@ Given a MusicXML score, eXeMpLify:
 **Screenshots**
 1. Click Load XML Score to get started (remember to export the score you want to analyze as a .musicXML file.
 2. Once selected, the score will show up in the center. You can adjust the zoom as needed.
-<img width="598" height="736" alt="image" src="https://github.com/user-attachments/assets/e1725d9a-a895-4272-8efb-04a294a6effb" />
+
+<img width="1918" height="1065" alt="Screenshot 2026-02-18 134615" src="https://github.com/user-attachments/assets/8c15e560-3532-4f7e-a0d4-2d080bffdb53" />
+
 
 3. Select the grade you estimate the piece to be on the top right, then click analyze. You can choose to search through partial grades (like 2.5, 3.5), or if you want detailed analysis based on the grade you select only. 
 Each sub-process takes ~ 30 seconds.
