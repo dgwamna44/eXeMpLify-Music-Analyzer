@@ -42,6 +42,72 @@ _OBSERVED_KEYS = {
     "scoring": ["observed_grade", "confidences"],
 }
 
+HIGH_WOODWINDS = {
+    "flute",
+    "piccolo",
+    "oboe",
+}
+MID_WOODWINDS = {
+    "clarinet_bb",
+    "clarinet_eb",
+    "alto_clarinet",
+    "alto_sax",
+    "tenor_sax",
+    "soprano_sax",
+}
+LOW_WOODWINDS = {
+    "bassoon",
+    "bari_sax",
+    "bass_sax",
+    "bass_clarinet",
+    "contra_bass_clarinet",
+    "english_horn",
+}
+HIGH_BRASS = {
+    "trumpet_bb",
+}
+MID_BRASS = {
+    "horn_f",
+}
+LOW_BRASS = {
+    "euphonium",
+    "baritone",
+    "trombone",
+    "tuba",
+}
+HIGH_STRINGS = {
+    "violin",
+    "viola",
+}
+LOW_STRINGS = {
+    "cello",
+    "bass",
+}
+
+
+def _classify_group(instrument_key: str, family: str | None) -> str | None:
+    if instrument_key in HIGH_WOODWINDS:
+        return "high_woodwinds"
+    if instrument_key in MID_WOODWINDS:
+        return "mid_woodwinds"
+    if instrument_key in LOW_WOODWINDS:
+        return "low_woodwinds"
+    if instrument_key in HIGH_BRASS:
+        return "high_brass"
+    if instrument_key in MID_BRASS:
+        return "mid_brass"
+    if instrument_key in LOW_BRASS:
+        return "low_brass"
+    if instrument_key in HIGH_STRINGS:
+        return "high_strings"
+    if instrument_key in LOW_STRINGS:
+        return "low_strings"
+    if family == "percussion":
+        return "percussion"
+    if family == "keyboard":
+        return "keyboard"
+    return None
+
 
 def _cache_key(score_path: str, analysis_options: AnalysisOptions) -> tuple:
     return (score_path, bool(analysis_options.string_only))
@@ -90,6 +156,7 @@ def run_analysis_engine(
     instrument_data = build_instrument_data()
     part_order = []
     part_families = {}
+    part_groups = {}
     for part in parts:
         name = part.partName or part.partAbbreviation
         if not name:
@@ -108,6 +175,7 @@ def run_analysis_engine(
             else "unknown"
         )
         part_families[display_name] = family
+        part_groups[display_name] = _classify_group(instrument_key, family)
     total_measures = (
         len(list(parts[0].getElementsByClass(stream.Measure))) if parts else 0
     )
@@ -232,7 +300,7 @@ def run_analysis_engine(
     if skip_scoring:
         results["scoring"] = {
             "analysis_notes": {
-                "message": "Scoring analysis skipped for solo pieces.",
+                "message": "Scoring analysis skipped for single part scores",
             },
             "overall_confidence": None,
         }
@@ -245,6 +313,7 @@ def run_analysis_engine(
         target_grade,
         part_order=part_order,
         part_families=part_families,
+        part_groups=part_groups,
     )
 
 
@@ -255,6 +324,7 @@ def build_final_result(
     target_grade: float | None = None,
     part_order: list[str] | None = None,
     part_families: dict[str, str] | None = None,
+    part_groups: dict[str, str | None] | None = None,
 ):
     def clamp_conf(value):
         if value is None:
@@ -381,6 +451,12 @@ def build_final_result(
                 "comments": comments,
             }
     filtered_notes["dynamics"] = filtered_dynamics
+    if dynamics:
+        total_dyn = sum(len(data.get("dynamics", [])) for data in dynamics.values())
+        if total_dyn == 0:
+            filtered_notes["dynamics"] = (
+                "Dynamics analysis skipped for scores without dynamics markings"
+            )
 
     key_payload = full_notes.get("key") or {}
     key_segments = key_payload.get("segments", []) if isinstance(key_payload, dict) else []
@@ -420,6 +496,14 @@ def build_final_result(
                 "articulation_confidence": data.get("articulation_confidence"),
             }
     filtered_notes["articulation"] = filtered_articulation
+    if articulation:
+        total_articulation = sum(
+            len(data.get("articulation_data", [])) for data in articulation.values()
+        )
+        if total_articulation == 0:
+            filtered_notes["articulation"] = (
+                "Articulation analysis skipped for scores without articulation markings"
+            )
 
     rhythm = full_notes.get("rhythm") or {}
     filtered_rhythm = {}
@@ -500,7 +584,7 @@ def build_final_result(
         scoring_payload = filtered_notes.get("scoring")
         if isinstance(scoring_payload, dict):
             issues = scoring_payload.get("issues") or []
-            if not issues:
+            if not issues and not scoring_payload.get("message"):
                 scoring_payload["message"] = no_issue_msg.format(
                     name="scoring",
                     grade=grade_str,
@@ -531,6 +615,7 @@ def build_final_result(
         "duration": duration_str,
         "part_order": part_order or [],
         "part_families": part_families or {},
+        "part_groups": part_groups or {},
     }
 
 if __name__ == "__main__":

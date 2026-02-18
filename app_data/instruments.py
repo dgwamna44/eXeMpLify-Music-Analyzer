@@ -16,6 +16,7 @@ NON_PERCUSSION_INSTRUMENTS = {
     "alto_sax": r"(?:e♭\s+|eb\s+)?alto sax(?:ophone)?(?:\s+\d+)?(?:\s+in\s+|in)?(?:e♭|eb)?",
     "tenor_sax": r"(?:b♭\s+|bb\s+)?tenor sax(?:ophone)?(?:\s+\d+)?(?:\s+in\s+|in)?(?:b♭|bb)?",
     "bari_sax": r"(?:e♭\s+|eb\s+)?baritone sax(?:ophone)?(?:\s+\d+)?(?:\s+in\s+|in)?(?:e♭|eb)?",
+    "bass_sax": r"(?:bb\s+)?bass sax(?:ophone)?(?:\s+\d+)?(?:\s+in\s+|in)?(?:bb)?",
     "trumpet_bb": r"(?:b♭\s+|bb\s+)?trumpet(?:\s+\d+)?(?:\s+in\s+|in)?(?:b♭|bb)?",
     "horn_f": r"(?:f\s+)?(?:french\s+)?horn(?:\s+\d+)?(?:\s+in\s+|in)?(?:f)?",
     "trombone": r"(?:trombone|tenor trombone)(?:\s+\d+)?",
@@ -64,6 +65,7 @@ FAMILY_MAP = {
     "alto_sax": "wind",
     "tenor_sax": "wind",
     "bari_sax": "wind",
+    "bass_sax": "wind",
     "soprano_sax": "wind",
 
     # brass
@@ -129,6 +131,9 @@ INST_TO_GRADE_NON_STRING = {
     },
     "bari_sax": {
         "ABC": 2, "FJH": 0.5, "Belwin": 0.5, "Marlatt": 1
+    },
+    "bass_sax": {
+        "ABC": 5, "FJH": 5, "Belwin": 5, "Marlatt": 5
     },
     "bassoon": {
         "ABC": 2, "FJH": 1, "Belwin": 1.5, "Marlatt": 1

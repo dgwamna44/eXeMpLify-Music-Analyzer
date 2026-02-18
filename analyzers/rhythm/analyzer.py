@@ -35,11 +35,13 @@ def _severe_measure_multiplier(measure_mins, grade, *, severe_threshold=0.2):
     if not measure_mins:
         return 1.0
     severe_count = sum(1 for m in measure_mins if m <= severe_threshold)
+    if severe_count <= 1:
+        return 1.0
     total = len(measure_mins)
     if total == 0:
         return 1.0
 
-    ratio = severe_count / total
+    ratio = (severe_count - 1) / total  # allow one severe measure
     allowed = 0.02 + 0.06 * (grade / 5.0)
 
     if ratio <= allowed:
@@ -83,7 +85,8 @@ def analyze_rhythm_confidence(score, rules, grade: float) -> float | None:
         total_dur = 0.0
         measure_mins: list[float] = []
 
-        hard_subdivision_hit = False
+        hard_subdivision_dur = 0.0
+        hard_subdivision_measures = 0
         extreme_measure_count = 0  # <-- per part
 
         for m in part.getElementsByClass(stream.Measure):
@@ -140,6 +143,7 @@ def analyze_rhythm_confidence(score, rules, grade: float) -> float | None:
             measure_min = 1.0
             measure_has_extreme = False
 
+            measure_has_hard_subdivision = False
             for note in partial_notes:
                 if note.rhythm_token is None:
                     continue
@@ -152,7 +156,8 @@ def analyze_rhythm_confidence(score, rules, grade: float) -> float | None:
 
                 # keep your hard-subdivision shortcut
                 if any((label == "Subdivision" and conf == 0.0) for conf, _, label in res):
-                    hard_subdivision_hit = True
+                    hard_subdivision_dur += float(note.duration or 0.0)
+                    measure_has_hard_subdivision = True
 
                 measure_min = min(measure_min, note_conf)
                 d = (note.duration or 0.0)
@@ -171,6 +176,8 @@ def analyze_rhythm_confidence(score, rules, grade: float) -> float | None:
                 measure_conf = 0.0
                 measure_min = 0.0  # so it also registers as severe
                 extreme_measure_count += 1
+            if measure_has_hard_subdivision:
+                hard_subdivision_measures += 1
 
             total_conf += measure_conf * measure_dur
             total_dur += measure_dur
@@ -183,8 +190,12 @@ def analyze_rhythm_confidence(score, rules, grade: float) -> float | None:
         part_conf *= _severe_measure_multiplier(measure_mins, grade)
 
         # your original "hard subdivision" kill switch, updated to < 5 per your spec
-        if hard_subdivision_hit and float(grade) < 5.0:
-            part_conf = 0.0
+        if total_dur > 0 and float(grade) < 5.0:
+            hard_ratio = hard_subdivision_dur / total_dur
+            if hard_ratio >= 0.3 and hard_subdivision_measures > 1:
+                part_conf = 0.0
+            elif hard_subdivision_measures == 1:
+                part_conf = min(part_conf, 0.65)
 
         # PG-13 / quota gate by EXTREME MEASURES
         part_conf = _apply_pg13_gate(part_conf, extreme_measure_count, grade, allowed=1, cap_if_one=0.65)
@@ -289,8 +300,10 @@ def analyze_rhythm_target(score, rules, target_grade: float):
         total_conf = 0.0
         total_dur = 0.0
         measure_acc: dict[int, dict[str, float | bool]] = {}
-        hard_subdivision_hit = False
+        hard_subdivision_dur = 0.0
+        hard_subdivision_measures = 0
 
+        measure_has_hard_subdivision = {}
         for note in notes:
             if note.rhythm_token is None:
                 continue
@@ -299,7 +312,9 @@ def analyze_rhythm_target(score, rules, target_grade: float):
             note.rhythm_confidence = note_conf
 
             if any((label == "Subdivision" and conf == 0.0) for conf, _, label in res):
-                hard_subdivision_hit = True
+                hard_subdivision_dur += float(note.duration or 0.0)
+                measure = note.measure if note.measure is not None else -1
+                measure_has_hard_subdivision[measure] = True
 
             # Attach note-level comments
             for conf, msg, label in res:
@@ -346,8 +361,13 @@ def analyze_rhythm_target(score, rules, target_grade: float):
 
             part_conf = (total_conf / total_dur) * _severe_measure_multiplier(measure_mins, target_grade)
 
-            if hard_subdivision_hit and float(target_grade) < 5.0:
-                part_conf = 0.0
+            if total_dur > 0 and float(target_grade) < 5.0:
+                hard_ratio = hard_subdivision_dur / total_dur
+                hard_subdivision_measures = len(measure_has_hard_subdivision)
+                if hard_ratio >= 0.3 and hard_subdivision_measures > 1:
+                    part_conf = 0.0
+                elif hard_subdivision_measures == 1:
+                    part_conf = min(part_conf, 0.65)
 
             part_conf = _apply_pg13_gate(part_conf, extreme_measure_count, target_grade, allowed=1, cap_if_one=0.65)
 

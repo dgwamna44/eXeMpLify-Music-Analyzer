@@ -400,6 +400,8 @@ function renderScoringDetails(payload) {
   }
 
   const summary = payload.summary || {};
+  const highlights = Array.isArray(payload.highlights) ? payload.highlights : [];
+  const issues = Array.isArray(payload.issues) ? payload.issues : [];
   const message = payload.message ? String(payload.message) : "";
   const gradeEstimate = payload.grade_estimate;
 
@@ -415,11 +417,26 @@ function renderScoringDetails(payload) {
     mid_woodwinds: "Mid woodwinds",
     low_woodwinds: "Low woodwinds",
     high_brass: "High brass",
+    mid_brass: "Mid brass",
     low_brass: "Low brass",
     high_strings: "High strings",
     low_strings: "Low strings",
     percussion: "Percussion",
     keyboard: "Keyboard",
+  };
+
+  const appendPercentText = (node, text) => {
+    const parts = String(text).split(/(\d+%)/g);
+    parts.forEach((part) => {
+      if (!part) return;
+      if (/^\d+%$/.test(part)) {
+        const strong = document.createElement("strong");
+        strong.textContent = part;
+        node.appendChild(strong);
+      } else {
+        node.appendChild(document.createTextNode(part));
+      }
+    });
   };
 
   const appendBlock = (titleText, items) => {
@@ -445,10 +462,15 @@ function renderScoringDetails(payload) {
     if (listItems.length > 0) {
       const list = document.createElement("ul");
       list.className = "measure-issue-list";
+      const shouldBoldPercent = titleText === "Scoring overview";
       listItems.forEach((itemText) => {
         const item = document.createElement("li");
         item.className = "measure-issue-item";
-        item.textContent = itemText;
+        if (shouldBoldPercent) {
+          appendPercentText(item, itemText);
+        } else {
+          item.textContent = itemText;
+        }
         list.appendChild(item);
       });
       wrap.appendChild(list);
@@ -503,12 +525,44 @@ function renderScoringDetails(payload) {
     summaryLines.push(`Overall congruency: ${pct}% (harmonic weighted)`);
   }
 
+  if (Number.isFinite(summary.within_group_congruency)) {
+    const pct = Math.round(summary.within_group_congruency * 100);
+    summaryLines.push(`Within-group congruency: ${pct}%`);
+  }
+
+  if (Number.isFinite(summary.cross_group_congruency)) {
+    const pct = Math.round(summary.cross_group_congruency * 100);
+    summaryLines.push(`Cross-group congruency: ${pct}%`);
+  }
+
+  if (Number.isFinite(summary.percussion_rhythm_congruency)) {
+    const pct = Math.round(summary.percussion_rhythm_congruency * 100);
+    summaryLines.push(`Percussion rhythmic congruency: ${pct}%`);
+  }
+
   void gradeEstimate;
 
-  if (summaryLines.length > 0) {
-    appendBlock("Scoring overview", summaryLines);
+  const overviewItems = [];
+  const seen = new Set();
+  [...summaryLines, ...highlights].forEach((item) => {
+    const text = String(item || "").trim();
+    if (!text) return;
+    const key = text.toLowerCase();
+    if (seen.has(key)) return;
+    seen.add(key);
+    overviewItems.push(text);
+  });
+
+  if (overviewItems.length > 0) {
+    appendBlock("Scoring overview", overviewItems);
   } else if (message) {
     detailsPane.textContent = message;
+    return;
+  }
+
+  const issueItems = issues.length > 0 ? issues : message ? [message] : [];
+  if (issueItems.length > 0) {
+    appendBlock("Issues", issueItems);
   }
 }
 
@@ -533,6 +587,7 @@ function renderAnalyzerInstrumentList(analyzer, payload) {
 
   const partOrder = window.analysisResult?.result?.part_order;
   const partFamilies = window.analysisResult?.result?.part_families || {};
+  const partGroups = window.analysisResult?.result?.part_groups || {};
   if (Array.isArray(partOrder) && partOrder.length > 0) {
     const orderMap = new Map();
     partOrder.forEach((name, idx) => {
@@ -554,6 +609,10 @@ function renderAnalyzerInstrumentList(analyzer, payload) {
   instrumentList.forEach((ins) => {
     const btn = document.createElement("button");
     btn.className = "detail-list-btn";
+    const group = partGroups?.[ins];
+    if (group) {
+      btn.classList.add(`detail-list-btn--${String(group).replace(/_/g, "-")}`);
+    }
     const family = partFamilies?.[ins];
     if (family) {
       btn.classList.add(`detail-list-btn--${family}`);
@@ -2353,10 +2412,102 @@ async function initVerovio() {
   syncScoreActions();
 }
 
+function initExportControls() {
+  const exportBtn = document.getElementById("exportBtn");
+  const modalEl = document.getElementById("exportModal");
+  const visibleBtn = document.getElementById("exportVisibleBtn");
+  const allBtn = document.getElementById("exportAllBtn");
+  const progressWrap = document.getElementById("exportProgress");
+  const progressBar = document.getElementById("exportProgressBar");
+  const statusEl = document.getElementById("exportStatus");
+  const modal = modalEl ? new bootstrap.Modal(modalEl) : null;
+
+  if (!exportBtn || !modalEl) return;
+
+  const setProgress = (pct, text) => {
+    if (progressBar) {
+      progressBar.style.width = `${pct}%`;
+      progressBar.textContent = `${pct}%`;
+    }
+    if (statusEl && text) statusEl.textContent = text;
+  };
+
+  const getBaseFilename = () => {
+    const title = document.getElementById("scoreTitle")?.textContent || "analysis";
+    const cleaned = title.replace(/Score Title:\s*/i, "").trim();
+    return cleaned || "analysis";
+  };
+
+  const buildDetailsCsv = () => {
+    const pane = document.querySelector(".detail-body");
+    const lines = pane
+      ? pane.innerText.split(/\n+/).map((l) => l.trim()).filter(Boolean)
+      : [];
+    const rows = ["line", ...lines.map((line) => `"${line.replace(/"/g, '""')}"`)];
+    return new Blob([rows.join("\n")], { type: "text/csv;charset=utf-8;" });
+  };
+
+  const buildFullAnalysis = () => {
+    const payload = window.analysisResult?.result ?? {};
+    const json = JSON.stringify(payload, null, 2);
+    return new Blob([json], { type: "application/json;charset=utf-8;" });
+  };
+
+  const runExport = (builder, filename) => {
+    if (!window.analysisResult?.result) {
+      alert("Please run analysis before exporting.");
+      return;
+    }
+    if (progressWrap) progressWrap.hidden = false;
+    if (visibleBtn) visibleBtn.disabled = true;
+    if (allBtn) allBtn.disabled = true;
+    setProgress(0, "Preparing file...");
+
+    let pct = 0;
+    const timer = setInterval(() => {
+      pct = Math.min(90, pct + 5);
+      setProgress(pct, "Preparing file...");
+    }, 120);
+
+    setTimeout(() => {
+      const blob = builder();
+      clearInterval(timer);
+      setProgress(100, "Ready to save.");
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      if (visibleBtn) visibleBtn.disabled = false;
+      if (allBtn) allBtn.disabled = false;
+    }, 250);
+  };
+
+  exportBtn.addEventListener("click", () => {
+    if (progressWrap) progressWrap.hidden = true;
+    setProgress(0, "Preparing file...");
+    modal?.show();
+  });
+
+  visibleBtn?.addEventListener("click", () => {
+    const name = `${getBaseFilename()}_details.csv`;
+    runExport(buildDetailsCsv, name);
+  });
+
+  allBtn?.addEventListener("click", () => {
+    const name = `${getBaseFilename()}_analysis.json`;
+    runExport(buildFullAnalysis, name);
+  });
+}
+
 // Run immediately (DOM is already present because your script tag is at the bottom)
 initTooltips();
 initGradeOptions();
 initAnalysisRequest();
 initTimelineToggles();
+initExportControls();
 initVerovio().catch((err) => console.error("initVerovio failed:", err));
 setTimelineLabels();
