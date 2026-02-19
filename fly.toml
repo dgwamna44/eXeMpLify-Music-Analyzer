@@ -7,6 +7,15 @@ app = 'exemplify-music-analyzer'
 primary_region = 'iad'
 
 [build]
+  builder = "paketobuildpacks/builder:base"
+  buildpacks = ["gcr.io/paketo-buildpacks/python"]
+
+[env]
+  PORT = "8080"
+  PYTHONUNBUFFERED = "1"
+
+[processes]
+  app = "gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 8 --timeout 300 flask_app:app"
 
 [http_service]
   internal_port = 8080
