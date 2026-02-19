@@ -946,7 +946,7 @@ footer {
 
 .timeline {
   display: grid;
-  grid-template-rows: 1fr; /* track */
+  grid-template-rows: 1fr auto; /* track, labels */
   height: 100%;
   padding: 10px 12px;
   gap: 10px;
@@ -1055,13 +1055,14 @@ footer {
   height: 100%;
   overflow-x: auto;
   overflow-y: hidden;
-  padding-bottom: 56px;
+  padding-bottom: 32px;
 }
 
 .timeline-canvas {
   position: relative;
   height: 100%;
-  padding: 0 12px;
+  padding: 0;
+  min-width: 100%;
   box-sizing: border-box;
 }
 
@@ -1208,7 +1209,7 @@ footer {
 
 .timeline-tick-end {
   transform: translateX(-100%);
-  right: calc(50%);
+  right: auto;
 }
 
 .timeline-tick-start .tick-top {
@@ -1269,12 +1270,7 @@ footer {
 }
 
 .timeline-range {
-  position: sticky;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  margin-top: auto;
-  z-index: 3;
+  position: relative;
   background: var(--timeline);
   padding-top: 6px;
   display: flex;

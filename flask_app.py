@@ -8,6 +8,7 @@ import hashlib
 import time
 
 from flask import Flask, Response, jsonify, request, stream_with_context, send_from_directory
+from flask_cors import CORS
 from werkzeug.utils import secure_filename
 
 from app_data import FULL_GRADES, GRADES
@@ -15,6 +16,7 @@ from models import AnalysisOptions
 from run_analysis import run_analysis_engine
 
 app = Flask(__name__, static_folder="html")
+CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 JOBS = {}
 UPLOAD_DIR = tempfile.mkdtemp(prefix="score_uploads_")

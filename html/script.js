@@ -1811,6 +1811,7 @@ function initAnalysisRequest() {
         window.location.hostname === "127.0.0.1"
       ? "http://127.0.0.1:5000"
       : "https://api.exemplify.dgwamna-music.com";
+    console.log("API_BASE =", API_BASE);
   window.analysisResult = null;
   const analyzeBtn = document.getElementById("analyzeBtn");
   const targetOnly = document.getElementById("targetOnly");
