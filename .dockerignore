@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.git/
+.vscode/
+input_files/
+duration_prototype_test/
+verovio/
+publisher_sources/
+ScoreAnalyzer/
+app_data/__pycache__/
+models/__pycache__/
+analyzers/__pycache__/
+data_processing/__pycache__/

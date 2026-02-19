@@ -7,8 +7,7 @@ app = 'exemplify-music-analyzer'
 primary_region = 'iad'
 
 [build]
-  builder = "paketobuildpacks/builder:base"
-  buildpacks = ["gcr.io/paketo-buildpacks/python"]
+  dockerfile = "Dockerfile"
 
 [env]
   PORT = "8080"
