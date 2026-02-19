@@ -14,7 +14,7 @@ primary_region = 'iad'
   PYTHONUNBUFFERED = "1"
 
 [processes]
-  app = "gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 8 --timeout 300 flask_app:app"
+  app = "gunicorn --bind 0.0.0.0:8080 --workers 1 --threads 8 --timeout 300 flask_app:app"
 
 [http_service]
   internal_port = 8080
