@@ -83,23 +83,22 @@ High-level layout (main folders/scripts): 2
 
 **Hosting**
 
-This repo can be split so the backend runs on Fly.io while the frontend is hosted separately (e.g., Cloudflare Pages).
+This repo can be split so the backend runs locally and is exposed via Cloudflare Tunnel, while the frontend is hosted separately (e.g., Cloudflare Pages).
 
-**Backend (Fly.io)**
+**Backend (Cloudflare Tunnel)**
 
-1. Update `fly.toml` `app = "..."` to a unique Fly app name.
-2. Launch and deploy:
+1. Run the backend locally:
    ```bash
-   flyctl launch
-   flyctl deploy
+   python flask_app.py
    ```
-3. Your API base will be `https://<app-name>.fly.dev` unless you attach a custom domain.
+2. Expose it with Cloudflare Tunnel (cloudflared) and map a public hostname to `http://localhost:5000`.
+3. Your API base will be that public hostname (e.g., `https://exemplify.dgwamna-music.com`).
 
 **Frontend (static hosting / Pages)**
 
 1. Host the `html/` directory as a static site.
 2. Set the backend base URL in `html/config.js`:
    ```js
-   window.SCORE_ANALYZER_API_BASE = "https://<app-name>.fly.dev";
+   window.SCORE_ANALYZER_API_BASE = "https://your-backend.example.com";
    ```
 3. If needed, you can also set a `<meta name="score-analyzer-api">` tag in `html/index.html` instead of editing `config.js`.
