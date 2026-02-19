@@ -2,7 +2,13 @@
 const TS_FONT_PATH = "fonts_ts";
 const KS_FONT_PATH = "fonts_key";
 
-const PART_ANALYZERS = ["range", "articulation", "dynamics", "rhythm", "availability"];
+const PART_ANALYZERS = [
+  "range",
+  "articulation",
+  "dynamics",
+  "rhythm",
+  "availability",
+];
 const KEY_ANALYSIS_MODES = {
   STRING: "string",
   STANDARD: "standard",
@@ -51,9 +57,7 @@ function extractRangeCommentList(comments) {
     return text ? [text] : [];
   }
   if (Array.isArray(comments)) {
-    return comments
-      .map((val) => String(val || "").trim())
-      .filter((val) => val);
+    return comments.map((val) => String(val || "").trim()).filter((val) => val);
   }
   if (typeof comments === "object") {
     return Object.entries(comments)
@@ -161,9 +165,8 @@ function buildAnalyzerInstrumentIssues(analyzer, instrument, filteredNotes) {
       const fallback = dynName
         ? `${dynName} not common for this grade`
         : "Dynamic not common for this grade";
-      const comment = dynName && commentMap?.[dynName]
-        ? commentMap[dynName]
-        : fallback;
+      const comment =
+        dynName && commentMap?.[dynName] ? commentMap[dynName] : fallback;
       addIssue(item?.measure, null, comment);
     });
   } else if (analyzer === "availability") {
@@ -257,7 +260,8 @@ function renderGlobalAnalyzerDetails(analyzer, payload) {
     });
   } else if (analyzer === "duration") {
     if (payload && typeof payload === "object") {
-      const length = payload.length_string || payload.length || payload.duration;
+      const length =
+        payload.length_string || payload.length || payload.duration;
       const comments = takeChangeComments(extractSegmentComments(payload));
       blocks.push({
         title: length ? `Duration: ${length}` : "Duration issue",
@@ -400,7 +404,9 @@ function renderScoringDetails(payload) {
   }
 
   const summary = payload.summary || {};
-  const highlights = Array.isArray(payload.highlights) ? payload.highlights : [];
+  const highlights = Array.isArray(payload.highlights)
+    ? payload.highlights
+    : [];
   const issues = Array.isArray(payload.issues) ? payload.issues : [];
   const message = payload.message ? String(payload.message) : "";
   const gradeEstimate = payload.grade_estimate;
@@ -820,9 +826,8 @@ function buildMeasureIssueIndex(filteredNotes) {
       const fallback = dynName
         ? `${dynName} not common for this grade`
         : "Dynamic not common for this grade";
-      const comment = dynName && commentMap?.[dynName]
-        ? commentMap[dynName]
-        : fallback;
+      const comment =
+        dynName && commentMap?.[dynName] ? commentMap[dynName] : fallback;
       addMeasureIssue(index, measure, part, "dynamics", comment);
       measures.add(measure);
     });
@@ -1135,7 +1140,9 @@ function countPartAnalyzerIssues(analyzer, payload) {
     case "range":
       return sumObjectValues(payload, (part) => sumList(part?.["Note Data"]));
     case "articulation":
-      return sumObjectValues(payload, (part) => sumList(part?.articulation_data));
+      return sumObjectValues(payload, (part) =>
+        sumList(part?.articulation_data),
+      );
     case "rhythm":
       return sumObjectValues(
         payload,
@@ -1431,7 +1438,11 @@ function toMeasureArray(data) {
   if (Array.isArray(data))
     return data.map((x) => x.measure).filter(Number.isFinite);
 
-  if (typeof data === "object" && data !== null && Array.isArray(data.segments)) {
+  if (
+    typeof data === "object" &&
+    data !== null &&
+    Array.isArray(data.segments)
+  ) {
     return data.segments.map((x) => x.measure).filter(Number.isFinite);
   }
 
@@ -1443,7 +1454,6 @@ function toMeasureArray(data) {
     .map((x) => x?.measure)
     .filter(Number.isFinite);
 }
-
 
 function prepareTimelineTicks() {
   const analysisData = window.analysisResult?.result;
@@ -1566,7 +1576,7 @@ function setTimelineLabels(totalMeasures, durationString, tempoData) {
       endText = durationText;
     }
   }
-  if (startEl) startEl.textContent = durationCheck?.checked ? "0\"" : "1";
+  if (startEl) startEl.textContent = durationCheck?.checked ? '0"' : "1";
   if (endEl) endEl.textContent = endText;
   if (totalMeasures != null || durationString != null) {
     window._timelineMeta = { totalMeasures, durationString, tempoData };
@@ -1588,6 +1598,15 @@ window.prepareTimelineTicks = prepareTimelineTicks;
 
 window.prepareTimelineTicks = prepareTimelineTicks;
 
+function rebuildTimelineFromCache() {
+  const track = document.getElementById("timelineTrack");
+  const meta = window._timelineMeta || {};
+  const ticks = window._timelineTicks;
+  if (!track || !Array.isArray(ticks)) return;
+  buildTimelineTicks(track, ticks, meta.totalMeasures);
+  setTimelineLabels(meta.totalMeasures, meta.durationString, meta.tempoData);
+}
+
 function bindBarHeadDetailPaneClicks() {
   // Prevent double-binding if user runs analysis multiple times
   if (window.__barHeadClicksBound) return;
@@ -1599,10 +1618,13 @@ function bindBarHeadDetailPaneClicks() {
       const filtered = window.analysisResult?.result?.analysis_notes_filtered;
 
       const detailsPane = document.getElementsByClassName("detail-body")[0];
-  if (!detailsPane) return;
+      if (!detailsPane) return;
 
-  detailsPane.innerHTML = "";
-      detailsPane.classList.remove("detail-body--measure", "detail-body--analyzer");
+      detailsPane.innerHTML = "";
+      detailsPane.classList.remove(
+        "detail-body--measure",
+        "detail-body--analyzer",
+      );
 
       const analyzer = row
         .getElementsByTagName("span")[0]
@@ -1646,7 +1668,9 @@ function bindBarHeadDetailPaneClicks() {
         detailsPane.textContent = ""; // or "—"
       } else {
         detailsPane.textContent =
-          typeof payload === "object" ? JSON.stringify(payload, null, 2) : String(payload);
+          typeof payload === "object"
+            ? JSON.stringify(payload, null, 2)
+            : String(payload);
       }
     });
   });
@@ -1691,9 +1715,7 @@ function setMarkerPositions(confidences, opts = {}) {
     const marker = getMarkerByLabel(label);
     if (!marker) return;
     const clamped =
-      effectiveValue == null
-        ? 0
-        : Math.max(0, Math.min(0.99, effectiveValue));
+      effectiveValue == null ? 0 : Math.max(0, Math.min(0.99, effectiveValue));
     marker.style.left = `${clamped * 100}%`;
     const scoreEl = document.querySelector(`[data-bar-score="${key}"]`);
     if (scoreEl) {
@@ -1703,8 +1725,7 @@ function setMarkerPositions(confidences, opts = {}) {
         const pct = Math.round(effectiveValue * 100);
         if (showObserved) {
           const observedRaw = observedGrades?.[key];
-          const observedNum =
-            observedRaw == null ? null : Number(observedRaw);
+          const observedNum = observedRaw == null ? null : Number(observedRaw);
           const observedText = Number.isFinite(observedNum)
             ? formatGrade(observedNum)
             : "";
@@ -1779,8 +1800,17 @@ function initGradeOptions() {
 }
 
 function initAnalysisRequest() {
-  const API_BASE =
-    window.location.protocol === "file:" ? "http://127.0.0.1:5000" : "";
+  const configuredBase = String(
+    window.SCORE_ANALYZER_API_BASE ||
+      document.querySelector('meta[name="score-analyzer-api"]')?.content ||
+      "",
+  ).trim();
+  const API_BASE = configuredBase
+    ? configuredBase.replace(/\/+$/, "")
+    : window.location.hostname === "localhost" ||
+        window.location.hostname === "127.0.0.1"
+      ? "http://127.0.0.1:5000"
+      : "https://api.exemplify.dgwamna-music.com";
   window.analysisResult = null;
   const analyzeBtn = document.getElementById("analyzeBtn");
   const targetOnly = document.getElementById("targetOnly");
@@ -1788,7 +1818,9 @@ function initAnalysisRequest() {
   const targetGrade = document.getElementById("targetGradeSelect");
   const keyAnalysisBtn = document.getElementById("keyAnalysisBtn");
   const keyAnalysisStringBtn = document.getElementById("keyAnalysisStringBtn");
-  const keyAnalysisStandardBtn = document.getElementById("keyAnalysisStandardBtn");
+  const keyAnalysisStandardBtn = document.getElementById(
+    "keyAnalysisStandardBtn",
+  );
   const modalEl = document.getElementById("progressModal");
   const progressBars = document.getElementById("progressBars");
   const progressText = document.getElementById("progressText");
@@ -1833,7 +1865,8 @@ function initAnalysisRequest() {
 
       const totalMeasures = window.analysisResult?.result?.total_measures ?? 0;
       const durationString = window.analysisResult?.result?.duration ?? 0;
-      const tempoData = window.analysisResult?.result?.analysis_notes?.tempo ?? [];
+      const tempoData =
+        window.analysisResult?.result?.analysis_notes?.tempo ?? [];
       const targetGradeValue = Number(targetGrade?.value ?? NaN);
       setMarkerPositions(window.analysisResult?.result?.confidences, {
         observedGrades: window.analysisResult?.result?.observed_grades,
@@ -2007,125 +2040,128 @@ function initAnalysisRequest() {
       if (es) es.close();
       es = new EventSource(`${API_BASE}/api/progress/${jobId}`);
       es.onmessage = (evt) => {
-      const data = JSON.parse(evt.data);
-      if (data.type === "heartbeat") return;
-      if (data.type === "observed") {
-        const pct = data.total ? Math.round((data.idx / data.total) * 100) : 0;
-        const analyzerKey =
-          data.analyzer === "key_range" && data.label
-            ? data.label
-            : data.analyzer === "tempo_duration" && data.label
+        const data = JSON.parse(evt.data);
+        if (data.type === "heartbeat") return;
+        if (data.type === "observed") {
+          const pct = data.total
+            ? Math.round((data.idx / data.total) * 100)
+            : 0;
+          const analyzerKey =
+            data.analyzer === "key_range" && data.label
               ? data.label
-              : data.analyzer;
-        const ids = barIds[analyzerKey];
-        const bar = ids ? document.getElementById(ids.bar) : null;
-        const pctEl = ids ? document.getElementById(ids.pct) : null;
-        const labelEl = ids ? document.getElementById(ids.label) : null;
-        if (bar) bar.style.width = `${pct}%`;
-        if (pctEl) pctEl.textContent = `${pct}%`;
-        if (labelEl) {
-          const name = labelMap[analyzerKey] || analyzerKey;
-          labelEl.textContent = name;
-        }
-        if (progressText) {
-          const name = labelMap[analyzerKey] || analyzerKey;
-          progressText.textContent = `${name} grade ${formatGrade(data.grade)} - ${pct}%`;
-        }
-      } else if (data.type === "analyzer") {
-        const analyzerKey =
-          data.analyzer === "key_range"
-            ? "range"
-            : data.analyzer === "tempo_duration"
-              ? "tempo"
-              : data.analyzer;
-        const ids = barIds[analyzerKey];
-        const bar = ids ? document.getElementById(ids.bar) : null;
-        const pctEl = ids ? document.getElementById(ids.pct) : null;
-        const labelEl = ids ? document.getElementById(ids.label) : null;
-        if (bar && bar.style.width === "0%") {
-          bar.style.width = "100%";
-        }
-        if (pctEl && pctEl.textContent === "0%") {
-          pctEl.textContent = "100%";
-        }
-        if (labelEl) {
-          labelEl.textContent = labelMap[analyzerKey] || analyzerKey;
-        }
-        if (data.analyzer === "tempo_duration") {
-          const tempoIds = barIds.tempo;
-          const durationIds = barIds.duration;
-          const tempoBar = tempoIds
-            ? document.getElementById(tempoIds.bar)
-            : null;
-          const tempoPct = tempoIds
-            ? document.getElementById(tempoIds.pct)
-            : null;
-          const durationBar = durationIds
-            ? document.getElementById(durationIds.bar)
-            : null;
-          const durationPct = durationIds
-            ? document.getElementById(durationIds.pct)
-            : null;
-          if (tempoBar) tempoBar.style.width = "100%";
-          if (tempoPct) tempoPct.textContent = "100%";
-          if (durationBar) durationBar.style.width = "100%";
-          if (durationPct) durationPct.textContent = "100%";
-        }
-      } else if (data.type === "done") {
-        streamDone = true;
-        Object.values(barIds).forEach((ids) => {
-          const bar = document.getElementById(ids.bar);
-          const pctEl = document.getElementById(ids.pct);
-          if (bar) bar.style.width = "100%";
-          if (pctEl) pctEl.textContent = "100%";
-        });
-        if (progressText) progressText.textContent = "Done.";
-        if (progressOkBtn) progressOkBtn.disabled = false;
-        if (timerId) clearInterval(timerId);
-        if (reconnectTimer) clearTimeout(reconnectTimer);
-        es.close();
-        fetch(`${API_BASE}/api/result/${jobId}`)
-          .then((r) => r.json())
-          .then((result) => {
-            window.analysisResult = result;
+              : data.analyzer === "tempo_duration" && data.label
+                ? data.label
+                : data.analyzer;
+          const ids = barIds[analyzerKey];
+          const bar = ids ? document.getElementById(ids.bar) : null;
+          const pctEl = ids ? document.getElementById(ids.pct) : null;
+          const labelEl = ids ? document.getElementById(ids.label) : null;
+          if (bar) bar.style.width = `${pct}%`;
+          if (pctEl) pctEl.textContent = `${pct}%`;
+          if (labelEl) {
+            const name = labelMap[analyzerKey] || analyzerKey;
+            labelEl.textContent = name;
+          }
+          if (progressText) {
+            const name = labelMap[analyzerKey] || analyzerKey;
+            progressText.textContent = `${name} grade ${formatGrade(data.grade)} - ${pct}%`;
+          }
+        } else if (data.type === "analyzer") {
+          const analyzerKey =
+            data.analyzer === "key_range"
+              ? "range"
+              : data.analyzer === "tempo_duration"
+                ? "tempo"
+                : data.analyzer;
+          const ids = barIds[analyzerKey];
+          const bar = ids ? document.getElementById(ids.bar) : null;
+          const pctEl = ids ? document.getElementById(ids.pct) : null;
+          const labelEl = ids ? document.getElementById(ids.label) : null;
+          if (bar && bar.style.width === "0%") {
+            bar.style.width = "100%";
+          }
+          if (pctEl && pctEl.textContent === "0%") {
+            pctEl.textContent = "100%";
+          }
+          if (labelEl) {
+            labelEl.textContent = labelMap[analyzerKey] || analyzerKey;
+          }
+          if (data.analyzer === "tempo_duration") {
+            const tempoIds = barIds.tempo;
+            const durationIds = barIds.duration;
+            const tempoBar = tempoIds
+              ? document.getElementById(tempoIds.bar)
+              : null;
+            const tempoPct = tempoIds
+              ? document.getElementById(tempoIds.pct)
+              : null;
+            const durationBar = durationIds
+              ? document.getElementById(durationIds.bar)
+              : null;
+            const durationPct = durationIds
+              ? document.getElementById(durationIds.pct)
+              : null;
+            if (tempoBar) tempoBar.style.width = "100%";
+            if (tempoPct) tempoPct.textContent = "100%";
+            if (durationBar) durationBar.style.width = "100%";
+            if (durationPct) durationPct.textContent = "100%";
+          }
+        } else if (data.type === "done") {
+          streamDone = true;
+          Object.values(barIds).forEach((ids) => {
+            const bar = document.getElementById(ids.bar);
+            const pctEl = document.getElementById(ids.pct);
+            if (bar) bar.style.width = "100%";
+            if (pctEl) pctEl.textContent = "100%";
+          });
+          if (progressText) progressText.textContent = "Done.";
+          if (progressOkBtn) progressOkBtn.disabled = false;
+          if (timerId) clearInterval(timerId);
+          if (reconnectTimer) clearTimeout(reconnectTimer);
+          es.close();
+          fetch(`${API_BASE}/api/result/${jobId}`)
+            .then((r) => r.json())
+            .then((result) => {
+              window.analysisResult = result;
 
-            bindBarHeadDetailPaneClicks();
-            updatePartAnalyzerIssueTooltips(
-              result?.result?.analysis_notes_filtered,
-            );
-            const targetGradeValue = Number(targetGrade?.value ?? NaN);
-            setMarkerPositions(result?.result?.confidences, {
-              observedGrades: result?.result?.observed_grades,
-              targetGrade: targetGradeValue,
-              showObserved: !targetOnly?.checked,
-              availabilityNotes: result?.result?.analysis_notes?.availability,
-            });
-            setObservedGrade(
-              result?.result?.observed_grade_overall,
-              result?.result?.observed_grade_overall_range,
-            );
-            const scoringPayload =
-              result?.result?.analysis_notes_filtered?.scoring ??
-              result?.result?.analysis_notes?.scoring;
-            if (scoringPayload) {
-              renderScoringDetails(scoringPayload);
-            }
+              bindBarHeadDetailPaneClicks();
+              updatePartAnalyzerIssueTooltips(
+                result?.result?.analysis_notes_filtered,
+              );
+              const targetGradeValue = Number(targetGrade?.value ?? NaN);
+              setMarkerPositions(result?.result?.confidences, {
+                observedGrades: result?.result?.observed_grades,
+                targetGrade: targetGradeValue,
+                showObserved: !targetOnly?.checked,
+                availabilityNotes: result?.result?.analysis_notes?.availability,
+              });
+              setObservedGrade(
+                result?.result?.observed_grade_overall,
+                result?.result?.observed_grade_overall_range,
+              );
+              const scoringPayload =
+                result?.result?.analysis_notes_filtered?.scoring ??
+                result?.result?.analysis_notes?.scoring;
+              if (scoringPayload) {
+                renderScoringDetails(scoringPayload);
+              }
 
-            const totalMeasures = result?.result?.total_measures ?? 0;
-            const durationString = result?.result?.duration ?? 0;
-            const tempoData = result?.result?.analysis_notes?.tempo ?? [];
+              const totalMeasures = result?.result?.total_measures ?? 0;
+              const durationString = result?.result?.duration ?? 0;
+              const tempoData = result?.result?.analysis_notes?.tempo ?? [];
 
-            setTimelineLabels(totalMeasures, durationString, tempoData);
+              setTimelineLabels(totalMeasures, durationString, tempoData);
 
-            const ticks = prepareTimelineTicks();
-            console.log("ticks:", ticks);
-            const track = document.getElementById("timelineTrack");
+              const ticks = prepareTimelineTicks();
+              console.log("ticks:", ticks);
+              const track = document.getElementById("timelineTrack");
+              window._timelineTicks = ticks;
 
-            buildTimelineTicks(track, ticks, totalMeasures);
-          })
-          .catch((err) => console.error("Failed to fetch result:", err));
-      }
-    };
+              buildTimelineTicks(track, ticks, totalMeasures);
+            })
+            .catch((err) => console.error("Failed to fetch result:", err));
+        }
+      };
 
       es.onerror = () => {
         if (streamDone) return;
@@ -2182,7 +2218,11 @@ function initTimelineToggles() {
   if (durationToggle) {
     durationToggle.addEventListener("change", () => {
       const meta = window._timelineMeta || {};
-      setTimelineLabels(meta.totalMeasures, meta.durationString, meta.tempoData);
+      setTimelineLabels(
+        meta.totalMeasures,
+        meta.durationString,
+        meta.tempoData,
+      );
     });
   }
 }
@@ -2247,7 +2287,7 @@ async function initVerovio() {
 
   let app = new window.Verovio.App(appEl, {
     defaultView: "responsive",
-    documentZoom: 3
+    documentZoom: 3,
   });
 
   function ensureZoomWrapper() {
@@ -2389,7 +2429,7 @@ async function initVerovio() {
     appEl.innerHTML = "";
     app = new window.Verovio.App(appEl, {
       defaultView: "responsive",
-      documentZoom: 3
+      documentZoom: 3,
     });
 
     hasActiveScore = false;
@@ -2439,6 +2479,16 @@ async function initVerovio() {
   syncScoreActions();
 }
 
+function initTimelineResize() {
+  let resizeTimer = null;
+  window.addEventListener("resize", () => {
+    if (resizeTimer) clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      rebuildTimelineFromCache();
+    }, 150);
+  });
+}
+
 function initExportControls() {
   const exportBtn = document.getElementById("exportBtn");
   const modalEl = document.getElementById("exportModal");
@@ -2460,7 +2510,8 @@ function initExportControls() {
   };
 
   const getBaseFilename = () => {
-    const title = document.getElementById("scoreTitle")?.textContent || "analysis";
+    const title =
+      document.getElementById("scoreTitle")?.textContent || "analysis";
     const cleaned = title.replace(/Score Title:\s*/i, "").trim();
     return cleaned || "analysis";
   };
@@ -2468,9 +2519,15 @@ function initExportControls() {
   const buildDetailsCsv = () => {
     const pane = document.querySelector(".detail-body");
     const lines = pane
-      ? pane.innerText.split(/\n+/).map((l) => l.trim()).filter(Boolean)
+      ? pane.innerText
+          .split(/\n+/)
+          .map((l) => l.trim())
+          .filter(Boolean)
       : [];
-    const rows = ["line", ...lines.map((line) => `"${line.replace(/"/g, '""')}"`)];
+    const rows = [
+      "line",
+      ...lines.map((line) => `"${line.replace(/"/g, '""')}"`),
+    ];
     return new Blob([rows.join("\n")], { type: "text/csv;charset=utf-8;" });
   };
 
@@ -2535,6 +2592,7 @@ initTooltips();
 initGradeOptions();
 initAnalysisRequest();
 initTimelineToggles();
+initTimelineResize();
 initExportControls();
 initVerovio().catch((err) => console.error("initVerovio failed:", err));
 setTimelineLabels();
