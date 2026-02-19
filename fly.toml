@@ -1,17 +1,3 @@
-<<<<<<< HEAD
-app = "exemplify-backend"
-primary_region = "iad"
-
-[build]
-  builder = "paketobuildpacks/builder:base"
-
-[env]
-  PORT = "8080"
-  PYTHONUNBUFFERED = "1"
-
-[processes]
-  app = "gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 8 --timeout 300 flask_app:app"
-=======
 # fly.toml app configuration file generated for exemplify-music-analyzer on 2026-02-19T17:39:43Z
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
@@ -21,17 +7,10 @@ app = 'exemplify-music-analyzer'
 primary_region = 'iad'
 
 [build]
->>>>>>> 911073118d250b926242fcf0d3509243e65d1184
 
 [http_service]
   internal_port = 8080
   force_https = true
-<<<<<<< HEAD
-  auto_stop_machines = "stop"
-  auto_start_machines = true
-  min_machines_running = 0
-  processes = ["app"]
-=======
   auto_stop_machines = 'stop'
   auto_start_machines = true
   min_machines_running = 0
@@ -42,4 +21,3 @@ primary_region = 'iad'
   cpu_kind = 'shared'
   cpus = 1
   memory_mb = 1024
->>>>>>> 911073118d250b926242fcf0d3509243e65d1184
