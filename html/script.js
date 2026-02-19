@@ -1810,8 +1810,8 @@ function initAnalysisRequest() {
     : window.location.hostname === "localhost" ||
         window.location.hostname === "127.0.0.1"
       ? "http://127.0.0.1:5000"
-      : "https://api.exemplify.dgwamna-music.com";
-    console.log("API_BASE =", API_BASE);
+      : "";
+  console.log("API_BASE =", API_BASE);
   window.analysisResult = null;
   const analyzeBtn = document.getElementById("analyzeBtn");
   const targetOnly = document.getElementById("targetOnly");
@@ -1979,6 +1979,12 @@ function initAnalysisRequest() {
   };
 
   analyzeBtn.addEventListener("click", async () => {
+    if (!API_BASE) {
+      alert(
+        "Missing backend URL. Set SCORE_ANALYZER_API_BASE in html/config.js (or a score-analyzer-api meta tag).",
+      );
+      return;
+    }
     const fileInput = document.getElementById("fileInput");
     const file = fileInput?.files?.[0];
     if (!file) {

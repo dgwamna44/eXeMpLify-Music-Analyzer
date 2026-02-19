@@ -1,0 +1,20 @@
+app = "exemplify-backend"
+primary_region = "iad"
+
+[build]
+  builder = "paketobuildpacks/builder:base"
+
+[env]
+  PORT = "8080"
+  PYTHONUNBUFFERED = "1"
+
+[processes]
+  app = "gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 8 --timeout 300 flask_app:app"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
