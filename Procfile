@@ -1,1 +1,2 @@
-web: gunicorn flask_app:app --workers 1 --threads 8 --timeout 0
+web: gunicorn flask_app:app --workers 1 --threads 4 --timeout 300
+worker: rq worker --url $REDIS_URL default

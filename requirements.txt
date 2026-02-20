@@ -1,6 +1,8 @@
 Flask
 Flask-Cors
 gunicorn
+redis
+rq
 music21
 pandas
 gunicorn
