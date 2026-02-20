@@ -111,6 +111,16 @@ function sortNumericKeys(keys) {
   });
 }
 
+function updateExportVisibility() {
+  const btn = document.getElementById("exportBtn");
+  if (!btn) return;
+  const pane = document.querySelector(".detail-body");
+  const hasResult = Boolean(window.analysisResult?.result);
+  const hasContent = Boolean(pane?.textContent?.trim());
+  const isList = pane?.classList.contains("detail-body--list");
+  btn.hidden = !(hasResult && hasContent && !isList);
+}
+
 function buildAnalyzerInstrumentIssues(analyzer, instrument, filteredNotes) {
   const issues = {};
 
@@ -193,6 +203,7 @@ function renderGlobalAnalyzerDetails(analyzer, payload) {
 
   if (typeof payload === "string") {
     detailsPane.textContent = payload;
+    updateExportVisibility();
     return;
   }
 
@@ -281,6 +292,7 @@ function renderGlobalAnalyzerDetails(analyzer, payload) {
 
   if (blocks.length === 0) {
     detailsPane.textContent = "";
+    updateExportVisibility();
     return;
   }
 
@@ -319,6 +331,7 @@ function renderGlobalAnalyzerDetails(analyzer, payload) {
 
     detailsPane.appendChild(wrap);
   });
+  updateExportVisibility();
 }
 
 function renderAvailabilityDetails(payload) {
@@ -334,17 +347,20 @@ function renderAvailabilityDetails(payload) {
 
   if (typeof payload === "string") {
     detailsPane.textContent = payload;
+    updateExportVisibility();
     return;
   }
 
   if (!payload || typeof payload !== "object") {
     detailsPane.textContent = "";
+    updateExportVisibility();
     return;
   }
 
   const instruments = Object.keys(payload || {});
   if (instruments.length === 0) {
     detailsPane.textContent = "No issues found.";
+    updateExportVisibility();
     return;
   }
 
@@ -380,6 +396,7 @@ function renderAvailabilityDetails(payload) {
   wrap.appendChild(list);
 
   detailsPane.appendChild(wrap);
+  updateExportVisibility();
 }
 
 function renderScoringDetails(payload) {
@@ -395,11 +412,13 @@ function renderScoringDetails(payload) {
 
   if (typeof payload === "string") {
     detailsPane.textContent = payload;
+    updateExportVisibility();
     return;
   }
 
   if (!payload || typeof payload !== "object") {
     detailsPane.textContent = "";
+    updateExportVisibility();
     return;
   }
 
@@ -563,6 +582,7 @@ function renderScoringDetails(payload) {
     appendBlock("Scoring overview", overviewItems);
   } else if (message) {
     detailsPane.textContent = message;
+    updateExportVisibility();
     return;
   }
 
@@ -570,6 +590,7 @@ function renderScoringDetails(payload) {
   if (issueItems.length > 0) {
     appendBlock("Issues", issueItems);
   }
+  updateExportVisibility();
 }
 
 function renderAnalyzerInstrumentList(analyzer, payload) {
@@ -588,6 +609,7 @@ function renderAnalyzerInstrumentList(analyzer, payload) {
   const instrumentList = Object.keys(payload || {});
   if (instrumentList.length === 0) {
     detailsPane.textContent = "";
+    updateExportVisibility();
     return;
   }
 
@@ -634,6 +656,7 @@ function renderAnalyzerInstrumentList(analyzer, payload) {
 
     detailsPane.appendChild(btn);
   });
+  updateExportVisibility();
 }
 
 function renderAnalyzerInstrumentDetails(analyzer, instrument) {
@@ -715,6 +738,7 @@ function renderAnalyzerInstrumentDetails(analyzer, instrument) {
 
     detailsPane.appendChild(measureBlock);
   });
+  updateExportVisibility();
 }
 
 function handleDetailBack() {
@@ -722,17 +746,18 @@ function handleDetailBack() {
   const filtered = window.analysisResult?.result?.analysis_notes_filtered;
   if (!last || !filtered) {
     const detailsPane = document.getElementsByClassName("detail-body")[0];
-    if (detailsPane) {
-      detailsPane.innerHTML = "";
-      detailsPane.classList.remove(
-        "detail-body--measure",
-        "detail-body--analyzer",
-        "detail-body--global",
-        "detail-body--list",
-      );
+      if (detailsPane) {
+        detailsPane.innerHTML = "";
+        detailsPane.classList.remove(
+          "detail-body--measure",
+          "detail-body--analyzer",
+          "detail-body--global",
+          "detail-body--list",
+        );
+      }
+      updateExportVisibility();
+      return;
     }
-    return;
-  }
   if (last.type === "analyzer_list") {
     renderAnalyzerInstrumentList(last.analyzer, filtered?.[last.analyzer]);
   } else if (last.type === "analyzer_detail") {
@@ -748,6 +773,7 @@ function handleDetailBack() {
         "detail-body--list",
       );
     }
+    updateExportVisibility();
   }
 }
 
@@ -875,6 +901,7 @@ function renderMeasureDetails(measure) {
     empty.className = "measure-empty";
     empty.textContent = "No issues detected for this measure.";
     detailsPane.appendChild(empty);
+    updateExportVisibility();
     return;
   }
 
@@ -957,6 +984,7 @@ function renderMeasureDetails(measure) {
       });
     detailsPane.appendChild(section);
   });
+  updateExportVisibility();
 }
 
 const STRING_INSTRUMENT_PATTERNS = [
@@ -2022,6 +2050,7 @@ function initAnalysisRequest() {
       window._timelineTicks = ticks;
 
       buildTimelineTicks(track, ticks, totalMeasures);
+      updateExportVisibility();
     };
     const wrapResult = (data) => ({ done: true, error: null, result: data });
     const fileInput = document.getElementById("fileInput");
@@ -2578,6 +2607,7 @@ function initExportControls() {
   const exportBtn = document.getElementById("exportBtn");
   const modalEl = document.getElementById("exportModal");
   const visibleBtn = document.getElementById("exportVisibleBtn");
+  const filteredBtn = document.getElementById("exportFilteredBtn");
   const allBtn = document.getElementById("exportAllBtn");
   const progressWrap = document.getElementById("exportProgress");
   const progressBar = document.getElementById("exportProgressBar");
@@ -2622,6 +2652,25 @@ function initExportControls() {
     return new Blob([json], { type: "application/json;charset=utf-8;" });
   };
 
+  const buildFilteredAnalysis = () => {
+    const payload = window.analysisResult?.result ?? {};
+    const filtered = payload.analysis_notes_filtered ?? {};
+    const exportPayload = {
+      analysis_notes_filtered: filtered,
+      confidences: payload.confidences ?? null,
+      observed_grades: payload.observed_grades ?? null,
+      observed_grade_overall: payload.observed_grade_overall ?? null,
+      observed_grade_overall_range: payload.observed_grade_overall_range ?? null,
+      total_measures: payload.total_measures ?? null,
+      duration: payload.duration ?? null,
+      part_order: payload.part_order ?? [],
+      part_families: payload.part_families ?? {},
+      part_groups: payload.part_groups ?? {},
+    };
+    const json = JSON.stringify(exportPayload, null, 2);
+    return new Blob([json], { type: "application/json;charset=utf-8;" });
+  };
+
   const runExport = (builder, filename) => {
     if (!window.analysisResult?.result) {
       alert("Please run analysis before exporting.");
@@ -2629,6 +2678,7 @@ function initExportControls() {
     }
     if (progressWrap) progressWrap.hidden = false;
     if (visibleBtn) visibleBtn.disabled = true;
+    if (filteredBtn) filteredBtn.disabled = true;
     if (allBtn) allBtn.disabled = true;
     setProgress(0, "Preparing file...");
 
@@ -2651,6 +2701,7 @@ function initExportControls() {
       link.remove();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
       if (visibleBtn) visibleBtn.disabled = false;
+      if (filteredBtn) filteredBtn.disabled = false;
       if (allBtn) allBtn.disabled = false;
     }, 250);
   };
@@ -2666,10 +2717,17 @@ function initExportControls() {
     runExport(buildDetailsCsv, name);
   });
 
+  filteredBtn?.addEventListener("click", () => {
+    const name = `${getBaseFilename()}_filtered.json`;
+    runExport(buildFilteredAnalysis, name);
+  });
+
   allBtn?.addEventListener("click", () => {
     const name = `${getBaseFilename()}_analysis.json`;
     runExport(buildFullAnalysis, name);
   });
+
+  updateExportVisibility();
 }
 
 // Run immediately (DOM is already present because your script tag is at the bottom)

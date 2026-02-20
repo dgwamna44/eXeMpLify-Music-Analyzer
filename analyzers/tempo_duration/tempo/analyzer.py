@@ -1,5 +1,10 @@
 from models import BaseAnalyzer
-from .helpers import build_tempo_marks, build_tempo_segments, get_tempo_score
+from .helpers import (
+    build_tempo_marks,
+    build_tempo_segments,
+    get_tempo_confidence,
+    VALID_TEMPOS,
+)
 from utilities import format_grade, get_rounded_grade
 
 
@@ -17,12 +22,18 @@ def analyze_tempo(score, rules, grade, *, run_target: bool = False):
 
     for seg in segments:
         seg.grade = grade
-        seg.confidence = get_tempo_score(seg.bpm, tempo_min, tempo_max)
-        if run_target and seg.confidence == 0:
-            seg.comments = (
-                f"Tempo {seg.bpm} ({seg.beat_unit}) "
-                f"outside grade {format_grade(grade)} range ({tempo_min}-{tempo_max})"
-            )
+        seg.confidence = get_tempo_confidence(seg.bpm, tempo_min, tempo_max, grade)
+        if run_target and seg.confidence < 1:
+            if seg.bpm < tempo_min or seg.bpm > tempo_max:
+                seg.comments = (
+                    f"Tempo {seg.bpm} ({seg.beat_unit}) "
+                    f"outside grade {format_grade(grade)} range ({tempo_min}-{tempo_max})"
+                )
+            elif seg.bpm not in VALID_TEMPOS:
+                seg.comments = (
+                    f"Tempo {seg.bpm} ({seg.beat_unit}) "
+                    "is not a standard metronome marking"
+                )
 
     composite = sum((s.confidence or 0.0) * (s.exposure or 0.0) for s in segments)
     composite = min(1.0, max(0.0, composite))
