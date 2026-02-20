@@ -2001,7 +2001,7 @@ function initAnalysisRequest() {
     );
     form.append("full_grade_analysis", String(Boolean(fullGrade?.checked)));
     form.append("target_grade", String(Number(targetGrade?.value || 2)));
-    const res = await fetch(`${API_BASE}/api/analyze`, {
+    const res = await fetch(`${API_BASE}/analyze`, {
       method: "POST",
       body: form,
     });
@@ -2045,7 +2045,7 @@ function initAnalysisRequest() {
 
     const connectProgressStream = () => {
       if (es) es.close();
-      es = new EventSource(`${API_BASE}/api/progress/${jobId}`);
+      es = new EventSource(`${API_BASE}/progress/${jobId}`);
       es.onmessage = (evt) => {
         const data = JSON.parse(evt.data);
         if (data.type === "heartbeat") return;
@@ -2126,7 +2126,7 @@ function initAnalysisRequest() {
           if (timerId) clearInterval(timerId);
           if (reconnectTimer) clearTimeout(reconnectTimer);
           es.close();
-          fetch(`${API_BASE}/api/result/${jobId}`)
+          fetch(`${API_BASE}/result/${jobId}`)
             .then((r) => r.json())
             .then((result) => {
               window.analysisResult = result;
