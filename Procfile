@@ -1,1 +1,1 @@
-web: gunicorn flask_app:app
+web: gunicorn flask_app:app --workers 1 --threads 8 --timeout 0
