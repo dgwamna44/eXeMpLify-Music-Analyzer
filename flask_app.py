@@ -24,6 +24,8 @@ JOB_TTL_SECONDS = 60 * 60 * 6
 
 def get_redis():
     url = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
+    if os.environ.get("REDIS_TLS") == "1":
+        return redis.from_url(url, ssl_cert_reqs=None)
     return redis.from_url(url)
 
 
