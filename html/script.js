@@ -1805,12 +1805,14 @@ function initAnalysisRequest() {
       document.querySelector('meta[name="score-analyzer-api"]')?.content ||
       "",
   ).trim();
-  const API_BASE = configuredBase
-    ? configuredBase.replace(/\/+$/, "")
-    : window.location.hostname === "localhost" ||
-        window.location.hostname === "127.0.0.1"
-      ? "http://127.0.0.1:5000"
-      : "";
+    const API_BASE = configuredBase
+      ? configuredBase.replace(/\/+$/, "")
+      : window.location.hostname === "localhost" ||
+          window.location.hostname === "127.0.0.1"
+        ? "http://127.0.0.1:5000"
+        : "";
+    const isLocalApi =
+      API_BASE.includes("127.0.0.1") || API_BASE.includes("localhost");
   console.log("API_BASE =", API_BASE);
   window.analysisResult = null;
   const analyzeBtn = document.getElementById("analyzeBtn");
@@ -1985,6 +1987,43 @@ function initAnalysisRequest() {
       );
       return;
     }
+    const applyAnalysisResult = (payload) => {
+      window.analysisResult = payload;
+
+      bindBarHeadDetailPaneClicks();
+      updatePartAnalyzerIssueTooltips(payload?.result?.analysis_notes_filtered);
+      const targetGradeValue = Number(targetGrade?.value ?? NaN);
+      setMarkerPositions(payload?.result?.confidences, {
+        observedGrades: payload?.result?.observed_grades,
+        targetGrade: targetGradeValue,
+        showObserved: !targetOnly?.checked,
+        availabilityNotes: payload?.result?.analysis_notes?.availability,
+      });
+      setObservedGrade(
+        payload?.result?.observed_grade_overall,
+        payload?.result?.observed_grade_overall_range,
+      );
+      const scoringPayload =
+        payload?.result?.analysis_notes_filtered?.scoring ??
+        payload?.result?.analysis_notes?.scoring;
+      if (scoringPayload) {
+        renderScoringDetails(scoringPayload);
+      }
+
+      const totalMeasures = payload?.result?.total_measures ?? 0;
+      const durationString = payload?.result?.duration ?? 0;
+      const tempoData = payload?.result?.analysis_notes?.tempo ?? [];
+
+      setTimelineLabels(totalMeasures, durationString, tempoData);
+
+      const ticks = prepareTimelineTicks();
+      console.log("ticks:", ticks);
+      const track = document.getElementById("timelineTrack");
+      window._timelineTicks = ticks;
+
+      buildTimelineTicks(track, ticks, totalMeasures);
+    };
+    const wrapResult = (data) => ({ done: true, error: null, result: data });
     const fileInput = document.getElementById("fileInput");
     const file = fileInput?.files?.[0];
     if (!file) {
@@ -2001,24 +2040,9 @@ function initAnalysisRequest() {
     );
     form.append("full_grade_analysis", String(Boolean(fullGrade?.checked)));
     form.append("target_grade", String(Number(targetGrade?.value || 2)));
-    const res = await fetch(`${API_BASE}/api/analyze`, {
-      method: "POST",
-      body: form,
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      alert(err.error || "Failed to start analysis.");
-      return;
+    if (isLocalApi) {
+      form.append("debug_inline", "true");
     }
-
-    const { job_id: jobId } = await res.json();
-    if (!jobId) {
-      alert("No job id returned.");
-      return;
-    }
-
-    window.lastJobId = jobId;
     window.analysisResult = null;
 
     ensureProgressBars();
@@ -2028,6 +2052,39 @@ function initAnalysisRequest() {
     modal?.show();
     const startedAt = performance.now();
     let timerId = null;
+    let localProgressTimer = null;
+    const localProgress = {};
+    const localKeys = Object.keys(labelMap);
+    const startLocalProgress = () => {
+      if (localProgressTimer) return;
+      localKeys.forEach((key) => {
+        localProgress[key] = 0;
+      });
+      let tick = 0;
+      localProgressTimer = setInterval(() => {
+        localKeys.forEach((key) => {
+          const ids = barIds[key];
+          const bar = ids ? document.getElementById(ids.bar) : null;
+          const pctEl = ids ? document.getElementById(ids.pct) : null;
+          const bump = 1 + Math.random() * 4;
+          const next = Math.min(95, (localProgress[key] || 0) + bump);
+          localProgress[key] = next;
+          if (bar) bar.style.width = `${Math.round(next)}%`;
+          if (pctEl) pctEl.textContent = `${Math.round(next)}%`;
+        });
+        if (progressText && localKeys.length > 0) {
+          const label = labelMap[localKeys[tick % localKeys.length]] || "Analysis";
+            progressText.textContent = "Now processing...";
+        }
+        tick += 1;
+      }, 700);
+    };
+    const stopLocalProgress = () => {
+      if (localProgressTimer) {
+        clearInterval(localProgressTimer);
+        localProgressTimer = null;
+      }
+    };
     if (progressTimer) {
       timerId = setInterval(() => {
         const elapsed = (performance.now() - startedAt) / 1000;
@@ -2036,6 +2093,44 @@ function initAnalysisRequest() {
         progressTimer.textContent = `Time Elapsed - ${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
       }, 200);
     }
+
+    startLocalProgress();
+      const res = await fetch(`${API_BASE}/api/analyze`, {
+        method: "POST",
+        body: form,
+      });
+
+      if (!res.ok) {
+        stopLocalProgress();
+        if (timerId) clearInterval(timerId);
+        const err = await res.json().catch(() => ({}));
+        alert(err.error || "Failed to start analysis.");
+        return;
+      }
+
+      const initialPayload = await res.json().catch(() => ({}));
+      const jobId = initialPayload?.job_id;
+      if (!jobId) {
+        stopLocalProgress();
+        if (timerId) clearInterval(timerId);
+        Object.values(barIds).forEach((ids) => {
+          const bar = document.getElementById(ids.bar);
+          const pctEl = document.getElementById(ids.pct);
+          if (bar) bar.style.width = "100%";
+          if (pctEl) pctEl.textContent = "100%";
+        });
+        if (progressText) progressText.textContent = "Done.";
+        if (progressOkBtn) progressOkBtn.disabled = false;
+        applyAnalysisResult({
+          done: true,
+          error: null,
+          result: initialPayload,
+        });
+        return;
+      }
+      stopLocalProgress();
+
+    window.lastJobId = jobId;
 
     let es = null;
     let reconnectAttempts = 0;
@@ -2046,6 +2141,7 @@ function initAnalysisRequest() {
     const connectProgressStream = () => {
       if (es) es.close();
       es = new EventSource(`${API_BASE}/api/progress/${jobId}`);
+      let finalReceived = false;
       es.onmessage = (evt) => {
         const data = JSON.parse(evt.data);
         if (data.type === "heartbeat") return;
@@ -2113,6 +2209,21 @@ function initAnalysisRequest() {
             if (durationBar) durationBar.style.width = "100%";
             if (durationPct) durationPct.textContent = "100%";
           }
+        } else if (data.type === "analyzer_result") {
+          window.analysisResult = wrapResult(data.data);
+        } else if (data.type === "result") {
+          finalReceived = true;
+          streamDone = true;
+          if (progressText) progressText.textContent = "Done.";
+          if (progressOkBtn) progressOkBtn.disabled = false;
+          if (timerId) clearInterval(timerId);
+          if (reconnectTimer) clearTimeout(reconnectTimer);
+          es.close();
+          applyAnalysisResult(wrapResult(data.data));
+        } else if (data.type === "timeout") {
+          if (progressText) {
+            progressText.textContent = "Timed out. Showing partial results.";
+          }
         } else if (data.type === "done") {
           streamDone = true;
           Object.values(barIds).forEach((ids) => {
@@ -2126,47 +2237,14 @@ function initAnalysisRequest() {
           if (timerId) clearInterval(timerId);
           if (reconnectTimer) clearTimeout(reconnectTimer);
           es.close();
-          fetch(`${API_BASE}/api/result/${jobId}`)
-            .then((r) => r.json())
-            .then((result) => {
-              window.analysisResult = result;
-
-              bindBarHeadDetailPaneClicks();
-              updatePartAnalyzerIssueTooltips(
-                result?.result?.analysis_notes_filtered,
-              );
-              const targetGradeValue = Number(targetGrade?.value ?? NaN);
-              setMarkerPositions(result?.result?.confidences, {
-                observedGrades: result?.result?.observed_grades,
-                targetGrade: targetGradeValue,
-                showObserved: !targetOnly?.checked,
-                availabilityNotes: result?.result?.analysis_notes?.availability,
-              });
-              setObservedGrade(
-                result?.result?.observed_grade_overall,
-                result?.result?.observed_grade_overall_range,
-              );
-              const scoringPayload =
-                result?.result?.analysis_notes_filtered?.scoring ??
-                result?.result?.analysis_notes?.scoring;
-              if (scoringPayload) {
-                renderScoringDetails(scoringPayload);
-              }
-
-              const totalMeasures = result?.result?.total_measures ?? 0;
-              const durationString = result?.result?.duration ?? 0;
-              const tempoData = result?.result?.analysis_notes?.tempo ?? [];
-
-              setTimelineLabels(totalMeasures, durationString, tempoData);
-
-              const ticks = prepareTimelineTicks();
-              console.log("ticks:", ticks);
-              const track = document.getElementById("timelineTrack");
-              window._timelineTicks = ticks;
-
-              buildTimelineTicks(track, ticks, totalMeasures);
-            })
-            .catch((err) => console.error("Failed to fetch result:", err));
+          if (!finalReceived) {
+            fetch(`${API_BASE}/api/result/${jobId}`)
+              .then((r) => r.json())
+              .then((result) => {
+                applyAnalysisResult(result);
+              })
+              .catch((err) => console.error("Failed to fetch result:", err));
+          }
         }
       };
 

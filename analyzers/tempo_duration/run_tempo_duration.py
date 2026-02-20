@@ -1,5 +1,3 @@
-from copy import deepcopy
-
 from music21 import converter
 from functools import lru_cache
 import pandas as pd
@@ -80,7 +78,7 @@ def run_tempo_duration(
 
     if score_factory is None:
         if score is not None:
-            score_factory = lambda: deepcopy(score)
+            score_factory = lambda: score
         elif score_path is not None:
             score_factory = lambda: converter.parse(score_path)
         else:

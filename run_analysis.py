@@ -1,7 +1,7 @@
-from copy import deepcopy
 import math
 import threading
-from time import perf_counter
+import gc
+from time import perf_counter, monotonic
 import argparse
 import sys
 
@@ -147,6 +147,7 @@ def run_analysis_engine(
     *,
     analysis_options: AnalysisOptions,
     progress_cb=None,
+    deadline: float | None = None,
 ):
     target_only = not analysis_options.run_observed
     cache_key = _cache_key(score_path, analysis_options)
@@ -180,7 +181,7 @@ def run_analysis_engine(
         len(list(parts[0].getElementsByClass(stream.Measure))) if parts else 0
     )
     skip_scoring = len(parts) <= 1
-    score_factory = lambda: deepcopy(base_score)
+    score_factory = lambda: base_score
 
     analyzers = [
         ("dynamics", run_dynamics, False),
@@ -247,8 +248,23 @@ def run_analysis_engine(
     results = {}
     reconciler = NoteReconciler()
     step = 0
+    timed_out = False
+    timed_out_at = None
+
+    def _check_timeout(next_name: str | None = None) -> bool:
+        nonlocal timed_out, timed_out_at
+        if deadline is None:
+            return False
+        if monotonic() >= deadline:
+            timed_out = True
+            timed_out_at = next_name
+            emit({"type": "timeout", "analyzer": next_name})
+            return True
+        return False
 
     for name, fn, _ in note_analyzers:
+        if _check_timeout(name):
+            break
         cache_entry = _get_cached_observed(cache_key, name) if not target_only else None
         use_cache = (not target_only) and _should_use_cached(cache_entry, requested_grades)
         options_for_analyzer = AnalysisOptions(
@@ -260,21 +276,25 @@ def run_analysis_engine(
         results[name] = fn(
             score_path,
             target_grade,
-            score=score_factory(),
+            score=base_score,
             score_factory=score_factory,
             progress_cb=None if target_only or use_cache else progress_bar(name),
             analysis_options=options_for_analyzer,
         )
+        emit({"type": "analyzer_result", "analyzer": name, "data": results[name]})
         if use_cache and cache_entry:
             results[name].update(cache_entry.get("data") or {})
         elif not target_only and options_for_analyzer.run_observed:
             _set_cached_observed(cache_key, name, requested_grades, results[name])
         collect_partial_notes(results[name], name, reconciler)
         analyzer_progress(step, name)
+        gc.collect()
 
     results["reconciled_notes"] = reconciler._notes
 
     for name, fn, _ in other_analyzers:
+        if _check_timeout(name):
+            break
         cache_entry = _get_cached_observed(cache_key, name) if not target_only else None
         use_cache = (not target_only) and _should_use_cached(cache_entry, requested_grades)
         options_for_analyzer = AnalysisOptions(
@@ -286,16 +306,18 @@ def run_analysis_engine(
         results[name] = fn(
             score_path,
             target_grade,
-            score=score_factory(),
+            score=base_score,
             score_factory=score_factory,
             progress_cb=None if target_only or use_cache else progress_bar(name),
             analysis_options=options_for_analyzer,
         )
+        emit({"type": "analyzer_result", "analyzer": name, "data": results[name]})
         if use_cache and cache_entry:
             results[name].update(cache_entry.get("data") or {})
         elif not target_only and options_for_analyzer.run_observed:
             _set_cached_observed(cache_key, name, requested_grades, results[name])
         analyzer_progress(step, name)
+        gc.collect()
 
     if skip_scoring:
         results["scoring"] = {
@@ -306,7 +328,7 @@ def run_analysis_engine(
         }
 
     emit({"type": "done"})
-    return build_final_result(
+    final = build_final_result(
         results,
         target_only,
         total_measures,
@@ -315,6 +337,10 @@ def run_analysis_engine(
         part_families=part_families,
         part_groups=part_groups,
     )
+    if timed_out:
+        final["timeout"] = True
+        final["timeout_at"] = timed_out_at
+    return final
 
 
 def build_final_result(
@@ -655,7 +681,7 @@ if __name__ == "__main__":
                   r"input_files\dynamics_test.musicxml",
                   r"input_files\ijo.musicxml"]
     
-    score_path = test_files[-3]
+    score_path = test_files[-1]
 
     def progress_bar(name):
         bar_width = 50
