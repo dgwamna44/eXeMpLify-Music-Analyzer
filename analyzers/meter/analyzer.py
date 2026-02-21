@@ -1,7 +1,6 @@
 # analyzers/meter/analyzer.py
 from __future__ import annotations
 
-from copy import deepcopy
 
 from music21 import converter
 
@@ -68,7 +67,7 @@ def run_meter(
 ):
     if score_factory is None:
         if score is not None:
-            score_factory = lambda: deepcopy(score)
+            score_factory = lambda: score
         elif score_path is not None:
             score_factory = lambda: converter.parse(score_path)
         else:

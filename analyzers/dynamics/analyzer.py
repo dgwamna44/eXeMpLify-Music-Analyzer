@@ -1,4 +1,3 @@
-from copy import deepcopy
 
 from models import BaseAnalyzer
 from utilities import format_grade, get_rounded_grade
@@ -28,7 +27,7 @@ def run_dynamics(
 
     if score_factory is None:
         if score is not None:
-            score_factory = lambda: deepcopy(score)
+            score_factory = lambda: score
         elif score_path is not None:
             score_factory = lambda: converter.parse(score_path)
         else:
