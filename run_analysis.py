@@ -3,7 +3,7 @@ import threading
 import time
 import gc
 from time import perf_counter
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import argparse
 import sys
 
@@ -258,6 +258,7 @@ def run_analysis_engine(
     # RUN NOTE ANALYZERS IN PARALLEL (these are fast and can run together)
     with ThreadPoolExecutor(max_workers=4) as executor:
         futures = {}
+        future_to_name = {}
         analyzer_metadata = {}  # Store cache info for later retrieval
         
         for name, fn, _ in note_analyzers:
@@ -285,6 +286,7 @@ def run_analysis_engine(
                 analysis_options=options_for_analyzer,
             )
             futures[name] = future
+            future_to_name[future] = name
             analyzer_metadata[name] = {
                 "use_cache": use_cache,
                 "cache_entry": cache_entry,
@@ -292,17 +294,22 @@ def run_analysis_engine(
             }
         
         # Collect results as they complete
-        for name in futures.keys():
+        for future in as_completed(futures.values()):
+            if _deadline_exceeded():
+                timed_out = True
+                emit({"type": "timeout"})
+                break
+            name = future_to_name[future]
             step += 1
             try:
-                results[name] = futures[name].result()  # Blocks until this analyzer finishes
+                results[name] = future.result()
                 metadata = analyzer_metadata[name]
-                
+
                 if metadata["use_cache"] and metadata["cache_entry"]:
                     results[name].update(metadata["cache_entry"].get("data") or {})
                 elif not target_only and metadata["options_for_analyzer"].run_observed:
                     _set_cached_observed(cache_key, name, requested_grades, results[name])
-                
+
                 collect_partial_notes(results[name], name, reconciler)
                 analyzer_progress(step, name)
                 gc.collect()
@@ -316,6 +323,7 @@ def run_analysis_engine(
     # RUN OTHER ANALYZERS IN PARALLEL (tempo_duration, dynamics, availability, scoring, meter)
     with ThreadPoolExecutor(max_workers=4) as executor:
         futures = {}
+        future_to_name = {}
         analyzer_metadata = {}
         
         for name, fn, _ in other_analyzers:
@@ -343,6 +351,7 @@ def run_analysis_engine(
                 analysis_options=options_for_analyzer,
             )
             futures[name] = future
+            future_to_name[future] = name
             analyzer_metadata[name] = {
                 "use_cache": use_cache,
                 "cache_entry": cache_entry,
@@ -350,17 +359,22 @@ def run_analysis_engine(
             }
         
         # Collect results as they complete
-        for name in futures.keys():
+        for future in as_completed(futures.values()):
+            if _deadline_exceeded():
+                timed_out = True
+                emit({"type": "timeout"})
+                break
+            name = future_to_name[future]
             step += 1
             try:
-                results[name] = futures[name].result()  # Blocks until this analyzer finishes
+                results[name] = future.result()
                 metadata = analyzer_metadata[name]
-                
+
                 if metadata["use_cache"] and metadata["cache_entry"]:
                     results[name].update(metadata["cache_entry"].get("data") or {})
                 elif not target_only and metadata["options_for_analyzer"].run_observed:
                     _set_cached_observed(cache_key, name, requested_grades, results[name])
-                
+
                 analyzer_progress(step, name)
                 gc.collect()
             except Exception as exc:
@@ -732,7 +746,7 @@ if __name__ == "__main__":
                   r"input_files\dynamics_test.musicxml",
                   r"input_files\ijo.musicxml"]
     
-    score_path = test_files[-3]
+    score_path = test_files[-1]
 
     def progress_bar(name):
         bar_width = 50
