@@ -3,6 +3,7 @@ import threading
 import time
 import gc
 from time import perf_counter
+from concurrent.futures import ThreadPoolExecutor
 import argparse
 import sys
 
@@ -254,64 +255,118 @@ def run_analysis_engine(
     step = 0
     timed_out = False
 
-    for name, fn, _ in note_analyzers:
-        if _deadline_exceeded():
-            timed_out = True
-            emit({"type": "timeout", "analyzer": name})
-            break
-        cache_entry = _get_cached_observed(cache_key, name) if not target_only else None
-        use_cache = (not target_only) and _should_use_cached(cache_entry, requested_grades)
-        options_for_analyzer = AnalysisOptions(
-            run_observed=analysis_options.run_observed and not use_cache,
-            string_only=analysis_options.string_only,
-            observed_grades=analysis_options.observed_grades,
-        )
-        step += 1
-        results[name] = fn(
-            score_path,
-            target_grade,
-            score=score_factory(),
-            score_factory=score_factory,
-            progress_cb=None if target_only or use_cache else progress_bar(name),
-            analysis_options=options_for_analyzer,
-        )
-        if use_cache and cache_entry:
-            results[name].update(cache_entry.get("data") or {})
-        elif not target_only and options_for_analyzer.run_observed:
-            _set_cached_observed(cache_key, name, requested_grades, results[name])
-        collect_partial_notes(results[name], name, reconciler)
-        analyzer_progress(step, name)
-        gc.collect()
+    # RUN NOTE ANALYZERS IN PARALLEL (these are fast and can run together)
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        futures = {}
+        analyzer_metadata = {}  # Store cache info for later retrieval
+        
+        for name, fn, _ in note_analyzers:
+            if _deadline_exceeded():
+                timed_out = True
+                emit({"type": "timeout", "analyzer": name})
+                break
+            
+            cache_entry = _get_cached_observed(cache_key, name) if not target_only else None
+            use_cache = (not target_only) and _should_use_cached(cache_entry, requested_grades)
+            options_for_analyzer = AnalysisOptions(
+                run_observed=analysis_options.run_observed and not use_cache,
+                string_only=analysis_options.string_only,
+                observed_grades=analysis_options.observed_grades,
+            )
+            
+            # Submit to thread pool (non-blocking)
+            future = executor.submit(
+                fn,
+                score_path,
+                target_grade,
+                score=score_factory(),
+                score_factory=score_factory,
+                progress_cb=None if target_only or use_cache else progress_bar(name),
+                analysis_options=options_for_analyzer,
+            )
+            futures[name] = future
+            analyzer_metadata[name] = {
+                "use_cache": use_cache,
+                "cache_entry": cache_entry,
+                "options_for_analyzer": options_for_analyzer,
+            }
+        
+        # Collect results as they complete
+        for name in futures.keys():
+            step += 1
+            try:
+                results[name] = futures[name].result()  # Blocks until this analyzer finishes
+                metadata = analyzer_metadata[name]
+                
+                if metadata["use_cache"] and metadata["cache_entry"]:
+                    results[name].update(metadata["cache_entry"].get("data") or {})
+                elif not target_only and metadata["options_for_analyzer"].run_observed:
+                    _set_cached_observed(cache_key, name, requested_grades, results[name])
+                
+                collect_partial_notes(results[name], name, reconciler)
+                analyzer_progress(step, name)
+                gc.collect()
+            except Exception as exc:
+                emit({"type": "error", "analyzer": name, "error": str(exc)})
+                timed_out = True
+                break
 
     results["reconciled_notes"] = reconciler._notes
 
-    for name, fn, _ in other_analyzers:
-        if _deadline_exceeded():
-            timed_out = True
-            emit({"type": "timeout", "analyzer": name})
-            break
-        cache_entry = _get_cached_observed(cache_key, name) if not target_only else None
-        use_cache = (not target_only) and _should_use_cached(cache_entry, requested_grades)
-        options_for_analyzer = AnalysisOptions(
-            run_observed=analysis_options.run_observed and not use_cache,
-            string_only=analysis_options.string_only,
-            observed_grades=analysis_options.observed_grades,
-        )
-        step += 1
-        results[name] = fn(
-            score_path,
-            target_grade,
-            score=score_factory(),
-            score_factory=score_factory,
-            progress_cb=None if target_only or use_cache else progress_bar(name),
-            analysis_options=options_for_analyzer,
-        )
-        if use_cache and cache_entry:
-            results[name].update(cache_entry.get("data") or {})
-        elif not target_only and options_for_analyzer.run_observed:
-            _set_cached_observed(cache_key, name, requested_grades, results[name])
-        analyzer_progress(step, name)
-        gc.collect()
+    # RUN OTHER ANALYZERS IN PARALLEL (tempo_duration, dynamics, availability, scoring, meter)
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        futures = {}
+        analyzer_metadata = {}
+        
+        for name, fn, _ in other_analyzers:
+            if _deadline_exceeded():
+                timed_out = True
+                emit({"type": "timeout", "analyzer": name})
+                break
+            
+            cache_entry = _get_cached_observed(cache_key, name) if not target_only else None
+            use_cache = (not target_only) and _should_use_cached(cache_entry, requested_grades)
+            options_for_analyzer = AnalysisOptions(
+                run_observed=analysis_options.run_observed and not use_cache,
+                string_only=analysis_options.string_only,
+                observed_grades=analysis_options.observed_grades,
+            )
+            
+            # Submit to thread pool (non-blocking)
+            future = executor.submit(
+                fn,
+                score_path,
+                target_grade,
+                score=score_factory(),
+                score_factory=score_factory,
+                progress_cb=None if target_only or use_cache else progress_bar(name),
+                analysis_options=options_for_analyzer,
+            )
+            futures[name] = future
+            analyzer_metadata[name] = {
+                "use_cache": use_cache,
+                "cache_entry": cache_entry,
+                "options_for_analyzer": options_for_analyzer,
+            }
+        
+        # Collect results as they complete
+        for name in futures.keys():
+            step += 1
+            try:
+                results[name] = futures[name].result()  # Blocks until this analyzer finishes
+                metadata = analyzer_metadata[name]
+                
+                if metadata["use_cache"] and metadata["cache_entry"]:
+                    results[name].update(metadata["cache_entry"].get("data") or {})
+                elif not target_only and metadata["options_for_analyzer"].run_observed:
+                    _set_cached_observed(cache_key, name, requested_grades, results[name])
+                
+                analyzer_progress(step, name)
+                gc.collect()
+            except Exception as exc:
+                emit({"type": "error", "analyzer": name, "error": str(exc)})
+                timed_out = True
+                break
 
     if skip_scoring:
         results["scoring"] = {
