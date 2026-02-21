@@ -2001,24 +2001,6 @@ function initAnalysisRequest() {
     );
     form.append("full_grade_analysis", String(Boolean(fullGrade?.checked)));
     form.append("target_grade", String(Number(targetGrade?.value || 2)));
-    const res = await fetch(`${API_BASE}/api/analyze`, {
-      method: "POST",
-      body: form,
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      alert(err.error || "Failed to start analysis.");
-      return;
-    }
-
-    const { job_id: jobId } = await res.json();
-    if (!jobId) {
-      alert("No job id returned.");
-      return;
-    }
-
-    window.lastJobId = jobId;
     window.analysisResult = null;
 
     ensureProgressBars();
@@ -2037,160 +2019,162 @@ function initAnalysisRequest() {
       }, 200);
     }
 
-    let es = null;
-    let reconnectAttempts = 0;
-    const maxReconnects = 5;
-    let reconnectTimer = null;
-    let streamDone = false;
+    const applyFinalResult = (result) => {
+      window.analysisResult = result;
 
-    const connectProgressStream = () => {
-      if (es) es.close();
-      es = new EventSource(`${API_BASE}/api/progress/${jobId}`);
-      es.onmessage = (evt) => {
-        const data = JSON.parse(evt.data);
-        if (data.type === "heartbeat") return;
-        if (data.type === "observed") {
-          const pct = data.total
-            ? Math.round((data.idx / data.total) * 100)
-            : 0;
-          const analyzerKey =
-            data.analyzer === "key_range" && data.label
-              ? data.label
-              : data.analyzer === "tempo_duration" && data.label
-                ? data.label
-                : data.analyzer;
-          const ids = barIds[analyzerKey];
-          const bar = ids ? document.getElementById(ids.bar) : null;
-          const pctEl = ids ? document.getElementById(ids.pct) : null;
-          const labelEl = ids ? document.getElementById(ids.label) : null;
-          if (bar) bar.style.width = `${pct}%`;
-          if (pctEl) pctEl.textContent = `${pct}%`;
-          if (labelEl) {
-            const name = labelMap[analyzerKey] || analyzerKey;
-            labelEl.textContent = name;
-          }
-          if (progressText) {
-            const name = labelMap[analyzerKey] || analyzerKey;
-            progressText.textContent = `${name} grade ${formatGrade(data.grade)} - ${pct}%`;
-          }
-        } else if (data.type === "analyzer") {
-          const analyzerKey =
-            data.analyzer === "key_range"
-              ? "range"
-              : data.analyzer === "tempo_duration"
-                ? "tempo"
-                : data.analyzer;
-          const ids = barIds[analyzerKey];
-          const bar = ids ? document.getElementById(ids.bar) : null;
-          const pctEl = ids ? document.getElementById(ids.pct) : null;
-          const labelEl = ids ? document.getElementById(ids.label) : null;
-          if (bar && bar.style.width === "0%") {
-            bar.style.width = "100%";
-          }
-          if (pctEl && pctEl.textContent === "0%") {
-            pctEl.textContent = "100%";
-          }
-          if (labelEl) {
-            labelEl.textContent = labelMap[analyzerKey] || analyzerKey;
-          }
-          if (data.analyzer === "tempo_duration") {
-            const tempoIds = barIds.tempo;
-            const durationIds = barIds.duration;
-            const tempoBar = tempoIds
-              ? document.getElementById(tempoIds.bar)
-              : null;
-            const tempoPct = tempoIds
-              ? document.getElementById(tempoIds.pct)
-              : null;
-            const durationBar = durationIds
-              ? document.getElementById(durationIds.bar)
-              : null;
-            const durationPct = durationIds
-              ? document.getElementById(durationIds.pct)
-              : null;
-            if (tempoBar) tempoBar.style.width = "100%";
-            if (tempoPct) tempoPct.textContent = "100%";
-            if (durationBar) durationBar.style.width = "100%";
-            if (durationPct) durationPct.textContent = "100%";
-          }
-        } else if (data.type === "done") {
-          streamDone = true;
-          Object.values(barIds).forEach((ids) => {
-            const bar = document.getElementById(ids.bar);
-            const pctEl = document.getElementById(ids.pct);
-            if (bar) bar.style.width = "100%";
-            if (pctEl) pctEl.textContent = "100%";
-          });
-          if (progressText) progressText.textContent = "Done.";
-          if (progressOkBtn) progressOkBtn.disabled = false;
-          if (timerId) clearInterval(timerId);
-          if (reconnectTimer) clearTimeout(reconnectTimer);
-          es.close();
-          fetch(`${API_BASE}/api/result/${jobId}`)
-            .then((r) => r.json())
-            .then((result) => {
-              window.analysisResult = result;
+      bindBarHeadDetailPaneClicks();
+      updatePartAnalyzerIssueTooltips(
+        result?.result?.analysis_notes_filtered,
+      );
+      const targetGradeValue = Number(targetGrade?.value ?? NaN);
+      setMarkerPositions(result?.result?.confidences, {
+        observedGrades: result?.result?.observed_grades,
+        targetGrade: targetGradeValue,
+        showObserved: !targetOnly?.checked,
+        availabilityNotes: result?.result?.analysis_notes?.availability,
+      });
+      setObservedGrade(
+        result?.result?.observed_grade_overall,
+        result?.result?.observed_grade_overall_range,
+      );
+      const scoringPayload =
+        result?.result?.analysis_notes_filtered?.scoring ??
+        result?.result?.analysis_notes?.scoring;
+      if (scoringPayload) {
+        renderScoringDetails(scoringPayload);
+      }
 
-              bindBarHeadDetailPaneClicks();
-              updatePartAnalyzerIssueTooltips(
-                result?.result?.analysis_notes_filtered,
-              );
-              const targetGradeValue = Number(targetGrade?.value ?? NaN);
-              setMarkerPositions(result?.result?.confidences, {
-                observedGrades: result?.result?.observed_grades,
-                targetGrade: targetGradeValue,
-                showObserved: !targetOnly?.checked,
-                availabilityNotes: result?.result?.analysis_notes?.availability,
-              });
-              setObservedGrade(
-                result?.result?.observed_grade_overall,
-                result?.result?.observed_grade_overall_range,
-              );
-              const scoringPayload =
-                result?.result?.analysis_notes_filtered?.scoring ??
-                result?.result?.analysis_notes?.scoring;
-              if (scoringPayload) {
-                renderScoringDetails(scoringPayload);
-              }
+      const totalMeasures = result?.result?.total_measures ?? 0;
+      const durationString = result?.result?.duration ?? 0;
+      const tempoData = result?.result?.analysis_notes?.tempo ?? [];
 
-              const totalMeasures = result?.result?.total_measures ?? 0;
-              const durationString = result?.result?.duration ?? 0;
-              const tempoData = result?.result?.analysis_notes?.tempo ?? [];
+      setTimelineLabels(totalMeasures, durationString, tempoData);
 
-              setTimelineLabels(totalMeasures, durationString, tempoData);
+      const ticks = prepareTimelineTicks();
+      console.log("ticks:", ticks);
+      const track = document.getElementById("timelineTrack");
+      window._timelineTicks = ticks;
 
-              const ticks = prepareTimelineTicks();
-              console.log("ticks:", ticks);
-              const track = document.getElementById("timelineTrack");
-              window._timelineTicks = ticks;
-
-              buildTimelineTicks(track, ticks, totalMeasures);
-            })
-            .catch((err) => console.error("Failed to fetch result:", err));
-        }
-      };
-
-      es.onerror = () => {
-        if (streamDone) return;
-        reconnectAttempts += 1;
-        if (reconnectAttempts <= maxReconnects) {
-          const delay = Math.min(2000 * reconnectAttempts, 10000);
-          if (progressText) {
-            progressText.textContent = `Connection lost. Reconnecting (${reconnectAttempts}/${maxReconnects})...`;
-          }
-          if (reconnectTimer) clearTimeout(reconnectTimer);
-          es.close();
-          reconnectTimer = setTimeout(connectProgressStream, delay);
-        } else {
-          if (progressText) progressText.textContent = "Connection lost.";
-          if (timerId) clearInterval(timerId);
-          es.close();
-          console.warn("Progress stream error; analysisResult not set yet.");
-        }
-      };
+      buildTimelineTicks(track, ticks, totalMeasures);
     };
 
-    connectProgressStream();
+    const handleEvent = (data) => {
+      if (!data || data.type === "heartbeat") return;
+      if (data.type === "observed") {
+        const pct = data.total ? Math.round((data.idx / data.total) * 100) : 0;
+        const analyzerKey =
+          data.analyzer === "key_range" && data.label
+            ? data.label
+            : data.analyzer === "tempo_duration" && data.label
+              ? data.label
+              : data.analyzer;
+        const ids = barIds[analyzerKey];
+        const bar = ids ? document.getElementById(ids.bar) : null;
+        const pctEl = ids ? document.getElementById(ids.pct) : null;
+        const labelEl = ids ? document.getElementById(ids.label) : null;
+        if (bar) bar.style.width = `${pct}%`;
+        if (pctEl) pctEl.textContent = `${pct}%`;
+        if (labelEl) {
+          const name = labelMap[analyzerKey] || analyzerKey;
+          labelEl.textContent = name;
+        }
+        if (progressText) {
+          const name = labelMap[analyzerKey] || analyzerKey;
+          progressText.textContent = `${name} grade ${formatGrade(data.grade)} - ${pct}%`;
+        }
+      } else if (data.type === "analyzer") {
+        const analyzerKey =
+          data.analyzer === "key_range"
+            ? "range"
+            : data.analyzer === "tempo_duration"
+              ? "tempo"
+              : data.analyzer;
+        const ids = barIds[analyzerKey];
+        const bar = ids ? document.getElementById(ids.bar) : null;
+        const pctEl = ids ? document.getElementById(ids.pct) : null;
+        const labelEl = ids ? document.getElementById(ids.label) : null;
+        if (bar && bar.style.width === "0%") {
+          bar.style.width = "100%";
+        }
+        if (pctEl && pctEl.textContent === "0%") {
+          pctEl.textContent = "100%";
+        }
+        if (labelEl) {
+          labelEl.textContent = labelMap[analyzerKey] || analyzerKey;
+        }
+        if (data.analyzer === "tempo_duration") {
+          const tempoIds = barIds.tempo;
+          const durationIds = barIds.duration;
+          const tempoBar = tempoIds ? document.getElementById(tempoIds.bar) : null;
+          const tempoPct = tempoIds ? document.getElementById(tempoIds.pct) : null;
+          const durationBar = durationIds ? document.getElementById(durationIds.bar) : null;
+          const durationPct = durationIds ? document.getElementById(durationIds.pct) : null;
+          if (tempoBar) tempoBar.style.width = "100%";
+          if (tempoPct) tempoPct.textContent = "100%";
+          if (durationBar) durationBar.style.width = "100%";
+          if (durationPct) durationPct.textContent = "100%";
+        }
+      } else if (data.type === "timeout") {
+        if (progressText) {
+          progressText.textContent = "Timed out. Showing partial results.";
+        }
+      } else if (data.type === "result") {
+        applyFinalResult({ done: true, error: null, result: data.data });
+      } else if (data.type === "error") {
+        if (progressText) progressText.textContent = "Analysis error.";
+        console.error("Analysis error:", data.error);
+      } else if (data.type === "done") {
+        Object.values(barIds).forEach((ids) => {
+          const bar = document.getElementById(ids.bar);
+          const pctEl = document.getElementById(ids.pct);
+          if (bar) bar.style.width = "100%";
+          if (pctEl) pctEl.textContent = "100%";
+        });
+        if (progressText) progressText.textContent = "Done.";
+        if (progressOkBtn) progressOkBtn.disabled = false;
+        if (timerId) clearInterval(timerId);
+      }
+    };
+
+    const res = await fetch(`${API_BASE}/api/analyze_stream`, {
+      method: "POST",
+      body: form,
+    });
+
+    if (!res.ok || !res.body) {
+      const err = await res.json().catch(() => ({}));
+      alert(err.error || "Failed to start analysis.");
+      if (timerId) clearInterval(timerId);
+      return;
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      let idx;
+      while ((idx = buffer.indexOf("\n\n")) !== -1) {
+        const chunk = buffer.slice(0, idx).trim();
+        buffer = buffer.slice(idx + 2);
+        if (!chunk) continue;
+        const lines = chunk.split("\n");
+        for (const line of lines) {
+          if (!line.startsWith("data:")) continue;
+          const payload = line.slice(5).trim();
+          if (!payload) continue;
+          try {
+            const data = JSON.parse(payload);
+            handleEvent(data);
+          } catch (err) {
+            console.warn("Failed to parse SSE payload:", payload, err);
+          }
+        }
+      }
+    }
   });
 }
 

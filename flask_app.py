@@ -206,6 +206,116 @@ def analyze():
     return jsonify({"job_id": job_id})
 
 
+@app.post("/api/analyze_stream")
+def analyze_stream():
+    _cleanup_jobs()
+    payload = {}
+    score_path = None
+    if request.content_type and request.content_type.startswith("multipart/form-data"):
+        form = request.form
+        uploaded = request.files.get("score_file")
+        if uploaded:
+            filename = secure_filename(uploaded.filename or "score.musicxml")
+            ext = os.path.splitext(filename)[1] or ".musicxml"
+            data = uploaded.read()
+            if len(data) > MAX_UPLOAD_BYTES:
+                return jsonify({"error": "Score too large"}), 413
+            digest = hashlib.sha256(data).hexdigest()
+            file_id = f"{digest}{ext}"
+            save_path = os.path.join(UPLOAD_DIR, file_id)
+            if not os.path.exists(save_path):
+                with open(save_path, "wb") as f:
+                    f.write(data)
+            payload["score_path"] = save_path
+            payload["file_size"] = len(data)
+            score_path = save_path
+        payload["target_only"] = form.get("target_only") == "true"
+        payload["strings_only"] = form.get("strings_only") == "true"
+        payload["full_grade_analysis"] = form.get("full_grade_analysis") == "true"
+        if form.get("target_grade"):
+            payload["target_grade"] = float(form.get("target_grade"))
+    else:
+        payload = request.get_json(force=True, silent=True) or {}
+        score_path = payload.get("score_path")
+
+    if not payload.get("score_path") or "target_grade" not in payload:
+        return jsonify({"error": "Missing score or target grade."}), 400
+
+    if payload.get("score_path") and not payload.get("file_size"):
+        try:
+            payload["file_size"] = os.path.getsize(payload["score_path"])
+        except OSError:
+            payload["file_size"] = None
+    if payload.get("file_size") and payload["file_size"] > MAX_UPLOAD_BYTES:
+        return jsonify({"error": "Score too large"}), 413
+
+    timeout_seconds = estimate_timeout(payload.get("file_size"))
+    payload["timeout_seconds"] = timeout_seconds
+
+    target_only = parse_bool(payload.get("target_only"))
+    strings_only = parse_bool(payload.get("strings_only"))
+    full_grade = parse_bool(payload.get("full_grade_analysis"))
+    target_grade = float(payload.get("target_grade", 2))
+    observed_grades = None
+    if target_only is False:
+        observed_grades = FULL_GRADES if full_grade else GRADES
+    options = AnalysisOptions(
+        run_observed=not target_only,
+        string_only=strings_only,
+        observed_grades=observed_grades,
+    )
+
+    q = queue.Queue()
+
+    def progress_cb(event):
+        q.put(event)
+
+    def run():
+        try:
+            deadline = time.monotonic() + float(timeout_seconds)
+            result = run_analysis_engine(
+                payload["score_path"],
+                target_grade,
+                analysis_options=options,
+                progress_cb=progress_cb,
+                deadline=deadline,
+            )
+            q.put({"type": "result", "data": make_json_safe(result)})
+        except Exception as exc:
+            q.put({"type": "error", "error": str(exc)})
+        finally:
+            q.put({"type": "done"})
+            if score_path and os.path.exists(score_path):
+                try:
+                    os.remove(score_path)
+                except Exception:
+                    pass
+
+    thread = threading.Thread(target=run, daemon=True)
+    thread.start()
+
+    def generate():
+        last_heartbeat = time.time()
+        while True:
+            try:
+                event = q.get(timeout=0.5)
+            except queue.Empty:
+                now = time.time()
+                if now - last_heartbeat >= 3:
+                    last_heartbeat = now
+                    yield f"data: {json.dumps({'type': 'heartbeat'})}\n\n"
+                continue
+            yield f"data: {json.dumps(make_json_safe(event))}\n\n"
+            last_heartbeat = time.time()
+            if event.get("type") == "done":
+                break
+
+    resp = Response(stream_with_context(generate()), mimetype="text/event-stream")
+    resp.headers["Cache-Control"] = "no-cache"
+    resp.headers["X-Accel-Buffering"] = "no"
+    return resp
+
+
 @app.get("/api/progress/<job_id>")
 def progress(job_id):
     _cleanup_jobs()
