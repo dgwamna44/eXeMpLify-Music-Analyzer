@@ -1,6 +1,7 @@
-from copy import deepcopy
 import math
 import threading
+import time
+import gc
 from time import perf_counter
 import argparse
 import sys
@@ -147,6 +148,7 @@ def run_analysis_engine(
     *,
     analysis_options: AnalysisOptions,
     progress_cb=None,
+    deadline: float | None = None,
 ):
     target_only = not analysis_options.run_observed
     cache_key = _cache_key(score_path, analysis_options)
@@ -180,16 +182,16 @@ def run_analysis_engine(
         len(list(parts[0].getElementsByClass(stream.Measure))) if parts else 0
     )
     skip_scoring = len(parts) <= 1
-    score_factory = lambda: deepcopy(base_score)
+    score_factory = lambda: base_score
 
     analyzers = [
+        ("key_range", run_key_range, True),
+        ("articulation", run_articulation, True),
+        ("rhythm", run_rhythm, True),
+        ("tempo_duration", run_tempo_duration, False),
         ("dynamics", run_dynamics, False),
         ("availability", run_availability, False),
         ("scoring", run_scoring, False),
-        ("key_range", run_key_range, True),
-        ("tempo_duration", run_tempo_duration, False),
-        ("articulation", run_articulation, True),
-        ("rhythm", run_rhythm, True),
         ("meter", run_meter, False),
     ]
     if skip_scoring:
@@ -226,6 +228,9 @@ def run_analysis_engine(
             }
         )
 
+    def _deadline_exceeded():
+        return deadline is not None and time.monotonic() > deadline
+
     def collect_partial_notes(result, name, reconciler: NoteReconciler):
         analysis = result.get("analysis_notes") if result else None
         if not analysis:
@@ -247,8 +252,13 @@ def run_analysis_engine(
     results = {}
     reconciler = NoteReconciler()
     step = 0
+    timed_out = False
 
     for name, fn, _ in note_analyzers:
+        if _deadline_exceeded():
+            timed_out = True
+            emit({"type": "timeout", "analyzer": name})
+            break
         cache_entry = _get_cached_observed(cache_key, name) if not target_only else None
         use_cache = (not target_only) and _should_use_cached(cache_entry, requested_grades)
         options_for_analyzer = AnalysisOptions(
@@ -271,10 +281,15 @@ def run_analysis_engine(
             _set_cached_observed(cache_key, name, requested_grades, results[name])
         collect_partial_notes(results[name], name, reconciler)
         analyzer_progress(step, name)
+        gc.collect()
 
     results["reconciled_notes"] = reconciler._notes
 
     for name, fn, _ in other_analyzers:
+        if _deadline_exceeded():
+            timed_out = True
+            emit({"type": "timeout", "analyzer": name})
+            break
         cache_entry = _get_cached_observed(cache_key, name) if not target_only else None
         use_cache = (not target_only) and _should_use_cached(cache_entry, requested_grades)
         options_for_analyzer = AnalysisOptions(
@@ -296,6 +311,7 @@ def run_analysis_engine(
         elif not target_only and options_for_analyzer.run_observed:
             _set_cached_observed(cache_key, name, requested_grades, results[name])
         analyzer_progress(step, name)
+        gc.collect()
 
     if skip_scoring:
         results["scoring"] = {
@@ -305,7 +321,10 @@ def run_analysis_engine(
             "overall_confidence": None,
         }
 
-    emit({"type": "done"})
+    if timed_out:
+        emit({"type": "done", "timeout": True})
+    else:
+        emit({"type": "done"})
     return build_final_result(
         results,
         target_only,
@@ -314,6 +333,7 @@ def run_analysis_engine(
         part_order=part_order,
         part_families=part_families,
         part_groups=part_groups,
+        timed_out=timed_out,
     )
 
 
@@ -325,6 +345,7 @@ def build_final_result(
     part_order: list[str] | None = None,
     part_families: dict[str, str] | None = None,
     part_groups: dict[str, str | None] | None = None,
+    timed_out: bool = False,
 ):
     def clamp_conf(value):
         if value is None:
@@ -616,6 +637,7 @@ def build_final_result(
         "part_order": part_order or [],
         "part_families": part_families or {},
         "part_groups": part_groups or {},
+        "timed_out": timed_out,
     }
 
 if __name__ == "__main__":
