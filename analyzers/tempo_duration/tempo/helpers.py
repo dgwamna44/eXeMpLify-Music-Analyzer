@@ -2,6 +2,13 @@ from music21 import stream, tempo
 from models import TempoData
 from typing import List
 
+VALID_TEMPOS = [
+    40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60,
+    63, 66, 69, 72, 76, 80, 84, 88, 92, 96,
+    100, 104, 108, 112, 116, 120, 126, 132, 138,
+    144, 152, 160, 168, 176, 184, 200, 208,
+]
+
 def _quarter_bpm(mark: tempo.MetronomeMark) -> int | None:
     if hasattr(mark, "getQuarterBPM") and mark.getQuarterBPM() is not None:
         return int(round(mark.getQuarterBPM()))
@@ -78,3 +85,56 @@ def build_tempo_segments(score, tempo_marks: List[tuple[int, int, str, int]]) ->
 
 def get_tempo_score(bpm: int, low: int, high: int) -> float:
     return 1.0 if low <= bpm <= high else 0.0
+
+
+def _penalty_per_step(grade: float) -> float:
+    if grade >= 5:
+        return 0.0
+    steps = max(0, round((grade - 0.5) / 0.5))
+    penalty = 0.20 - (0.03 * steps)
+    return max(0.0, penalty)
+
+
+def _step_distance_from_range(bpm: int, low: int, high: int) -> int:
+    if low <= bpm <= high:
+        return 0
+    if bpm < low:
+        below = [t for t in VALID_TEMPOS if t <= bpm]
+        low_idx = VALID_TEMPOS.index(low) if low in VALID_TEMPOS else 0
+        bpm_idx = VALID_TEMPOS.index(below[-1]) if below else 0
+        return max(1, low_idx - bpm_idx)
+    above = [t for t in VALID_TEMPOS if t >= bpm]
+    high_idx = VALID_TEMPOS.index(high) if high in VALID_TEMPOS else len(VALID_TEMPOS) - 1
+    bpm_idx = VALID_TEMPOS.index(above[0]) if above else len(VALID_TEMPOS) - 1
+    return max(1, bpm_idx - high_idx)
+
+
+def _step_distance_to_mark(bpm: int) -> int:
+    if bpm in VALID_TEMPOS:
+        return 0
+    lower = [t for t in VALID_TEMPOS if t <= bpm]
+    upper = [t for t in VALID_TEMPOS if t >= bpm]
+    if not lower:
+        return max(1, VALID_TEMPOS.index(upper[0]))
+    if not upper:
+        return max(1, len(VALID_TEMPOS) - 1 - VALID_TEMPOS.index(lower[-1]))
+    lower_idx = VALID_TEMPOS.index(lower[-1])
+    upper_idx = VALID_TEMPOS.index(upper[0])
+    return max(1, min(upper_idx - lower_idx, lower_idx - upper_idx) or 1)
+
+
+def get_tempo_confidence(bpm: int, low: int, high: int, grade: float) -> float:
+    if grade >= 5:
+        return 1.0
+    penalty = _penalty_per_step(grade)
+    if penalty <= 0:
+        return 1.0
+
+    if low <= bpm <= high:
+        steps = _step_distance_to_mark(bpm)
+    else:
+        steps = _step_distance_from_range(bpm, low, high)
+    if steps <= 0:
+        return 1.0
+    confidence = 1.0 - (penalty * steps)
+    return max(0.0, min(1.0, confidence))
