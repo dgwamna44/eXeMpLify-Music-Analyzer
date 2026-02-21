@@ -2136,44 +2136,69 @@ function initAnalysisRequest() {
       }
     };
 
-    const res = await fetch(`${API_BASE}/api/analyze_stream`, {
-      method: "POST",
-      body: form,
-    });
+    let gotResult = false;
+    const handleEventWithResult = (data) => {
+      if (data?.type === "result") {
+        gotResult = true;
+      }
+      handleEvent(data);
+    };
 
-    if (!res.ok || !res.body) {
-      const err = await res.json().catch(() => ({}));
-      alert(err.error || "Failed to start analysis.");
-      if (timerId) clearInterval(timerId);
-      return;
-    }
+    try {
+      const res = await fetch(`${API_BASE}/api/analyze_stream`, {
+        method: "POST",
+        body: form,
+        headers: {
+          Accept: "text/event-stream",
+        },
+      });
 
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = "";
+      if (!res.ok || !res.body) {
+        const err = await res.json().catch(() => ({}));
+        alert(err.error || "Failed to start analysis.");
+        if (timerId) clearInterval(timerId);
+        return;
+      }
 
-    while (true) {
-      const { value, done } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-      let idx;
-      while ((idx = buffer.indexOf("\n\n")) !== -1) {
-        const chunk = buffer.slice(0, idx).trim();
-        buffer = buffer.slice(idx + 2);
-        if (!chunk) continue;
-        const lines = chunk.split("\n");
-        for (const line of lines) {
-          if (!line.startsWith("data:")) continue;
-          const payload = line.slice(5).trim();
-          if (!payload) continue;
-          try {
-            const data = JSON.parse(payload);
-            handleEvent(data);
-          } catch (err) {
-            console.warn("Failed to parse SSE payload:", payload, err);
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        let idx;
+        while ((idx = buffer.indexOf("\n\n")) !== -1) {
+          const chunk = buffer.slice(0, idx).trim();
+          buffer = buffer.slice(idx + 2);
+          if (!chunk) continue;
+          const lines = chunk.split("\n");
+          for (const line of lines) {
+            if (!line.startsWith("data:")) continue;
+            const payload = line.slice(5).trim();
+            if (!payload) continue;
+            try {
+              const data = JSON.parse(payload);
+              handleEventWithResult(data);
+            } catch (err) {
+              console.warn("Failed to parse SSE payload:", payload, err);
+            }
           }
         }
       }
+
+      if (!gotResult) {
+        console.warn("Stream ended without result event.");
+        if (progressText) progressText.textContent = "Connection lost.";
+        if (timerId) clearInterval(timerId);
+        if (progressOkBtn) progressOkBtn.disabled = false;
+      }
+    } catch (err) {
+      console.error("Failed to stream analysis:", err);
+      if (progressText) progressText.textContent = "Connection lost.";
+      if (timerId) clearInterval(timerId);
+      if (progressOkBtn) progressOkBtn.disabled = false;
     }
   });
 }
