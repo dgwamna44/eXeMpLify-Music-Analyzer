@@ -3,5 +3,5 @@ services:
     name: score-analyzer
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn flask_app:app --bind 0.0.0.0:$PORT --timeout 300 --keep-alive 30
+    startCommand: gunicorn flask_app:app --bind 0.0.0.0:$PORT --workers 1 --threads 8 --worker-class gthread --timeout 1200 --graceful-timeout 30 --keep-alive 30
     autoDeploy: true
